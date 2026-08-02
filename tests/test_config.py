@@ -10,6 +10,14 @@ from pydantic import ValidationError
 from careertwin.config import Settings
 
 
+def test_local_model_defaults_are_resource_bounded() -> None:
+    settings = Settings(_env_file=None)
+    assert settings.ollama_model == "qwen2.5:0.5b-instruct-q4_K_M"
+    assert settings.llm_context_window == 4096
+    assert settings.llm_max_output_tokens == 1024
+    assert settings.llm_request_timeout_seconds == 300
+
+
 def settings_from_environment(monkeypatch: pytest.MonkeyPatch, origins: str) -> Settings:
     """Build isolated settings with only the supplied origin representation."""
     monkeypatch.setenv("ALLOWED_ORIGINS", origins)
@@ -92,4 +100,4 @@ def test_backup_entrypoints_enforce_owner_only_storage() -> None:
     assert 'chmod 700 "$BACKUP_ROOT"' in shell
     assert 'chmod 600 "$DATABASE_FILE" "$BLOB_FILE"' in shell
     assert "/inheritance:r" in powershell
-    assert '$($env:USERNAME):F' in powershell
+    assert "$($env:USERNAME):F" in powershell

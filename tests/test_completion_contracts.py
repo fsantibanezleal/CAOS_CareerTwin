@@ -127,9 +127,7 @@ def test_profile_interchange_and_json_resume_are_lossless_and_tenant_scoped(
     assert original.status_code == 200, original.text
     document = original.json()
     assert "extracted_text" not in json.dumps(document)
-    imported = client.post(
-        "/api/profile/interchange/import", headers=csrf(token), json=document
-    )
+    imported = client.post("/api/profile/interchange/import", headers=csrf(token), json=document)
     assert imported.status_code == 200, imported.text
     assert imported.json()["counts"] == {
         "sources": 0,
@@ -332,7 +330,7 @@ def test_durable_agent_run_cancel_retry_execution_and_redacted_trace(
     queued = client.post(
         "/api/agent/runs",
         headers=csrf(token),
-        json={"message": "Summarize only my confirmed evidence.", "provider": "mock"},
+        json={"message": "Summarize only my confirmed evidence.", "provider": "contract"},
     )
     assert queued.status_code == 201, queued.text
     run = queued.json()
@@ -365,7 +363,7 @@ def test_durable_agent_run_cancel_retry_execution_and_redacted_trace(
     payload = trace_payload(
         run_id=retry["id"],
         workspace_id=workspace_id,
-        provider="mock",
+        provider="contract",
         specialist="profile_coach",
         status="completed",
         input_digest="0" * 64,

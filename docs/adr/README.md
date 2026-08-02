@@ -26,3 +26,6 @@ Records are active from the release in which they were accepted unless supersede
 | [0020](0020-portable-profile-and-target-portfolios.md) | Portable profile contracts and explicit target portfolios |
 | [0021](0021-durable-agent-runs-and-redacted-observability.md) | Durable agent execution and redacted observability |
 | [0022](0022-release-quality-contracts.md) | Representative-volume and accessibility release gates |
+| [0023](0023-encrypted-document-intelligence.md) | Encrypted blobs, private Docling, typed extraction critic |
+| [0024](0024-consent-bound-personal-connectors.md) | Consent-bound calendar, email, and browser connectors |
+| [0025](0025-hybrid-occupational-retrieval.md) | Pinned ESCO/O*NET graph and benchmarked local semantic retrieval |

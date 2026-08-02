@@ -34,12 +34,32 @@ class Settings(BaseSettings):
     session_hours: int = Field(default=12, ge=1, le=720)
     max_upload_bytes: int = Field(default=15 * 1024 * 1024, ge=1024, le=100 * 1024 * 1024)
     max_url_bytes: int = Field(default=2 * 1024 * 1024, ge=1024, le=10 * 1024 * 1024)
-    llm_default_provider: str = "mock"
+    llm_default_provider: str = "ollama"
     xai_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
     google_api_key: SecretStr | None = None
-    ollama_base_url: str = "http://localhost:11434"
+    ollama_base_url: str | None = "http://localhost:11434"
+    ollama_model: str = "qwen2.5:0.5b-instruct-q4_K_M"
+    ollama_embedding_model: str = "embeddinggemma:300m"
+    llm_request_timeout_seconds: int = Field(default=300, ge=10, le=900)
+    llm_context_window: int = Field(default=4096, ge=2048, le=32768)
+    llm_max_output_tokens: int = Field(default=1024, ge=128, le=8192)
+    semantic_matching_enabled: bool = True
+    blob_encryption_key: SecretStr | None = None
+    blob_encryption_key_id: str = Field(default="local-v1", min_length=1, max_length=64)
+    connector_encryption_key: SecretStr | None = None
+    docling_url: str | None = None
+    docling_api_key: SecretStr | None = None
+    docling_timeout_seconds: int = Field(default=300, ge=30, le=1800)
+    google_oauth_client_id: str | None = None
+    google_oauth_client_secret: SecretStr | None = None
+    microsoft_oauth_client_id: str | None = None
+    microsoft_oauth_client_secret: SecretStr | None = None
+    microsoft_oauth_tenant: str = "common"
+    connector_sync_timeout_seconds: int = Field(default=30, ge=10, le=180)
+    email_retention_days: int = Field(default=365, ge=30, le=730)
+    worker_max_jobs: int = Field(default=2, ge=1, le=32)
     langfuse_public_key: str | None = None
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str | None = None
@@ -106,6 +126,23 @@ class Settings(BaseSettings):
             raise ValueError("SECURE_COOKIES must be true in production")
         if not self.database_url.startswith("postgresql+"):
             raise ValueError("Production requires PostgreSQL")
+        if self.llm_default_provider in {"mock", "contract", "test"}:
+            raise ValueError("Production requires a real model provider")
+        configured = {
+            "xai": bool(self.xai_api_key),
+            "openai": bool(self.openai_api_key),
+            "anthropic": bool(self.anthropic_api_key),
+            "google": bool(self.google_api_key),
+            "ollama": bool(self.ollama_base_url),
+        }
+        if not configured.get(self.llm_default_provider, False):
+            raise ValueError("LLM_DEFAULT_PROVIDER is not configured")
+        if self.blob_encryption_key is None:
+            raise ValueError("BLOB_ENCRYPTION_KEY is required in production")
+        if self.connector_encryption_key is None:
+            raise ValueError("CONNECTOR_ENCRYPTION_KEY is required in production")
+        if not self.docling_url:
+            raise ValueError("DOCLING_URL is required in production")
         return self
 
 

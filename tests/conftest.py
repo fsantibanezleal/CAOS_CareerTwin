@@ -12,7 +12,7 @@ os.environ["APP_ENV"] = "test"
 os.environ["DATABASE_URL"] = "sqlite:///./data/private/test.sqlite3"
 os.environ["APP_SECRET_KEY"] = "test-secret-that-is-long-and-never-production"
 os.environ["APP_CSRF_SECRET"] = "test-csrf-secret-that-is-long-and-never-production"
-os.environ["LLM_DEFAULT_PROVIDER"] = "mock"
+os.environ["LLM_DEFAULT_PROVIDER"] = "contract"
 
 from careertwin.database import Base, SessionLocal, engine
 from careertwin.main import app

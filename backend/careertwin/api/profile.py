@@ -31,11 +31,11 @@ from careertwin.schemas import (
     SourceRead,
 )
 from careertwin.services.audit import record_audit
-from careertwin.services.blob import FileBlobStore
+from careertwin.services.blob import configured_blob_store
 from careertwin.services.graph import build_career_river, build_profile_graph
 from careertwin.services.ingestion import (
     clamav_scan,
-    extract_text,
+    extract_document,
     inspect_content,
     propose_profile_claims,
 )
@@ -48,6 +48,7 @@ from careertwin.services.interchange import (
     validate_json_object,
 )
 from careertwin.services.normalization import normalize_label
+from careertwin.services.queue import enqueue_source
 
 router = APIRouter(prefix="/api/profile", tags=["professional profile"])
 
@@ -402,21 +403,36 @@ async def upload_source(
         source.error = "Malware scanner is required in production"
         raise HTTPException(status_code=503, detail=source.error)
     clean, scan_result = clamav_scan(content, settings.clamav_host, settings.clamav_port)
-    source.source_metadata["scan"] = scan_result
+    source.source_metadata = {**source.source_metadata, "scan": scan_result}
     if not clean:
         source.status = SourceStatus.FAILED
         source.error = "Malware scanner rejected the document"
         raise HTTPException(status_code=422, detail=source.error)
-    stored = FileBlobStore(settings.blob_root).put(user.workspace.id, content)
+    stored = configured_blob_store(settings).put(user.workspace.id, content)
     source.storage_key, source.sha256 = stored.key, stored.sha256
-    try:
-        source.extracted_text = extract_text(content, inspection.media_type)
-        source.status = SourceStatus.READY
-        for proposal in propose_profile_claims(source.extracted_text, source.id):
-            db.add(EvidenceClaim(workspace_id=user.workspace.id, **proposal))
-    except ValueError as exc:
-        source.status = SourceStatus.FAILED
-        source.error = str(exc)
+    source.status = SourceStatus.PENDING
+    if settings.app_env == "test":
+        try:
+            extraction = extract_document(
+                content, inspection.media_type, file.filename or "upload", settings
+            )
+            source.extracted_text = extraction.text
+            source.source_metadata = {
+                **source.source_metadata,
+                "extraction": {
+                    "engine": extraction.engine,
+                    "confidence": extraction.confidence,
+                    "spans": extraction.spans,
+                    "timings": extraction.timings,
+                    "warnings": extraction.warnings,
+                },
+            }
+            source.status = SourceStatus.READY
+            for proposal in propose_profile_claims(source.extracted_text, source.id):
+                db.add(EvidenceClaim(workspace_id=user.workspace.id, **proposal))
+        except ValueError as exc:
+            source.status = SourceStatus.FAILED
+            source.error = str(exc)
     record_audit(
         db,
         user,
@@ -426,6 +442,37 @@ async def upload_source(
         {"media_type": inspection.media_type, "size": stored.size},
     )
     db.flush()
+    if settings.app_env != "test":
+        db.commit()
+        try:
+            await enqueue_source(settings, user.workspace.id, source.id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="Document is stored safely but extraction could not be queued; retry it.",
+            ) from exc
+    return SourceRead.model_validate(source)
+
+
+@router.post("/sources/{source_id}/retry", response_model=SourceRead)
+async def retry_source(source_id: str, user: CsrfUser, db: Db, settings: Config) -> SourceRead:
+    """Retry a failed or pending source through the durable extraction worker."""
+    source = db.scalar(
+        select(Source).where(
+            Source.id == source_id,
+            Source.workspace_id == user.workspace.id,
+        )
+    )
+    if not source or not source.storage_key:
+        raise HTTPException(status_code=404, detail="Stored source not found")
+    source.status = SourceStatus.PENDING
+    source.error = None
+    record_audit(db, user, "source.retry_queued", "source", source.id)
+    db.commit()
+    try:
+        await enqueue_source(settings, user.workspace.id, source.id)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Extraction queue is unavailable") from exc
     return SourceRead.model_validate(source)
 
 

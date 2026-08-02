@@ -5,7 +5,7 @@ description: Curate one CareerTwin seeker's professional profile from CVs, resum
 
 # Manage Career Profile
 
-Skill contract version: 1.1.0.
+Skill contract version: 1.2.0.
 
 ## Outcome
 
@@ -16,12 +16,13 @@ Maintain an accurate, source-traceable professional twin for the current authent
 1. Read `Entry_point.md`, then `references/profile-contract.md`.
 2. Confirm the CareerTwin instance is reachable with `scripts/doctor.ps1` or `scripts/doctor.sh` from the repository root.
 3. Inspect the current profile, sources, claims, skills, experience, education, and graph before proposing changes.
-4. For a document, use the supported upload endpoint. Do not paste private content into logs, issues, commits, or agent prompts outside the selected private provider flow.
-5. Present extracted claims with source locator, confidence, and proposed state. Ask the seeker to confirm or reject each claim. Never interpret silence as approval.
+4. For a document, use the supported upload endpoint. Production encrypts bytes before storage, scans them before parsing, and queues private Docling/model extraction; poll the source until `ready` or a sanitized `failed` state before reviewing claims. Do not paste private content into logs, issues, commits, or agent prompts outside the selected private provider flow.
+5. Present only critic-accepted extracted claims with exact source quotation, locator, confidence, and proposed state. Ask the seeker to confirm or reject each claim. Never interpret silence as approval.
 6. Add skills only with the seeker's chosen level and confirmed evidence links. An unlinked skill must remain visibly less substantiated.
 7. Update canonical profile fields with the current revision number. On a conflict, reload and present the difference; never overwrite blindly.
-8. Use CareerTwin interchange for lossless portability or JSON Resume for ecosystem exchange. Before import, state that the current seeker's profile-domain rows will be replaced; never import into another account by assumption.
-9. Re-read the graph and summarize what changed, what is confirmed, what remains proposed, and where evidence is absent.
+8. Build STAR accomplishments and tailored résumé variants only from explicitly selected, confirmed evidence. Treat every generated artifact as a new immutable version.
+9. Use CareerTwin interchange for lossless portability or JSON Resume for ecosystem exchange. Before import, state that the current seeker's profile-domain rows will be replaced; never import into another account by assumption.
+10. Re-read the graph and summarize what changed, what is confirmed, what remains proposed, and where evidence is absent.
 
 ## Guardrails
 

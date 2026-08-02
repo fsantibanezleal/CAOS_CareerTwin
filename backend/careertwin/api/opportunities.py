@@ -27,14 +27,15 @@ from careertwin.schemas import (
     TargetSetRead,
 )
 from careertwin.services.audit import record_audit
-from careertwin.services.blob import FileBlobStore
-from careertwin.services.ingestion import clamav_scan, extract_text, inspect_content
+from careertwin.services.blob import configured_blob_store
+from careertwin.services.ingestion import clamav_scan, extract_document, inspect_content
 from careertwin.services.normalization import normalize_label
 from careertwin.services.opportunity_ingestion import (
     UnsafeUrlError,
     capture_url,
     propose_requirements,
 )
+from careertwin.services.queue import enqueue_source
 
 router = APIRouter(prefix="/api/opportunities", tags=["opportunities"])
 
@@ -296,21 +297,20 @@ async def capture_opportunity_file(
     clean, scan_result = clamav_scan(content, settings.clamav_host, settings.clamav_port)
     if not clean:
         raise HTTPException(status_code=422, detail="Malware scanner rejected the document")
-    stored = FileBlobStore(settings.blob_root).put(user.workspace.id, content)
-    try:
-        extracted = extract_text(content, inspection.media_type)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    stored = configured_blob_store(settings).put(user.workspace.id, content)
     source = Source(
         workspace_id=user.workspace.id,
         kind="opportunity_document",
         label=(file.filename or "Opportunity document")[:300],
-        status=SourceStatus.READY,
+        status=SourceStatus.PENDING,
         media_type=inspection.media_type,
         sha256=stored.sha256,
         storage_key=stored.key,
-        extracted_text=extracted,
-        source_metadata={"scan": scan_result},
+        extracted_text=None,
+        source_metadata={
+            "scan": scan_result,
+            "original_name": (file.filename or "opportunity")[:300],
+        },
     )
     db.add(source)
     db.flush()
@@ -318,17 +318,39 @@ async def capture_opportunity_file(
         workspace_id=user.workspace.id,
         title=(title.strip() or (file.filename or "Captured opportunity"))[:300],
         employer=employer.strip()[:300],
-        description=extracted,
+        description="",
         source_kind="file",
         source_sha256=stored.sha256,
-        structured_data={"source_id": source.id},
+        structured_data={"source_id": source.id, "capture_status": "pending"},
     )
     db.add(item)
     db.flush()
-    item.requirements = [
-        _requirement(user.workspace.id, item.id, RequirementInput.model_validate(proposal))
-        for proposal in propose_requirements(extracted)
-    ]
+    source.source_metadata = {**source.source_metadata, "opportunity_id": item.id}
+    if settings.app_env == "test":
+        try:
+            extraction = extract_document(
+                content, inspection.media_type, file.filename or "opportunity", settings
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        source.extracted_text = extraction.text
+        source.status = SourceStatus.READY
+        source.source_metadata = {
+            **source.source_metadata,
+            "extraction": {
+                "engine": extraction.engine,
+                "confidence": extraction.confidence,
+                "spans": extraction.spans,
+                "timings": extraction.timings,
+                "warnings": extraction.warnings,
+            },
+        }
+        item.description = extraction.text
+        item.structured_data = {**item.structured_data, "capture_status": "ready"}
+        item.requirements = [
+            _requirement(user.workspace.id, item.id, RequirementInput.model_validate(proposal))
+            for proposal in propose_requirements(extraction.text)
+        ]
     record_audit(
         db,
         user,
@@ -339,6 +361,15 @@ async def capture_opportunity_file(
     )
     db.flush()
     _save_snapshot(db, item)
+    if settings.app_env != "test":
+        db.commit()
+        try:
+            await enqueue_source(settings, user.workspace.id, source.id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="Opportunity is stored safely but extraction could not be queued; retry it.",
+            ) from exc
     return OpportunityRead.model_validate(item)
 
 

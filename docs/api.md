@@ -9,13 +9,13 @@ The authoritative machine-readable contract is `/api/openapi.json`; interactive 
 | Profile/evidence | `/api/profile` | canonical profile, skills, chronology, sources, decisions, graph, CareerTwin/JSON Resume exchange |
 | Opportunities | `/api/opportunities` | capture, edit, immutable revisions, requirements, target portfolios, landscape |
 | Matching/readiness | `/api/matches` | immutable runs, named/global alignment, shared-gap matrix, editable recommendations |
-| Artifacts | `/api/artifacts` | evidence-grounded draft versions |
+| Artifacts | `/api/artifacts` | evidence-grounded drafts, STAR accomplishments, immutable résumé variants |
 | Pipeline | `/api/pipeline` | application stages/history, contacts, tasks, calendar import/export, analytics |
-| Connectors | `/api/connectors` | bounded GitHub snapshot |
-| Agent | `/api/agent` | providers, synchronous chat, durable run queue/poll/cancel/retry, conversations, proposed-change decisions |
-| Taxonomy | `/api/taxonomy` | local ESCO search/status |
+| Connectors | `/api/connectors` | bounded GitHub snapshot, OAuth grants, calendar/email sync, browser credential/capture |
+| Agent | `/api/agent` | providers, prompt/schema manifest, chat, durable queue/poll/cancel/retry, redacted trace, conversations, proposed-change decisions |
+| Taxonomy | `/api/taxonomy` | local ESCO/O*NET counts, checksum provenance, and lexical/graph/hybrid search |
 | Workspace | `/api/workspace` | Today summary and portable export |
-| Operations | `/api/health/*`, `/metrics` | liveness, readiness, Prometheus |
+| Operations | `/api/health/*`, `/metrics` | liveness, dependency readiness (database, Redis, model, ClamAV, Docling), Prometheus |
 
 ## Browser contract
 

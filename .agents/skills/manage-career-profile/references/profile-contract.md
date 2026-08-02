@@ -8,5 +8,7 @@
 - Add chronology: `POST /api/profile/experiences` or `/api/profile/education`.
 - Lossless portability: `GET /api/profile/interchange` and `POST /api/profile/interchange/import`.
 - JSON Resume exchange: `GET /api/profile/json-resume` and `POST /api/profile/json-resume/import`.
+- STAR evidence: `GET/POST /api/artifacts/accomplishments`.
+- Résumé versions: `GET/POST /api/artifacts/resume-variants` and `GET /api/artifacts/resume-variants/{id}`.
 
-Imports replace only the current tenant's professional-profile domain and remap source/evidence identifiers. Exports omit blob paths, uploaded bytes, and extracted private text. All non-read requests require the browser session cookie and `X-CSRF-Token`. API docs are available at `/api/docs` on the running instance.
+Uploaded sources are asynchronous outside tests: poll the source collection until extraction leaves `pending`, and use the retry endpoint after a recoverable failure. Imports replace only the current tenant's professional-profile domain and remap source/evidence identifiers. Exports omit blob paths, uploaded bytes, and extracted private text. All non-read requests require the browser session cookie and `X-CSRF-Token`. API docs are available at `/api/docs` on the running instance.
