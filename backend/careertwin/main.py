@@ -34,6 +34,7 @@ from careertwin.api import (
 )
 from careertwin.config import get_settings
 from careertwin.database import SessionLocal
+from careertwin.services.crypto_keys import decode_aes256_key
 from careertwin.services.ingestion import clamav_ready
 
 log = structlog.get_logger("careertwin")
@@ -120,6 +121,20 @@ def readiness() -> JSONResponse:
         checks["redis"] = "ok" if client.ping() else "unavailable"
     except Exception as exc:
         checks["redis"] = type(exc).__name__
+    if settings.blob_encryption_key or settings.connector_encryption_key:
+        try:
+            if not settings.blob_encryption_key or not settings.connector_encryption_key:
+                raise ValueError("Both encryption keys are required")
+            decode_aes256_key(
+                settings.blob_encryption_key.get_secret_value(), "BLOB_ENCRYPTION_KEY"
+            )
+            decode_aes256_key(
+                settings.connector_encryption_key.get_secret_value(),
+                "CONNECTOR_ENCRYPTION_KEY",
+            )
+            checks["encryption_keys"] = "ok"
+        except ValueError as exc:
+            checks["encryption_keys"] = type(exc).__name__
     provider = provider_registry(settings).get(settings.llm_default_provider)
     checks["model_provider"] = "ok" if provider and provider.ready() else "unavailable"
     if settings.clamav_host:

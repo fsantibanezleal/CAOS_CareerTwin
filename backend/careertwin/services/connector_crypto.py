@@ -10,6 +10,7 @@ from typing import Any
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from careertwin.config import Settings
+from careertwin.services.crypto_keys import decode_aes256_key
 
 VERSION = b"CTC1"
 
@@ -18,13 +19,7 @@ def _key(settings: Settings) -> bytes:
     if not settings.connector_encryption_key:
         raise ValueError("Connector encryption is not configured")
     value = settings.connector_encryption_key.get_secret_value()
-    try:
-        key = base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
-    except (TypeError, ValueError) as exc:
-        raise ValueError("CONNECTOR_ENCRYPTION_KEY must be URL-safe base64") from exc
-    if len(key) != 32:
-        raise ValueError("CONNECTOR_ENCRYPTION_KEY must decode to exactly 32 bytes")
-    return key
+    return decode_aes256_key(value, "CONNECTOR_ENCRYPTION_KEY")
 
 
 def seal_json(
