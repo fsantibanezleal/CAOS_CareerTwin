@@ -39,6 +39,7 @@ from careertwin.services import calendar_connector, email_connector, model_extra
 from careertwin.services.blob import MAGIC, FileBlobStore, StoredBlob
 from careertwin.services.calendar_connector import sync_calendar
 from careertwin.services.connector_crypto import open_json, seal_json
+from careertwin.services.crypto_keys import decode_aes256_key
 from careertwin.services.email_connector import sync_email
 from careertwin.services.model_extraction import (
     extract_opportunity_requirements,
@@ -101,12 +102,21 @@ def test_connector_encryption_rejects_missing_or_malformed_keys(tmp_path: Path) 
     missing = Settings(_env_file=None, connector_encryption_key=None)
     with pytest.raises(ValueError, match="not configured"):
         seal_json(missing, "workspace", "google", "token", {})
-    malformed = Settings(_env_file=None, connector_encryption_key=SecretStr("short"))
-    with pytest.raises(ValueError, match=r"URL-safe base64|exactly 32 bytes"):
-        seal_json(malformed, "workspace", "google", "token", {})
+    with pytest.raises(ValidationError, match="CONNECTOR_ENCRYPTION_KEY"):
+        Settings(_env_file=None, connector_encryption_key=SecretStr("short"))
     settings = encryption_settings(tmp_path)
     with pytest.raises(ValueError, match="cannot be decrypted"):
         open_json(settings, "workspace", "google", "token", "not-a-ciphertext")
+
+
+def test_aes256_key_decoder_accepts_only_canonical_32_byte_values() -> None:
+    raw = bytes(range(32))
+    unpadded = base64.urlsafe_b64encode(raw).decode().rstrip("=")
+    assert decode_aes256_key(unpadded, "SYNTHETIC_KEY") == raw
+    assert decode_aes256_key(f"{unpadded}=", "SYNTHETIC_KEY") == raw
+    for malformed in ("short", "0" * 64, "a" * 43, f"{unpadded}+", f" {unpadded}"):
+        with pytest.raises(ValueError, match="SYNTHETIC_KEY"):
+            decode_aes256_key(malformed, "SYNTHETIC_KEY")
 
 
 def test_typed_model_critic_accepts_exact_quotes_and_rejects_inference(
