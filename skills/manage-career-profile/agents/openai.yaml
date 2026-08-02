@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Career Profile"
+  short_description: "Curate one evidence-grounded professional profile"
+  default_prompt: "Use $manage-career-profile to ingest, review, and curate my CareerTwin profile."

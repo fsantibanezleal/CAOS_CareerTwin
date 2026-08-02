@@ -1,0 +1,19 @@
+name: Bug report
+description: Report a reproducible defect without personal data or secrets
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Never attach a real CV, token, database, log containing personal data, or production screenshot.
+  - type: input
+    id: version
+    attributes: { label: Version or commit }
+    validations: { required: true }
+  - type: textarea
+    id: reproduction
+    attributes: { label: Synthetic reproduction, description: Include the smallest synthetic steps and expected/actual behavior. }
+    validations: { required: true }
+  - type: textarea
+    id: security
+    attributes: { label: Security or privacy impact, description: Use the private security reporting path for exploitable vulnerabilities. }

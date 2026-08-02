@@ -1,0 +1,99 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "careertwin-app"
+version = "0.1.0a1"
+description = "Evidence-first self-hostable career intelligence workbench"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "alembic==1.18.5",
+  "argon2-cffi==25.1.0",
+  "arq==0.28.0",
+  "email-validator==2.3.0",
+  "fastapi==0.141.1",
+  "httpx==0.28.1",
+  "icalendar==6.3.2",
+  "langgraph==1.2.10",
+  "langgraph-checkpoint-postgres==3.1.1",
+  "orjson==3.11.9",
+  "pgvector==0.5.0",
+  "prometheus-client==0.26.0",
+  "psycopg[binary,pool]==3.3.4",
+  "pydantic==2.13.4",
+  "pydantic-ai-slim[anthropic,google,openai,xai]==1.107.1",
+  "pydantic-settings==2.14.2",
+  "pypdf==6.14.2",
+  "python-docx==1.2.0",
+  "python-multipart==0.0.32",
+  "redis==5.3.1",
+  "sqlalchemy==2.0.51",
+  "structlog==25.5.0",
+  "trafilatura==2.2.0",
+  "uvicorn[standard]==0.52.1",
+]
+
+[project.optional-dependencies]
+ingestion = ["docling>=2.48,<3"]
+observability = [
+  "langfuse>=3.2,<4",
+  "opentelemetry-api>=1.36,<2",
+  "opentelemetry-exporter-otlp>=1.36,<2",
+  "opentelemetry-instrumentation-fastapi>=0.57b0,<1",
+  "opentelemetry-sdk>=1.36,<2",
+]
+dev = [
+  "coverage[toml]==7.15.2",
+  "mypy==1.20.2",
+  "pip-audit==2.10.1",
+  "pydantic-evals==1.107.1",
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "pytest-cov==7.1.0",
+  "ruff==0.16.1",
+  "types-icalendar==6.3.2.20260712",
+]
+
+[project.scripts]
+careertwin = "careertwin.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/careertwin"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+  "integration: requires service dependencies",
+  "security: exercises a security boundary",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["backend", "tests", "evals"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "S", "UP", "B", "A", "C4", "DTZ", "PIE", "RUF"]
+ignore = ["B008", "E501", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S105", "S106", "S107"]
+
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["alembic"]
+
+[tool.coverage.run]
+source = ["backend/careertwin"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
