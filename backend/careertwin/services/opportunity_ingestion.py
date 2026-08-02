@@ -129,6 +129,7 @@ def capture_url(url: str, max_bytes: int) -> CapturedOpportunity:
                 )
                 if current.scheme == "https":
                     context = ssl.create_default_context()
+                    context.minimum_version = ssl.TLSVersion.TLSv1_2
                     raw_socket = context.wrap_socket(raw_socket, server_hostname=current.hostname)
                 connection = http.client.HTTPConnection(
                     current.hostname, current.port, timeout=15
