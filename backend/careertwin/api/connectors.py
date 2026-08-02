@@ -54,6 +54,20 @@ from careertwin.services.queue import enqueue_source
 router = APIRouter(prefix="/api/connectors", tags=["connectors"])
 
 
+def _oauth_return_url(redirect_after: str, provider: str) -> str:
+    """Map persisted OAuth metadata onto closed, same-origin route constants."""
+    if redirect_after == "/profile":
+        destination = "/profile"
+    elif redirect_after == "/opportunities":
+        destination = "/opportunities"
+    elif redirect_after == "/today":
+        destination = "/today"
+    else:
+        destination = "/pipeline"
+    provider_value = "google" if provider == "google" else "microsoft"
+    return f"{destination}?connector={provider_value}"
+
+
 def _connection(db: Db, workspace_id: str, connection_id: str) -> ExternalConnection:
     item = db.scalar(
         select(ExternalConnection).where(
@@ -133,7 +147,7 @@ def connector_callback(
         )
     except (ValueError, httpx.HTTPError) as exc:
         raise HTTPException(status_code=422, detail="Connector authorization failed") from exc
-    return RedirectResponse(url=f"{redirect_after}?connector={provider}", status_code=303)
+    return RedirectResponse(url=_oauth_return_url(redirect_after, provider), status_code=303)
 
 
 @router.delete("/connections/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
