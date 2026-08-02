@@ -12,11 +12,11 @@ CareerTwin is user-controlled career research, not an employer selection product
 
 ## Storage and disclosure
 
-Canonical data is in the private database; source bytes are in private blob storage. Public Git contains none of it. GitHub tokens are request-memory-only. Provider keys are server environment only. Confirmed evidence and optional opportunity context are disclosed to the provider chosen by the user/operator for a chat turn; the UI names that provider.
+Canonical data is in the private database; source bytes are in private blob storage. Public Git contains none of it. GitHub tokens are request-memory-only. Provider and observability keys are server environment only. Confirmed evidence and optional opportunity context are disclosed to the provider chosen by the user/operator for a chat turn; the UI names that provider. Optional Langfuse observations receive redacted operational metadata only: hashed subject, input digest, counts, provider/specialist labels, attempt and terminal status—not prompts, evidence, answers, email/account values, or raw workspace IDs.
 
 ## User controls
 
-The seeker can review/reject extracted claims, edit profile/opportunities, delete conversations and opportunities, export portable data, change password, and request account disable/purge from the superuser. Disable is recoverable; purge is explicit and irreversible. Retention schedules are operator-configurable and must include backups.
+The seeker can review/reject extracted claims, edit profile/opportunities, import/export a portable profile, delete conversations and opportunities, cancel/retry agent runs, exchange calendar events, export all canonical data, change password, and request account disable/purge from the superuser. Disable is recoverable; purge is explicit and irreversible. Retention schedules are operator-configurable and must include backups.
 
 ## Sensitive inference
 

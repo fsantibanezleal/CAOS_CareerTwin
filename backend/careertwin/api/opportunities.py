@@ -10,12 +10,21 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
 from careertwin.api.dependencies import Config, CsrfUser, CurrentUser, Db
-from careertwin.models import Opportunity, Requirement, Source, SourceStatus
+from careertwin.models import (
+    Opportunity,
+    OpportunitySnapshot,
+    Requirement,
+    Source,
+    SourceStatus,
+    TargetSet,
+)
 from careertwin.schemas import (
     OpportunityCreate,
     OpportunityRead,
     OpportunityUrlCapture,
     RequirementInput,
+    TargetSetCreate,
+    TargetSetRead,
 )
 from careertwin.services.audit import record_audit
 from careertwin.services.blob import FileBlobStore
@@ -50,6 +59,37 @@ def _find(db: Db, workspace_id: str, opportunity_id: str) -> Opportunity:
     return item
 
 
+def _save_snapshot(db: Db, item: Opportunity) -> OpportunitySnapshot:
+    """Persist the current reviewed opportunity and requirement revision as an immutable snapshot."""
+    snapshot = OpportunitySnapshot(
+        workspace_id=item.workspace_id,
+        opportunity_id=item.id,
+        version=item.version,
+        snapshot=OpportunityRead.model_validate(item).model_dump(mode="json"),
+        source_sha256=item.source_sha256,
+    )
+    db.add(snapshot)
+    return snapshot
+
+
+def _validate_target_opportunities(db: Db, workspace_id: str, ids: list[str]) -> list[str]:
+    unique = list(dict.fromkeys(ids))
+    if not unique:
+        return []
+    found = set(
+        db.scalars(
+            select(Opportunity.id).where(
+                Opportunity.workspace_id == workspace_id, Opportunity.id.in_(unique)
+            )
+        ).all()
+    )
+    if found != set(unique):
+        raise HTTPException(
+            status_code=400, detail="Every target-set opportunity must belong to this workspace"
+        )
+    return unique
+
+
 @router.get("", response_model=list[OpportunityRead])
 def list_opportunities(user: CurrentUser, db: Db) -> list[OpportunityRead]:
     """List the current seeker's opportunities, newest activity first."""
@@ -60,6 +100,68 @@ def list_opportunities(user: CurrentUser, db: Db) -> list[OpportunityRead]:
         .order_by(Opportunity.updated_at.desc())
     ).all()
     return [OpportunityRead.model_validate(item) for item in items]
+
+
+@router.get("/target-sets", response_model=list[TargetSetRead])
+def list_target_sets(user: CurrentUser, db: Db) -> list[TargetSetRead]:
+    """List named opportunity portfolios and their explicit scenario assumptions."""
+    items = db.scalars(
+        select(TargetSet)
+        .where(TargetSet.workspace_id == user.workspace.id)
+        .order_by(TargetSet.updated_at.desc())
+    ).all()
+    return [TargetSetRead.model_validate(item) for item in items]
+
+
+@router.post("/target-sets", response_model=TargetSetRead, status_code=status.HTTP_201_CREATED)
+def create_target_set(payload: TargetSetCreate, user: CsrfUser, db: Db) -> TargetSetRead:
+    """Create a tenant-owned portfolio from already saved opportunities."""
+    item = TargetSet(
+        workspace_id=user.workspace.id,
+        **payload.model_dump(exclude={"opportunity_ids"}),
+        opportunity_ids=_validate_target_opportunities(
+            db, user.workspace.id, payload.opportunity_ids
+        ),
+    )
+    db.add(item)
+    db.flush()
+    record_audit(db, user, "target_set.created", "target_set", item.id)
+    return TargetSetRead.model_validate(item)
+
+
+@router.put("/target-sets/{target_set_id}", response_model=TargetSetRead)
+def update_target_set(
+    target_set_id: str, payload: TargetSetCreate, user: CsrfUser, db: Db
+) -> TargetSetRead:
+    """Replace a target-set definition without mutating its constituent opportunities."""
+    item = db.scalar(
+        select(TargetSet).where(
+            TargetSet.id == target_set_id, TargetSet.workspace_id == user.workspace.id
+        )
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Target set not found")
+    item.name = payload.name
+    item.description = payload.description
+    item.strategy = payload.strategy
+    item.opportunity_ids = _validate_target_opportunities(
+        db, user.workspace.id, payload.opportunity_ids
+    )
+    record_audit(db, user, "target_set.updated", "target_set", item.id)
+    return TargetSetRead.model_validate(item)
+
+
+@router.delete("/target-sets/{target_set_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_target_set(target_set_id: str, user: CsrfUser, db: Db) -> None:
+    """Delete a target-set scenario without deleting saved opportunities."""
+    result = db.execute(
+        delete(TargetSet).where(
+            TargetSet.id == target_set_id, TargetSet.workspace_id == user.workspace.id
+        )
+    )
+    if not getattr(result, "rowcount", 0):
+        raise HTTPException(status_code=404, detail="Target set not found")
+    record_audit(db, user, "target_set.deleted", "target_set", target_set_id)
 
 
 @router.get("/{opportunity_id}", response_model=OpportunityRead)
@@ -91,6 +193,7 @@ def create_opportunity(payload: OpportunityCreate, user: CsrfUser, db: Db) -> Op
         db, user, "opportunity.created", "opportunity", item.id, {"source_kind": item.source_kind}
     )
     db.flush()
+    _save_snapshot(db, item)
     return OpportunityRead.model_validate(item)
 
 
@@ -115,6 +218,7 @@ def update_opportunity(
     ]
     record_audit(db, user, "opportunity.updated", "opportunity", item.id, {"version": item.version})
     db.flush()
+    _save_snapshot(db, item)
     return OpportunityRead.model_validate(item)
 
 
@@ -167,6 +271,7 @@ def capture_opportunity_url(
         {"requirements": len(item.requirements)},
     )
     db.flush()
+    _save_snapshot(db, item)
     return OpportunityRead.model_validate(item)
 
 
@@ -233,7 +338,32 @@ async def capture_opportunity_file(
         {"requirements": len(item.requirements), "size": stored.size},
     )
     db.flush()
+    _save_snapshot(db, item)
     return OpportunityRead.model_validate(item)
+
+
+@router.get("/{opportunity_id}/history")
+def opportunity_history(opportunity_id: str, user: CurrentUser, db: Db) -> list[dict[str, object]]:
+    """Return immutable reviewed opportunity revisions, newest first."""
+    _find(db, user.workspace.id, opportunity_id)
+    snapshots = db.scalars(
+        select(OpportunitySnapshot)
+        .where(
+            OpportunitySnapshot.workspace_id == user.workspace.id,
+            OpportunitySnapshot.opportunity_id == opportunity_id,
+        )
+        .order_by(OpportunitySnapshot.version.desc())
+    ).all()
+    return [
+        {
+            "id": item.id,
+            "version": item.version,
+            "source_sha256": item.source_sha256,
+            "snapshot": item.snapshot,
+            "created_at": item.created_at,
+        }
+        for item in snapshots
+    ]
 
 
 @router.post("/{opportunity_id}/propose-requirements")
@@ -250,6 +380,14 @@ def extract_requirement_proposals(
 @router.delete("/{opportunity_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_opportunity(opportunity_id: str, user: CsrfUser, db: Db) -> None:
     """Delete one tenant-owned opportunity and its dependent matches and applications."""
+    target_sets = db.scalars(
+        select(TargetSet).where(TargetSet.workspace_id == user.workspace.id)
+    ).all()
+    for target_set in target_sets:
+        if opportunity_id in target_set.opportunity_ids:
+            target_set.opportunity_ids = [
+                item for item in target_set.opportunity_ids if item != opportunity_id
+            ]
     result = db.execute(
         delete(Opportunity).where(
             Opportunity.id == opportunity_id, Opportunity.workspace_id == user.workspace.id

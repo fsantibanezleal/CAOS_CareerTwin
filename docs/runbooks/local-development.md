@@ -28,7 +28,7 @@ Use `--code` for source mode. The setup script creates an ignored `.env` with lo
 
 ## Verification
 
-`scripts/test.*` runs Ruff, strict MyPy, Pytest, ESLint, Vitest, TypeScript, and Vite production build. With an instance running, `scripts/verify.*` adds liveness and response-header checks. `scripts/doctor.*` reports tool/database/runtime availability without printing connection strings or credentials.
+`scripts/test.*` runs Ruff, strict MyPy, Pytest, agent evaluations, the fixed representative-volume contract, ESLint, Vitest/axe, TypeScript, and the Vite production build. The volume fixture always creates an ephemeral synthetic SQLite database; it cannot target configured personal or production data. With an instance running, `scripts/verify.*` adds liveness and response-header checks. `scripts/doctor.*` reports tool/database/runtime availability without printing connection strings or credentials.
 
 See [dependency maintenance](dependency-maintenance.md) before accepting automated updates.
 

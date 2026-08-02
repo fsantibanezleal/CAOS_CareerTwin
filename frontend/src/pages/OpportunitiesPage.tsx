@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowUpRight, BriefcaseBusiness, Building2, CalendarClock, Check, FileUp, Globe2, LayoutGrid, Link2, List, MapPin, Plus, Radar, Search, Sparkles, X } from 'lucide-react'
+import { ArrowUpRight, BriefcaseBusiness, Building2, CalendarClock, Check, FileUp, FolderKanban, Globe2, History, LayoutGrid, Link2, List, MapPin, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { api, json } from '../api'
 import { OpportunityLandscape } from '../components/Visualizations'
 import { EmptyState, ErrorState, ExternalLink, Loading, PageHeader, Panel } from '../components/Primitives'
-import type { Landscape, Opportunity, Requirement } from '../types'
+import type { Landscape, Opportunity, OpportunitySnapshot, Requirement, TargetSet } from '../types'
 
 type CaptureMode = 'manual' | 'paste' | 'url' | 'file'
 
@@ -46,6 +46,7 @@ function CaptureDialog({ open, onClose }: { open: boolean; onClose: () => void }
 
 function RequirementEditor({ opportunity }: { opportunity: Opportunity }) {
   const client = useQueryClient()
+  const history = useQuery({ queryKey: ['opportunity-history', opportunity.id], queryFn: () => api<OpportunitySnapshot[]>(`/api/opportunities/${opportunity.id}/history`) })
   const [draft, setDraft] = useState(opportunity)
   const update = useMutation({ mutationFn: () => api(`/api/opportunities/${opportunity.id}`, json('PUT', { ...draft, source_url: draft.source_url || null, requirements: draft.requirements.map((item) => ({ category: item.category, label: item.label, normalized_name: item.normalized_name, taxonomy_uri: item.taxonomy_uri, importance: item.importance, weight: item.weight, minimum_level: item.minimum_level, source_locator: item.source_locator })) })), onSuccess: () => { client.invalidateQueries({ queryKey: ['opportunities'] }); client.invalidateQueries({ queryKey: ['landscape'] }) } })
   const propose = useMutation({ mutationFn: () => api<Requirement[]>(`/api/opportunities/${opportunity.id}/propose-requirements`, { method: 'POST' }), onSuccess: (values) => setDraft((current) => ({ ...current, requirements: values.map((value, index) => ({ ...value, id: `proposal-${index}` })) })) })
@@ -58,8 +59,33 @@ function RequirementEditor({ opportunity }: { opportunity: Opportunity }) {
         <div className="requirement-header"><div><h3>Atomic requirements</h3><p>Eligibility is evaluated separately from weighted alignment.</p></div><div><button type="button" className="button ghost" onClick={() => propose.mutate()}><Sparkles /> Re-extract</button><button type="button" className="button secondary" onClick={addRequirement}><Plus /> Add</button></div></div>
         <div className="requirements-list">{draft.requirements.map((item) => <div key={item.id}><select value={item.importance} onChange={(event) => requirement(item.id, 'importance', event.target.value)}><option value="eligibility">Eligibility</option><option value="required">Required</option><option value="preferred">Preferred</option></select><select value={item.category} onChange={(event) => requirement(item.id, 'category', event.target.value)}><option value="skill">Skill</option><option value="experience">Experience</option><option value="education">Education</option><option value="location">Location</option><option value="authorization">Authorization</option><option value="language">Language</option></select><input value={item.label} onChange={(event) => requirement(item.id, 'label', event.target.value)} placeholder="Requirement" /><label>Weight<input type="number" min="0" max="10" step="0.25" value={item.weight} onChange={(event) => requirement(item.id, 'weight', Number(event.target.value))} /></label><button type="button" className="icon-button" onClick={() => setDraft((current) => ({ ...current, requirements: current.requirements.filter((value) => value.id !== item.id) }))}><X /></button></div>)}</div>
         {(update.error || propose.error) && <ErrorState error={update.error || propose.error} />}
+        <details className="evidence-history"><summary><History /> Immutable revision history ({history.data?.length ?? 0})</summary>{history.data?.map((item) => <div key={item.id}><span className="status-badge">Version {item.version}</span><p><b>{item.snapshot.title}</b> · {item.snapshot.requirements.length} requirements · {new Date(item.created_at).toLocaleString()}</p></div>)}</details>
         <div className="form-actions"><span>{draft.requirements.length} requirements under your control</span><button className="button primary"><Check /> Save reviewed version</button></div>
       </form>
+    </Panel>
+  )
+}
+
+function TargetSetManager({ opportunities }: { opportunities: Opportunity[] }) {
+  const client = useQueryClient()
+  const [name, setName] = useState('')
+  const [selected, setSelected] = useState<string[]>([])
+  const targetSets = useQuery({ queryKey: ['target-sets'], queryFn: () => api<TargetSet[]>('/api/opportunities/target-sets') })
+  const create = useMutation({
+    mutationFn: () => api<TargetSet>('/api/opportunities/target-sets', json('POST', { name, description: '', opportunity_ids: selected, strategy: { weighting: 'equal' } })),
+    onSuccess: () => { setName(''); setSelected([]); client.invalidateQueries({ queryKey: ['target-sets'] }) },
+  })
+  const remove = useMutation({ mutationFn: (id: string) => api(`/api/opportunities/target-sets/${id}`, { method: 'DELETE' }), onSuccess: () => client.invalidateQueries({ queryKey: ['target-sets'] }) })
+  const toggle = (id: string) => setSelected((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])
+  return (
+    <Panel title="Target portfolios" subtitle="Save named job-search scenarios so global alignment always has an explicit denominator" actions={<span className="status-badge"><FolderKanban /> {targetSets.data?.length ?? 0} sets</span>}>
+      <form className="target-set-compose" onSubmit={(event) => { event.preventDefault(); create.mutate() }}>
+        <label>Portfolio name<input value={name} onChange={(event) => setName(event.target.value)} placeholder="Remote platform leadership" required /></label>
+        <fieldset><legend>Include saved opportunities</legend><div className="target-options">{opportunities.map((item) => <label key={item.id}><input type="checkbox" checked={selected.includes(item.id)} onChange={() => toggle(item.id)} /><span><b>{item.title}</b><small>{item.employer || 'Employer unknown'}</small></span></label>)}</div></fieldset>
+        <button className="button primary" disabled={!selected.length || create.isPending}><Plus /> Save target portfolio</button>
+      </form>
+      {(targetSets.error || create.error || remove.error) && <ErrorState error={targetSets.error || create.error || remove.error} />}
+      {targetSets.data?.length ? <div className="target-set-list">{targetSets.data.map((item) => <article key={item.id}><div><b>{item.name}</b><small>{item.opportunity_ids.length} role{item.opportunity_ids.length === 1 ? '' : 's'} · explicit scenario</small></div><button className="icon-button" aria-label={`Delete ${item.name}`} onClick={() => remove.mutate(item.id)}><Trash2 /></button></article>)}</div> : <EmptyState title="No target portfolio yet" description="Select the roles you genuinely want to compare as one career-search scenario." />}
     </Panel>
   )
 }
@@ -78,6 +104,7 @@ export function OpportunitiesPage() {
   return (
     <>
       <PageHeader eyebrow="Opportunity research" title="Collect signals. Keep the source. Decide what matters." description="Capture individual roles from public pages or documents, review the structure, and understand patterns only within your saved research." actions={<button className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> Add opportunity</button>} />
+      <TargetSetManager opportunities={opportunities.data} />
       <div className="list-toolbar"><label className="search-field"><Search /><input placeholder="Search roles, employers, industries…" value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> Research cards</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> Landscape</button></div></div>
       {view === 'landscape' ? <Panel title="Your search landscape" subtitle="A descriptive view of saved roles—not the global labor market"><OpportunityLandscape data={landscape.data} /></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{item.status}</span></header><h2>{item.title}</h2><p>{item.employer || 'Employer not specified'}</p><div className="opportunity-meta"><span><MapPin />{item.location || item.remote_mode}</span><span><BriefcaseBusiness />{item.seniority || 'Seniority unknown'}</span>{item.deadline_at && <span><CalendarClock />{new Date(item.deadline_at).toLocaleDateString()}</span>}</div><footer><span>{item.requirements.length} structured requirements</span><ArrowUpRight /></footer></button>) : <EmptyState title="No opportunity matches this view" description="Capture a role from a URL, document, pasted text, or manual entry." action={<button className="button primary" onClick={() => setCaptureOpen(true)}>Add the first role</button>} />}</section>{selected ? <RequirementEditor key={`${selected.id}-${selected.version}`} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>Select a research card</h3><p>Review its extracted content and atomic requirements here.</p></aside>}</div>}
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />

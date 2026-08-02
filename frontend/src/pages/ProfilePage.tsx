@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpenCheck, Check, CircleUserRound, Code2, FileStack, FileUp, GitBranch, GraduationCap, Network, Plus, ShieldCheck, Sparkles, X } from 'lucide-react'
+import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Network, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api, json } from '../api'
 import { CareerRiver, EvidenceMatrix, ProfileConstellation } from '../components/Visualizations'
@@ -102,6 +102,45 @@ function ArtifactStudio({ claims }: { claims: Claim[] }) {
   )
 }
 
+function ProfilePortability() {
+  const client = useQueryClient()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [format, setFormat] = useState<'interchange' | 'json-resume'>('interchange')
+  const [notice, setNotice] = useState('')
+  const download = useMutation({
+    mutationFn: async (selected: 'interchange' | 'json-resume') => {
+      const document = await api<Record<string, unknown>>(`/api/profile/${selected}`)
+      const url = URL.createObjectURL(new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' }))
+      const anchor = window.document.createElement('a')
+      anchor.href = url
+      anchor.download = selected === 'interchange' ? 'careertwin-profile.json' : 'resume.json'
+      anchor.click()
+      URL.revokeObjectURL(url)
+    },
+  })
+  const importDocument = useMutation({
+    mutationFn: async (file: File) => {
+      const document = JSON.parse(await file.text()) as Record<string, unknown>
+      return api<{ counts: Record<string, number> }>(`/api/profile/${format}/import`, json('POST', document))
+    },
+    onSuccess: (result) => {
+      setNotice(`Imported ${Object.values(result.counts).reduce((sum, count) => sum + count, 0)} profile records.`)
+      for (const key of ['profile', 'skills', 'claims', 'experiences', 'education', 'profile-graph', 'today']) client.invalidateQueries({ queryKey: [key] })
+      if (fileRef.current) fileRef.current.value = ''
+    },
+  })
+  return (
+    <Panel title="Portable professional data" subtitle="Own a lossless CareerTwin archive or exchange a standards-based JSON Resume">
+      <div className="portable-profile">
+        <div><b>Export</b><p>Exports omit uploaded file bodies and extracted private text. Evidence references remain portable.</p><div className="form-actions"><button className="button secondary" onClick={() => download.mutate('interchange')}><Download /> CareerTwin archive</button><button className="button secondary" onClick={() => download.mutate('json-resume')}><Download /> JSON Resume</button></div></div>
+        <div><b>Import</b><p>Import replaces only your own professional-profile domain and remaps all internal evidence identifiers.</p><div className="form-actions"><select aria-label="Profile import format" value={format} onChange={(event) => setFormat(event.target.value as typeof format)}><option value="interchange">CareerTwin archive</option><option value="json-resume">JSON Resume</option></select><input ref={fileRef} hidden type="file" accept="application/json,.json" onChange={(event) => event.target.files?.[0] && importDocument.mutate(event.target.files[0])} /><button className="button primary" onClick={() => fileRef.current?.click()} disabled={importDocument.isPending}><Upload /> Import for review</button></div></div>
+      </div>
+      {(download.error || importDocument.error) && <ErrorState error={download.error || importDocument.error} />}
+      {notice && <div className="connector-result"><Check /><div><b>Portable profile restored</b><p>{notice}</p></div></div>}
+    </Panel>
+  )
+}
+
 export function ProfilePage() {
   const [tab, setTab] = useState<ProfileTab>('overview')
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api<Profile>('/api/profile') })
@@ -119,7 +158,7 @@ export function ProfilePage() {
     <>
       <PageHeader eyebrow="Your professional twin" title={profile.data.headline || 'Build a profile that can show its work.'} description="Curate your story, trace claims to their sources, and inspect capability without confusing missing evidence for weakness." />
       <nav className="section-tabs" aria-label="Profile views">{tabs.map(([key, label, icon]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{icon}{label}</button>)}</nav>
-      {tab === 'overview' && <div className="profile-layout"><Panel title="Identity and direction" subtitle="User-curated canonical fields"><ProfileEditor profile={profile.data} /></Panel><SkillsPanel skills={skills.data} claims={claims.data} /><TimelineEditors experiences={experiences.data} education={education.data} /></div>}
+      {tab === 'overview' && <div className="profile-layout"><Panel title="Identity and direction" subtitle="User-curated canonical fields"><ProfileEditor profile={profile.data} /></Panel><SkillsPanel skills={skills.data} claims={claims.data} /><TimelineEditors experiences={experiences.data} education={education.data} /><ProfilePortability /></div>}
       {tab === 'evidence' && <EvidenceInbox claims={claims.data} />}
       {tab === 'graph' && <Panel title="Professional constellation" subtitle="Every edge is inspectable; confirmed evidence anchors capability"><ProfileConstellation data={graph.data.graph} /></Panel>}
       {tab === 'river' && <div className="profile-layout"><Panel title="Career river" subtitle="Experience and education unfolding across time"><CareerRiver rows={graph.data.river} /></Panel><Panel title="Evidence matrix" subtitle="Capability level and source coverage side by side"><EvidenceMatrix rows={graph.data.matrix} /></Panel></div>}

@@ -13,6 +13,7 @@
 - [Visualization system](visualization.md): Atalaya lessons, selected engines, accessibility, and honest graphics.
 - [Security threat model](security/threat-model.md) and [privacy model](security/privacy.md).
 - [Research synthesis](research/README.md): comparable products, standards, primary sources, and resulting design choices.
+- [Repository skills](skills.md): auto-discovery, explicit invocation, versions, and safe use.
 - [ADRs](adr/README.md): accepted decisions and consequences.
 
 ## Runbooks

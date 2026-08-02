@@ -42,6 +42,15 @@ def build_recommendations(assessments: list[dict[str, Any]]) -> list[dict[str, A
                 "impact": impact,
                 "effort": effort,
                 "priority": priority,
+                "prerequisites": [],
+                "steps": [
+                    {
+                        "title": title,
+                        "requirement_id": item["requirement_id"],
+                        "status": "todo",
+                    }
+                ],
+                "progress": 0.0,
             }
         )
     return sorted(actions, key=lambda item: (-item["priority"], item["title"]))

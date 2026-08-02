@@ -5,7 +5,7 @@ description: Curate one CareerTwin seeker's professional profile from CVs, resum
 
 # Manage Career Profile
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Outcome
 
@@ -20,7 +20,8 @@ Maintain an accurate, source-traceable professional twin for the current authent
 5. Present extracted claims with source locator, confidence, and proposed state. Ask the seeker to confirm or reject each claim. Never interpret silence as approval.
 6. Add skills only with the seeker's chosen level and confirmed evidence links. An unlinked skill must remain visibly less substantiated.
 7. Update canonical profile fields with the current revision number. On a conflict, reload and present the difference; never overwrite blindly.
-8. Re-read the graph and summarize what changed, what is confirmed, what remains proposed, and where evidence is absent.
+8. Use CareerTwin interchange for lossless portability or JSON Resume for ecosystem exchange. Before import, state that the current seeker's profile-domain rows will be replaced; never import into another account by assumption.
+9. Re-read the graph and summarize what changed, what is confirmed, what remains proposed, and where evidence is absent.
 
 ## Guardrails
 
