@@ -41,7 +41,7 @@ Start at [`Entry_point.md`](Entry_point.md), then use the [documentation map](do
 
 ## Status
 
-`0.1.0-alpha.1`: feature-complete first public alpha under verification. See `CHANGELOG.md` for release notes and GitHub issues for tracked work.
+`0.1.0-alpha.2`: deployed first maintenance alpha with hardened origin parsing and supply-chain automation. See `CHANGELOG.md` for release notes and GitHub issues for tracked work.
 
 ## License
 
