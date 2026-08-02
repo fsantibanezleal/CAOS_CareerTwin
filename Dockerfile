@@ -1,4 +1,4 @@
-FROM node:24.18-alpine@sha256:f70403e87646dc51b45295f4b8b70cdad0b63d2297c4c9899119b03f7af7a6b3 AS frontend
+FROM node:26.4-alpine@sha256:725aeba2364a9b16beae49e180d83bd597dbd0b15c47f1f28875c290bfd255b9 AS frontend
 WORKDIR /src/frontend
 COPY frontend/package*.json ./
 RUN npm ci
