@@ -6,19 +6,19 @@ One authenticated account represents one professional seeker and owns exactly on
 
 ## Modules
 
-1. **Professional twin**: identity, narrative, preferences, links, skill evidence, experience, education, sources, GitHub snapshots, and visual projections.
+1. **Professional twin**: identity, narrative, preferences, links, skill evidence, experience, education, sources, GitHub snapshots, lossless/JSON Resume exchange, and visual projections.
 2. **Evidence inbox**: proposed/confirmed/rejected claims with provenance and confidence.
-3. **Opportunity research**: URL/file/paste/manual capture, reviewed metadata, atomic requirements, source hash, and version.
-4. **Matching**: deterministic immutable runs with eligibility, alignment, coverage, uncertainty, category components, and an evidence bridge.
-5. **Readiness**: gap-derived recommendations and user-selected tasks.
+3. **Opportunity research**: URL/file/paste/manual capture, reviewed metadata, atomic requirements, source hash, immutable revisions, and named target portfolios.
+4. **Matching**: deterministic immutable runs with eligibility, alignment, coverage, uncertainty, category components, an evidence bridge, and explicit portfolio scenarios.
+5. **Readiness**: gap-derived editable learning/action plans, shared-gap matrices, and user-selected tasks.
 6. **Artifact studio**: versioned résumé, cover-letter, interview-brief, and follow-up drafts assembled from confirmed evidence.
-7. **Pipeline**: legal stage transitions, immutable history, tasks, meetings, deadlines, calendar export, and denominator-aware personal analytics.
-8. **Career copilot**: provider-selectable, evidence-cited conversations and previewed changes.
+7. **Pipeline**: legal stage transitions, immutable history, contacts, tasks, meetings, deadlines, UID-idempotent calendar exchange, and denominator-aware personal analytics.
+8. **Career copilot**: provider-selectable, evidence-cited conversations, durable cancel/retry execution, and previewed changes.
 9. **Administration**: invite, disable/restore, session revocation, and explicit purge.
 
 ## Lifecycle
 
-The normal path is source -> proposed claims -> human decision -> curated graph -> reviewed opportunity -> match run -> recommendations/artifact -> application pipeline -> retrospective evidence. The user can enter at any module; CareerTwin must reveal missing prerequisites rather than fabricate them.
+The normal path is source → proposed claims → human decision → curated graph → reviewed opportunity/snapshot → named target portfolio → match run → editable recommendation/artifact → application/contact/agenda pipeline → retrospective evidence. The user can enter at any module; CareerTwin must reveal missing prerequisites rather than fabricate them.
 
 ## Explicit non-goals
 
@@ -31,4 +31,4 @@ The normal path is source -> proposed claims -> human decision -> curated graph 
 
 ## Honest language
 
-“Alignment” describes current confirmed evidence against user-reviewed requirements. “Coverage” describes how much can be resolved. “Unknown” is not weakness. Saved-opportunity analytics describe only the user's collection, and pipeline analytics describe only that person's process history.
+“Alignment” describes current confirmed evidence against user-reviewed requirements. “Coverage” describes how much can be resolved. “Unknown” is not weakness. A target-portfolio score describes only its named saved-role scenario. Pipeline analytics describe only that person's process history.

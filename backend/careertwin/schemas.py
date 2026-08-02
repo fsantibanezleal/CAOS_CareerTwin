@@ -222,6 +222,20 @@ class OpportunityUrlCapture(BaseModel):
     url: HttpUrl
 
 
+class TargetSetCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=5000)
+    opportunity_ids: list[str] = Field(default_factory=list, max_length=500)
+    strategy: dict[str, Any] = Field(default_factory=dict)
+
+
+class TargetSetRead(TargetSetCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
 class RequirementAssessment(BaseModel):
     requirement_id: str
     label: str
@@ -258,6 +272,17 @@ class RecommendationRead(ApiModel):
     effort: float
     priority: float
     status: str
+    prerequisites: list[str]
+    steps: list[dict[str, Any]]
+    progress: float
+
+
+class RecommendationUpdate(BaseModel):
+    effort: float | None = Field(default=None, ge=0, le=1)
+    status: Literal["suggested", "planned", "doing", "completed", "dismissed"] | None = None
+    prerequisites: list[str] | None = Field(default=None, max_length=100)
+    steps: list[dict[str, Any]] | None = Field(default=None, max_length=100)
+    progress: float | None = Field(default=None, ge=0, le=1)
 
 
 class ArtifactCreate(BaseModel):
@@ -323,12 +348,34 @@ class TaskCreate(BaseModel):
     due_at: datetime | None = None
     reminder_minutes: int | None = Field(default=None, ge=0, le=43_200)
     contact: dict[str, Any] = Field(default_factory=dict)
+    contact_id: str | None = None
 
 
 class TaskRead(TaskCreate):
     model_config = ConfigDict(from_attributes=True)
     id: str
     completed_at: datetime | None
+
+
+class ContactCreate(BaseModel):
+    application_id: str | None = None
+    name: str = Field(min_length=1, max_length=200)
+    email: EmailStr | None = None
+    organization: str = Field(default="", max_length=240)
+    role: str = Field(default="", max_length=160)
+    notes: str = Field(default="", max_length=10_000)
+
+
+class ContactRead(ApiModel):
+    id: str
+    application_id: str | None
+    name: str
+    email: str
+    organization: str
+    role: str
+    notes: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class GithubSnapshotRequest(BaseModel):
@@ -350,6 +397,24 @@ class ChatRequest(BaseModel):
     opportunity_id: str | None = None
 
 
+class AgentRunRead(ApiModel):
+    id: str
+    conversation_id: str
+    status: str
+    specialist: str | None
+    provider: str
+    input_digest: str
+    state: dict[str, Any]
+    error_code: str | None
+    parent_run_id: str | None
+    attempt: int
+    cancel_requested_at: datetime | None
+    started_at: datetime | None
+    finished_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
 class ChatResponse(BaseModel):
     conversation_id: str
     message_id: str
@@ -359,6 +424,7 @@ class ChatResponse(BaseModel):
     citations: list[dict[str, Any]]
     proposed_change_id: str | None = None
     usage: dict[str, Any] = Field(default_factory=dict)
+    run_id: str
 
 
 class ProposedChangeDecision(BaseModel):

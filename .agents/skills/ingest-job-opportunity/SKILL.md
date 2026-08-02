@@ -5,7 +5,7 @@ description: Capture and normalize one job opportunity in CareerTwin from a publ
 
 # Ingest Job Opportunity
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Outcome
 
@@ -20,7 +20,8 @@ Create a reviewable, versioned opportunity snapshot with atomic requirements, pr
 5. Detect duplicates by the returned source snapshot/hash; do not create near-identical copies without the seeker's instruction.
 6. Review the title, employer, full description, source, dates, location, remote mode, industry, area, seniority, compensation, and status.
 7. Split the posting into atomic requirements. Mark each as eligibility, required, or preferred; choose a category and bounded weight. Preserve its source locator.
-8. Save a reviewed version. Explain that structured content is the seeker's research record, not a claim about the entire labor market.
+8. Save a reviewed version and inspect its immutable revision history when the source changed.
+9. Add the opportunity to a named target portfolio only when the seeker wants it in that explicit comparison scenario. Explain that structured content is the seeker's research record, not a claim about the entire labor market.
 
 ## Guardrails
 
