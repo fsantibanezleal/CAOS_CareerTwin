@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ingest Job Opportunity"
+  short_description: "Capture and review one job opportunity"
+  default_prompt: "Use $ingest-job-opportunity to add and structure this opportunity in CareerTwin."

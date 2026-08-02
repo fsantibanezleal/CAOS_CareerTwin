@@ -1,0 +1,4 @@
+interface:
+  display_name: "Improve Career Readiness"
+  short_description: "Prioritize evidence-linked improvement actions"
+  default_prompt: "Use $improve-career-readiness to turn my match gaps into a practical improvement plan."

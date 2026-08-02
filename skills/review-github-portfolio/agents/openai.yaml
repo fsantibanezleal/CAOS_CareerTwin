@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review GitHub Portfolio"
+  short_description: "Create a safe evidence review from GitHub"
+  default_prompt: "Use $review-github-portfolio to inspect my selected GitHub repositories and stage evidence."
