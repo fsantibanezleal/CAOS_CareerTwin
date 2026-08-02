@@ -15,10 +15,15 @@ from sqlalchemy import select
 
 from careertwin.database import SessionLocal
 from careertwin.models import ProposedChange, User
-from careertwin.services import github_connector
+from careertwin.services import github_connector, ingestion
 from careertwin.services.blob import FileBlobStore
 from careertwin.services.github_connector import GithubConnectorError, snapshot_github
-from careertwin.services.ingestion import extract_text, inspect_content, propose_profile_claims
+from careertwin.services.ingestion import (
+    clamav_ready,
+    extract_text,
+    inspect_content,
+    propose_profile_claims,
+)
 from careertwin.services.normalization import label_similarity, normalize_label, token_set
 from careertwin.services.opportunity_ingestion import (
     _iter_job_postings,
@@ -42,6 +47,34 @@ def test_blob_store_is_opaque_idempotent_and_workspace_scoped(tmp_path: Path) ->
     store.delete_workspace("workspace-a")
     assert not (tmp_path / "blobs" / "workspacea").exists()
     store.delete_workspace("workspace-a")
+
+
+def test_clamav_readiness_uses_the_protocol_ping(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Connection:
+        sent = b""
+
+        def __enter__(self) -> Connection:
+            return self
+
+        def __exit__(self, *_: object) -> None:
+            return None
+
+        def sendall(self, payload: bytes) -> None:
+            self.sent = payload
+
+        def recv(self, _: int) -> bytes:
+            assert self.sent == b"zPING\0"
+            return b"PONG\0"
+
+    monkeypatch.setattr(ingestion.socket, "create_connection", lambda *_args, **_kwargs: Connection())
+    assert clamav_ready("clamav", 3310)
+    monkeypatch.setattr(
+        ingestion.socket,
+        "create_connection",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("unavailable")),
+    )
+    assert not clamav_ready("clamav", 3310)
+    assert not clamav_ready(None)
 
 
 def test_text_docx_html_inspection_and_conservative_proposals() -> None:
@@ -79,10 +112,34 @@ def test_requirement_normalization_and_recommendation_priorities() -> None:
     assert requirements[0]["importance"] == "required"
     actions = build_recommendations(
         [
-            {"requirement_id": "met", "label": "Already met", "status": "met", "importance": "required", "category": "skill"},
-            {"requirement_id": "unknown", "label": "Leadership", "status": "unknown", "importance": "required", "category": "experience"},
-            {"requirement_id": "missing", "label": "Kubernetes", "status": "missing", "importance": "required", "category": "skill"},
-            {"requirement_id": "partial", "label": "Communication", "status": "partial", "importance": "preferred", "category": "experience"},
+            {
+                "requirement_id": "met",
+                "label": "Already met",
+                "status": "met",
+                "importance": "required",
+                "category": "skill",
+            },
+            {
+                "requirement_id": "unknown",
+                "label": "Leadership",
+                "status": "unknown",
+                "importance": "required",
+                "category": "experience",
+            },
+            {
+                "requirement_id": "missing",
+                "label": "Kubernetes",
+                "status": "missing",
+                "importance": "required",
+                "category": "skill",
+            },
+            {
+                "requirement_id": "partial",
+                "label": "Communication",
+                "status": "partial",
+                "importance": "preferred",
+                "category": "experience",
+            },
         ]
     )
     assert {item["kind"] for item in actions} == {"evidence", "capability", "presentation"}
@@ -186,10 +243,15 @@ def test_github_snapshot_discards_invalid_names_and_proposes_owned_skills(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(github_connector.httpx, "Client", FakeGithubClient)
-    result = snapshot_github("synthetic-token-that-is-long-enough", ["invalid name", "synthetic/project"])
+    result = snapshot_github(
+        "synthetic-token-that-is-long-enough", ["invalid name", "synthetic/project"]
+    )
     assert result["login"] == "synthetic"
     assert len(result["repositories"]) == 1
-    assert {item["normalized_value"]["skill"] for item in result["proposed_claims"]} == {"python", "typescript"}
+    assert {item["normalized_value"]["skill"] for item in result["proposed_claims"]} == {
+        "python",
+        "typescript",
+    }
     assert "synthetic-token" not in str(result)
 
 
@@ -242,18 +304,27 @@ def test_agent_proposed_change_approval_allowlist_and_rejection(client: TestClie
     )
     assert approval.status_code == 200, approval.text
     assert client.get("/api/profile").json()["headline"] == "Approved headline"
-    assert client.post(
-        f"/api/agent/proposed-changes/{approved_id}/decision",
-        headers=csrf(token),
-        json={"decision": "rejected"},
-    ).status_code == 409
-    assert client.post(
-        f"/api/agent/proposed-changes/{rejected_id}/decision",
-        headers=csrf(token),
-        json={"decision": "rejected"},
-    ).status_code == 200
-    assert client.post(
-        f"/api/agent/proposed-changes/{invalid_id}/decision",
-        headers=csrf(token),
-        json={"decision": "approved"},
-    ).status_code == 400
+    assert (
+        client.post(
+            f"/api/agent/proposed-changes/{approved_id}/decision",
+            headers=csrf(token),
+            json={"decision": "rejected"},
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/agent/proposed-changes/{rejected_id}/decision",
+            headers=csrf(token),
+            json={"decision": "rejected"},
+        ).status_code
+        == 200
+    )
+    assert (
+        client.post(
+            f"/api/agent/proposed-changes/{invalid_id}/decision",
+            headers=csrf(token),
+            json={"decision": "approved"},
+        ).status_code
+        == 400
+    )

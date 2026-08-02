@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from types import SimpleNamespace
 
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import select
+
+from careertwin.database import SessionLocal
+from careertwin.models import User
 from tests.conftest import (
     INVITE_TEST_PASSWORD,
     ROTATED_TEST_PASSWORD,
@@ -96,3 +102,32 @@ def test_superuser_manages_accounts_without_a_content_browser(client: TestClient
         client.post(f"/api/admin/users/{invited_id}/restore", headers=csrf(token)).status_code
         == 200
     )
+
+
+def test_superuser_purge_removes_the_private_workspace_blob_tree(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Account deletion must erase encrypted files as well as relational rows."""
+    create_account("admin@example.com", superuser=True)
+    invited_id = create_account("purge@example.com")
+    with SessionLocal() as db:
+        workspace_id = str(
+            db.scalar(select(User).where(User.id == invited_id)).workspace.id  # type: ignore[union-attr]
+        )
+    deleted: list[str] = []
+    monkeypatch.setattr(
+        "careertwin.api.admin.configured_blob_store",
+        lambda _settings: SimpleNamespace(delete_workspace=deleted.append),
+    )
+    token = login(client, "admin@example.com")
+
+    response = client.delete(
+        f"/api/admin/users/{invited_id}",
+        params={"confirm": "purge@example.com"},
+        headers=csrf(token),
+    )
+
+    assert response.status_code == 204, response.text
+    assert deleted == [workspace_id]
+    with SessionLocal() as db:
+        assert db.get(User, invited_id) is None

@@ -7,8 +7,11 @@ from typing import Any
 
 import structlog
 from langfuse import Langfuse
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from careertwin.config import Settings
+from careertwin.models import AgentTrace
 
 log = structlog.get_logger("careertwin.tracing")
 
@@ -68,3 +71,37 @@ def emit_agent_trace(settings: Settings, payload: dict[str, Any]) -> bool:
     except Exception as exc:
         log.warning("agent.trace_failed", error_code=type(exc).__name__)
         return False
+
+
+def persist_agent_trace(
+    db: Session, workspace_id: str, run_id: str, payload: dict[str, Any]
+) -> AgentTrace:
+    """Persist the redacted local contract even when no external observer is configured."""
+    existing = db.scalar(
+        select(AgentTrace).where(
+            AgentTrace.run_id == run_id,
+            AgentTrace.workspace_id == workspace_id,
+        )
+    )
+    output = dict(payload["output"])
+    input_value = dict(payload["input"])
+    metadata = dict(payload["metadata"])
+    if existing:
+        existing.status = str(output["status"])
+        existing.specialist = str(output["specialist"])
+        existing.citation_count = int(output["citation_count"])
+        return existing
+    item = AgentTrace(
+        workspace_id=workspace_id,
+        run_id=run_id,
+        trace_id=str(payload["trace_id"]),
+        provider=str(metadata["provider"]),
+        specialist=str(output["specialist"]),
+        status=str(output["status"]),
+        input_digest=str(input_value["digest"]),
+        evidence_count=int(input_value["evidence_count"]),
+        citation_count=int(output["citation_count"]),
+        attempt=int(metadata["attempt"]),
+    )
+    db.add(item)
+    return item

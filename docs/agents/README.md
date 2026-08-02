@@ -14,9 +14,11 @@ Agents extract, draft, explain, and propose. Deterministic application services 
 6. Persist visible answer, citations, provider, specialist, and durable `AgentRun` state. No hidden chain of thought is stored or exposed. Queued runs commit before ARQ submission and can be polled, cancelled at durable boundaries, or retried as a new lineage-preserving attempt.
 7. If operations exist, create a `ProposedChange`. Only a later explicit decision can apply allowlisted profile paths.
 
+Prompt templates and JSON-schema contracts are versioned in `careertwin.agent.prompts`. The API exposes prompt/schema metadata but never system-prompt bodies. Tenant-scoped traces persist digests, counts, versions, latency, and sanitized error classes; raw evidence, prompts, outputs, and credentials are excluded.
+
 ## Providers
 
-`mock` provides offline deterministic behavior for tests. xAI/Grok, OpenAI, Anthropic, and Google are Pydantic AI adapters; Ollama uses a bounded structured-output adapter. Keys are optional, environment-only, and never returned by `/api/agent/providers`. The selected provider receives career context; operators must document its data-processing terms.
+Production registers only real providers. xAI/Grok, OpenAI, Anthropic, and Google are Pydantic AI adapters; Ollama uses a bounded structured-output adapter and is the self-hosted default. A deterministic contract double exists only under `APP_ENV=test` and cannot satisfy production validation. Keys are environment-only and never returned by `/api/agent/providers`. The selected hosted provider receives career context; operators must document its data-processing terms.
 
 ## Threat controls
 

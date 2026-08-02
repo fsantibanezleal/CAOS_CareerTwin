@@ -9,6 +9,14 @@
 !alembic/**
 !backend/
 !backend/**
+!docling_gateway/
+!docling_gateway/**
+!docker/
+!docker/docling/
+!docker/docling/patches/
+!docker/docling/patches/*.patch
+!extension/
+!extension/**
 !frontend/
 !frontend/package.json
 !frontend/package-lock.json

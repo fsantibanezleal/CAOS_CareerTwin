@@ -18,8 +18,9 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const handledRun = useRef<string | undefined>(undefined)
   const fileRef = useRef<HTMLInputElement>(null)
-  const providers = useQuery({ queryKey: ['providers'], queryFn: () => api<{ providers: string[]; default: string }>('/api/agent/providers'), enabled: open })
-  const [provider, setProvider] = useState('mock')
+  const providers = useQuery({ queryKey: ['providers'], queryFn: () => api<{ providers: string[]; default: string; local_private_provider: boolean }>('/api/agent/providers'), enabled: open })
+  const [provider, setProvider] = useState('')
+  const selectedProvider = provider || providers.data?.default || ''
   const run = useQuery({
     queryKey: ['agent-run', activeRun?.id],
     queryFn: () => api<AgentRun>(`/api/agent/runs/${activeRun?.id}`),
@@ -28,7 +29,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   })
   const currentRun = run.data ?? activeRun
   const send = useMutation({
-    mutationFn: (message: string) => api<AgentRun>('/api/agent/runs', json('POST', { conversation_id: conversationId, message, provider })),
+    mutationFn: (message: string) => api<AgentRun>('/api/agent/runs', json('POST', { conversation_id: conversationId, message, provider: selectedProvider })),
     onSuccess: (result) => {
       setConversationId(result.conversation_id)
       setActiveRun(result)
@@ -89,7 +90,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         {error && <ErrorState error={error} />}
       </div>
       <form className="chat-composer" onSubmit={submit}>
-        <div className="composer-tools"><select aria-label="Model provider" value={provider} onChange={(event) => setProvider(event.target.value)}>{(providers.data?.providers ?? ['mock']).map((name) => <option key={name}>{name}</option>)}</select><span>Provider keys stay server-side</span></div>
+        <div className="composer-tools"><select aria-label="Model provider" value={selectedProvider} onChange={(event) => setProvider(event.target.value)} disabled={!providers.data?.providers.length}>{(providers.data?.providers ?? []).map((name) => <option key={name}>{name}</option>)}</select><span>{providers.data?.local_private_provider ? 'Private local inference available' : 'Provider keys stay server-side'}</span></div>
         <textarea aria-label="Message" placeholder="Ask with context…" value={input} onChange={(event) => setInput(event.target.value)} rows={3} />
         <div><input ref={fileRef} type="file" hidden accept=".pdf,.docx,.txt,.md,.html,.png,.jpg,.jpeg" onChange={(event) => event.target.files?.[0] && upload.mutate(event.target.files[0])} /><button type="button" className="icon-button" onClick={() => fileRef.current?.click()} aria-label="Attach document"><FileUp /></button><button className="button primary" disabled={busy || !input.trim()}><Send size={16} /> Queue</button></div>
       </form>

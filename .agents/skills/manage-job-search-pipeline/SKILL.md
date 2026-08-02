@@ -5,7 +5,7 @@ description: Organize one CareerTwin seeker's applications, legal stage transiti
 
 # Manage Job Search Pipeline
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Outcome
 
@@ -20,13 +20,14 @@ Keep a truthful, candidate-owned operating timeline for saved opportunities, peo
 5. Add contacts with the minimum useful context. Link a contact to an application only when the relationship is explicit.
 6. Add meetings, deadlines, reminders, and tasks with timezone-aware dates. Link compatible contacts and applications when known.
 7. For calendar exchange, preview event counts and use RFC 5545 import/export. Treat UID-based skips as idempotency, not an error.
-8. Summarize overdue/open work and personal process analytics with their denominator and small-sample warning.
+8. If the seeker explicitly connects Google or Microsoft, verify the requested OAuth service and scopes before a user-triggered calendar or email synchronization. Read-only email context may create a private follow-up task but never send, draft, or alter mailbox content.
+9. Summarize overdue/open work and personal process analytics with their denominator and small-sample warning.
 
 ## Guardrails
 
 - Operate only inside the current authenticated seeker's workspace.
 - Never submit an application, fill an employer form, message a contact, or schedule an external meeting.
-- Do not store email bodies, credentials, private calendar feeds, or exported `.ics` files in Git.
+- Do not store email bodies, OAuth codes/tokens, browser credentials, private calendar feeds, or exported `.ics` files in Git. Disconnect and provider-side revocation are separate operations.
 - Do not interpret stage counts or time-to-close as hiring probability or a labor-market benchmark.
 - Confirm destructive contact/application decisions and preserve immutable stage history.
 - Use the web UI when the seeker needs to review dates, people, and stages together.

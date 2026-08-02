@@ -4,6 +4,46 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-02
+
+### Added
+
+- Encrypted tenant-namespaced document storage, private Docling conversion, queued extraction,
+  visible retry state, versioned structured-output prompts, deterministic evidence criticism, and
+  redacted tenant-scoped run traces.
+- ESCO 1.2.1 and O*NET 30.3 concept/relation imports, local EmbeddingGemma vectors, hybrid search,
+  HNSW indexing, persisted archive provenance, checksum-gated O*NET acquisition, and a pinned
+  bilingual retrieval benchmark.
+- Evidence-backed STAR accomplishments and immutable tailored résumé variants.
+- Consent-bound Google and Microsoft OAuth connections for user-triggered calendar synchronization
+  and read-only, bounded recruiting-email excerpts with finite retention.
+- Revocable browser-capture credentials and a Manifest V3 extension for explicit, visible-page job
+  capture without background crawling.
+- Private Ollama and authenticated Docling services in the production Compose topology.
+
+### Changed
+
+- Make private Ollama `qwen2.5:0.5b-instruct-q4_K_M` the measured CPU-safe production baseline,
+  with bounded context/output settings, while retaining typed optional xAI, OpenAI, Anthropic, and
+  Google adapters.
+- Extend the web workbench, APIs, worker lifecycle, repository skills, runbooks, and ADR catalog for
+  document intelligence, career artifacts, connectors, and hybrid occupational retrieval.
+
+### Security
+
+- Reject deterministic mock/test providers in production and fail readiness when the configured real
+  provider, model, scanner, converter, database, or queue is unavailable.
+- Encrypt OAuth refresh tokens with purpose-bound authenticated data; never expose stored secrets to
+  the browser, and request no mailbox write/send scope.
+- Preserve exact-quotation evidence, protected-term, duplicate, tenant-isolation, expiry, and
+  idempotency gates across extraction and connector workflows.
+- Upgrade the pinned runtime to a non-root, distroless Python 3.14.6 image with a separate
+  development-only builder after fixable-high image scans rejected the previous Python base.
+- Replace vulnerable vendor database, model-server, and document-service images with scanned custom
+  runtimes: PostgreSQL 17.10 plus pgvector 0.8.1, patched CPU-only Ollama 0.32.5, and a distroless
+  Docling gateway that uses bounded English/Spanish Tesseract OCR without EasyOCR, OpenCV, or
+  bundled FFmpeg.
+
 ## [0.1.0-alpha.4] - 2026-08-02
 
 ### Security

@@ -13,6 +13,7 @@
 - [Visualization system](visualization.md): Atalaya lessons, selected engines, accessibility, and honest graphics.
 - [Security threat model](security/threat-model.md) and [privacy model](security/privacy.md).
 - [Research synthesis](research/README.md): comparable products, standards, primary sources, and resulting design choices.
+- [Taxonomy provenance](research/taxonomy-provenance.md): official sources, checksums, licensing, and release gate.
 - [Repository skills](skills.md): auto-discovery, explicit invocation, versions, and safe use.
 - [ADRs](adr/README.md): accepted decisions and consequences.
 
@@ -21,6 +22,8 @@
 - [Local development](runbooks/local-development.md)
 - [VPS deployment](runbooks/vps-deployment.md)
 - [Providers and Grok](runbooks/providers.md)
+- [Personal connectors](runbooks/connectors.md)
+- [Occupational taxonomies](runbooks/taxonomy.md)
 - [Backup and restore](runbooks/backup-restore.md)
 - [Dependency maintenance](runbooks/dependency-maintenance.md)
 - [Incident response](runbooks/incident-response.md)

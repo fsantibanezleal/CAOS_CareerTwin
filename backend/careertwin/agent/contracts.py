@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class EvidenceReference(BaseModel):
@@ -21,7 +21,10 @@ class ChangeOperation(BaseModel):
 class AgentDraft(BaseModel):
     """User-visible answer plus citations and optional uncommitted change proposal."""
 
-    answer: str = Field(min_length=1, max_length=20_000)
+    # Ollama translates JSON Schema into a llama.cpp grammar, whose defensive
+    # repetition limit rejects ``char{1,20000}``. The runtime validator below
+    # preserves the boundary without emitting that provider-facing constraint.
+    answer: str = Field(min_length=1)
     specialist: Literal[
         "profile",
         "opportunity",
@@ -32,6 +35,14 @@ class AgentDraft(BaseModel):
     ]
     citations: list[EvidenceReference] = Field(default_factory=list, max_length=40)
     proposed_operations: list[ChangeOperation] = Field(default_factory=list, max_length=50)
+
+    @field_validator("answer")
+    @classmethod
+    def bound_visible_answer(cls, value: str) -> str:
+        """Reject oversized visible output without emitting an incompatible grammar."""
+        if len(value) > 20_000:
+            raise ValueError("Agent answers may contain at most 20000 characters")
+        return value
 
     @model_validator(mode="after")
     def require_citations_for_changes(self) -> AgentDraft:
