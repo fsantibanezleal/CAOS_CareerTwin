@@ -26,3 +26,5 @@ Open a focused issue before changing a semantic major or production runtime line
 Node production builds stay on an LTS line. Python production images stay on the accepted line until
 all native wheels, ingestion extras, providers, migrations, backup/restore, and image scans pass.
 Security updates are reviewed immediately even when the corresponding routine major is held.
+Because supported Python runtime lines share semantic major version 3, Dependabot blocks versions
+`>=3.13` explicitly rather than relying on a semantic-major update category.

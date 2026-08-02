@@ -41,4 +41,5 @@ updates:
       - dependency-name: node
         update-types: ["version-update:semver-major"]
       - dependency-name: python
-        update-types: ["version-update:semver-major"]
+        # Python runtime lines share major version 3, so an explicit range is required.
+        versions: [">=3.13"]
