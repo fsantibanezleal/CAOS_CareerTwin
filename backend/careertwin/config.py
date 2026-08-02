@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -24,7 +26,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/private/careertwin.sqlite3"
     redis_url: str = "redis://localhost:6379/0"
     blob_root: Path = Path("./data/blobs")
-    allowed_origins: list[str] = Field(
+    allowed_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:5173", "http://localhost:8000"]
     )
     secure_cookies: bool = False
@@ -47,10 +49,48 @@ class Settings(BaseSettings):
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def split_origins(cls, value: object) -> object:
-        """Accept a comma-separated environment value as well as a JSON list."""
-        if isinstance(value, str) and not value.lstrip().startswith("["):
-            return [part.strip() for part in value.split(",") if part.strip()]
-        return value
+        """Parse, normalize, and validate explicit HTTP(S) CORS origins.
+
+        ``NoDecode`` keeps environment strings intact until this validator runs. This avoids
+        Pydantic Settings attempting JSON decoding before the documented comma-separated form can
+        be handled. JSON arrays remain supported for Compose and hosted deployments.
+        """
+        parsed: object = value
+        if isinstance(value, str):
+            raw = value.strip()
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError as exc:
+                    raise ValueError("ALLOWED_ORIGINS contains invalid JSON") from exc
+            else:
+                parsed = [part.strip() for part in raw.split(",") if part.strip()]
+
+        if not isinstance(parsed, (list, tuple, set)) or not parsed:
+            raise ValueError("ALLOWED_ORIGINS must contain at least one origin")
+
+        origins: list[str] = []
+        for candidate in parsed:
+            if not isinstance(candidate, str):
+                raise ValueError("Every ALLOWED_ORIGINS entry must be a string")
+            origin = candidate.strip().rstrip("/")
+            parts = urlsplit(origin)
+            if (
+                origin == "*"
+                or parts.scheme not in {"http", "https"}
+                or not parts.hostname
+                or parts.username is not None
+                or parts.password is not None
+                or parts.path
+                or parts.query
+                or parts.fragment
+            ):
+                raise ValueError(
+                    "ALLOWED_ORIGINS entries must be explicit HTTP(S) origins without paths"
+                )
+            if origin not in origins:
+                origins.append(origin)
+        return origins
 
     @model_validator(mode="after")
     def validate_production_secrets(self) -> Settings:
