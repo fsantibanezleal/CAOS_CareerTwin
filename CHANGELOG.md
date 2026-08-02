@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] - 2026-08-02
+
+### Security
+
+- Restrict POSIX private-backup directories to mode 0700 and generated SQL/blob files to mode 0600,
+  including files copied from containers.
+- Remove inherited Windows ACLs from private backups and grant access only to the current operator.
+
 ## [0.1.0-alpha.3] - 2026-08-02
 
 ### Added
