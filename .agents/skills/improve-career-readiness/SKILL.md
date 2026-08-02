@@ -5,7 +5,7 @@ description: Turn CareerTwin match gaps and evidence coverage into transparent, 
 
 # Improve Career Readiness
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Outcome
 
@@ -18,8 +18,9 @@ Create a practical improvement plan grounded in the latest immutable requirement
 3. Regenerate recommendations only when the current match reflects the intended profile and opportunity versions.
 4. Separate actions into evidence, capability, positioning, application preparation, and eligibility clarification.
 5. Rank by transparent impact, effort, and derived priority. Preserve associated requirement IDs.
-6. Convert selected actions into pipeline tasks with realistic dates only after the seeker chooses them.
-7. Re-run matching only after canonical evidence or reviewed requirements actually change.
+6. Let the seeker edit prerequisites, steps, effort, status, and progress; preserve the gap rationale and requirement IDs.
+7. Convert a selected recommendation into an agenda task only after the seeker chooses it.
+8. Re-run matching only after canonical evidence or reviewed requirements actually change.
 
 ## Recommendation rules
 

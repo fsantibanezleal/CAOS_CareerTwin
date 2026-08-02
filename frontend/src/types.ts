@@ -84,6 +84,24 @@ export type Opportunity = {
   updated_at: string
 }
 
+export type OpportunitySnapshot = {
+  id: string
+  version: number
+  snapshot: Opportunity
+  source_sha256?: string
+  created_at: string
+}
+
+export type TargetSet = {
+  id: string
+  name: string
+  description: string
+  opportunity_ids: string[]
+  strategy: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
 export type MatchRun = {
   id: string
   opportunity_id: string
@@ -136,6 +154,19 @@ export type CareerTask = {
   completed_at?: string
   reminder_minutes?: number
   contact: Record<string, unknown>
+  contact_id?: string
+}
+
+export type Contact = {
+  id: string
+  application_id?: string
+  name: string
+  email: string
+  organization: string
+  role: string
+  notes: string
+  created_at: string
+  updated_at: string
 }
 
 export type Dashboard = {
@@ -197,6 +228,27 @@ export type Recommendation = {
   effort: number
   priority: number
   status: string
+  prerequisites: string[]
+  steps: Array<Record<string, unknown>>
+  progress: number
+}
+
+export type AgentRun = {
+  id: string
+  conversation_id: string
+  status: 'queued' | 'retrying' | 'running' | 'completed' | 'failed' | 'cancelled'
+  specialist?: string
+  provider: string
+  input_digest: string
+  state: Record<string, unknown>
+  error_code?: string
+  parent_run_id?: string
+  attempt: number
+  cancel_requested_at?: string
+  started_at?: string
+  finished_at?: string
+  created_at: string
+  updated_at: string
 }
 
 export type Artifact = {

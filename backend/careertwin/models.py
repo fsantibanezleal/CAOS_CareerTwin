@@ -336,6 +336,39 @@ class Opportunity(Base, TimestampMixin):
     )
 
 
+class OpportunitySnapshot(Base):
+    """Immutable reviewed opportunity revision used for provenance and change comparison."""
+
+    __tablename__ = "opportunity_snapshots"
+    __table_args__ = (UniqueConstraint("opportunity_id", "version"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    opportunity_id: Mapped[str] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="CASCADE"), index=True
+    )
+    version: Mapped[int] = mapped_column(Integer)
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JsonType)
+    source_sha256: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class TargetSet(Base, TimestampMixin):
+    """Named seeker-owned opportunity portfolio with explicit scenario assumptions."""
+
+    __tablename__ = "target_sets"
+    __table_args__ = (UniqueConstraint("workspace_id", "name"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    opportunity_ids: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    strategy: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
+
+
 class Requirement(Base, TimestampMixin):
     """Atomic required or preferred opportunity condition."""
 
@@ -400,6 +433,9 @@ class Recommendation(Base, TimestampMixin):
     effort: Mapped[float] = mapped_column(Float, default=0.5)
     priority: Mapped[float] = mapped_column(Float, default=0.5)
     status: Mapped[str] = mapped_column(String(30), default="suggested")
+    prerequisites: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    steps: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list)
+    progress: Mapped[float] = mapped_column(Float, default=0)
 
 
 class CareerArtifact(Base, TimestampMixin):
@@ -440,6 +476,11 @@ class AgentRun(Base, TimestampMixin):
     input_digest: Mapped[str] = mapped_column(String(64))
     state: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
     error_code: Mapped[str | None] = mapped_column(String(100))
+    parent_run_id: Mapped[str | None] = mapped_column(
+        ForeignKey("agent_runs.id", ondelete="SET NULL"), index=True
+    )
+    attempt: Mapped[int] = mapped_column(Integer, default=1)
+    cancel_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -505,6 +546,28 @@ class CareerTask(Base, TimestampMixin):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminder_minutes: Mapped[int | None] = mapped_column(Integer)
     contact: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
+    contact_id: Mapped[str | None] = mapped_column(
+        ForeignKey("contacts.id", ondelete="SET NULL"), index=True
+    )
+
+
+class Contact(Base, TimestampMixin):
+    """Seeker-owned recruiting or networking contact linked to applications and meetings."""
+
+    __tablename__ = "contacts"
+    __table_args__ = (Index("ix_contacts_workspace_name", "workspace_id", "name"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    application_id: Mapped[str | None] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(200))
+    email: Mapped[str] = mapped_column(String(320), default="")
+    organization: Mapped[str] = mapped_column(String(240), default="")
+    role: Mapped[str] = mapped_column(String(160), default="")
+    notes: Mapped[str] = mapped_column(Text, default="")
 
 
 class Conversation(Base, TimestampMixin):

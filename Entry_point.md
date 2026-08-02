@@ -10,7 +10,7 @@ Read this file before changing the repository.
 - `docs/operations/`: local and VPS operation.
 - `backend/`: FastAPI application and deterministic domain services.
 - `frontend/`: React workbench.
-- `skills/`: versioned repository-local Codex skills.
+- `.agents/skills/`: auto-discovered, versioned repository-local Codex skills.
 - `tests/` and `evals/`: executable contracts.
 
 ## Non-negotiable boundaries
@@ -28,4 +28,3 @@ Read this file before changing the repository.
 Create or reference a GitHub issue, work on a focused branch, update tests and documentation, run
 the repository verification scripts, then open a pull request against `develop`. Deploy only from a
 reviewed and verified revision.
-

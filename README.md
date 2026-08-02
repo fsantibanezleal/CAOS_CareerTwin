@@ -18,10 +18,11 @@ Implementation follows the validated plan in
 - CV, resume, document, image OCR, manual-profile, GitHub, URL, paste, and job-document ingestion.
 - Proposed/confirmed/rejected evidence with exact source locators and a rich professional graph.
 - Reviewed opportunity requirements, deterministic versioned matching, separate eligibility, evidence coverage, and uncertainty bounds.
-- Evidence-linked recommendations, résumé/cover-letter/interview/follow-up artifacts, and a candidate-owned board, agenda, calendar, and process analytics.
-- Bounded LangGraph/Pydantic AI agent routing with mock, xAI/Grok, OpenAI, Anthropic, Google, and Ollama adapters. Agents propose; deterministic services commit only after approval.
+- Evidence-linked editable recommendations, résumé/cover-letter/interview/follow-up artifacts, and a candidate-owned board, contact book, agenda, calendar exchange, and process analytics.
+- Lossless CareerTwin profile/evidence portability, JSON Resume exchange, immutable opportunity snapshots, and explicit named target portfolios.
+- Bounded LangGraph/Pydantic AI routing with mock, xAI/Grok, OpenAI, Anthropic, Google, and Ollama adapters plus durable queue/cancel/retry checkpoints. Agents propose; deterministic services commit only after approval.
 - React workbench with Sigma/Graphology, modular ECharts, React Flow architecture diagrams, dark/light themes, English/Spanish chrome, accessible fallbacks, and reduced-motion behavior.
-- Docker Compose, VPS-ready persistent services, local PowerShell/POSIX scripts, CI/security gates, and six validated Codex skills.
+- Docker Compose, VPS-ready persistent services, local PowerShell/POSIX scripts, CI/security/load/accessibility gates, and seven validated Codex skills.
 
 ## Quick start
 
@@ -41,7 +42,7 @@ Start at [`Entry_point.md`](Entry_point.md), then use the [documentation map](do
 
 ## Status
 
-`0.1.0-alpha.2`: deployed first maintenance alpha with hardened origin parsing and supply-chain automation. See `CHANGELOG.md` for release notes and GitHub issues for tracked work.
+`0.1.0-alpha.3`: public-alpha completion contracts implemented and release-gated. See `CHANGELOG.md` for release notes and GitHub issues for tracked work.
 
 ## License
 

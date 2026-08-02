@@ -23,3 +23,6 @@ Records are active from the release in which they were accepted unless supersede
 | [0017](0017-container-vps-operations.md) | Compose/VPS persistence and restore testing |
 | [0018](0018-responsible-scope.md) | Candidate-side assistance and prohibited automation |
 | [0019](0019-runtime-and-dependency-lifecycle.md) | Supported runtimes and deliberate dependency lifecycle |
+| [0020](0020-portable-profile-and-target-portfolios.md) | Portable profile contracts and explicit target portfolios |
+| [0021](0021-durable-agent-runs-and-redacted-observability.md) | Durable agent execution and redacted observability |
+| [0022](0022-release-quality-contracts.md) | Representative-volume and accessibility release gates |

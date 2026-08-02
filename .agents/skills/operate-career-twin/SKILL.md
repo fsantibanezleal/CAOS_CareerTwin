@@ -5,7 +5,7 @@ description: Set up, run, diagnose, back up, restore-test, upgrade, and deploy a
 
 # Operate CareerTwin
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Source of truth
 
@@ -17,15 +17,16 @@ Read `Entry_point.md`, then `references/operator-contract.md` and the relevant f
 2. Copy `.env.example` to ignored `.env` and set unique local secrets.
 3. Run migrations, then create the first account using the bootstrap script. Supply the password interactively or through a one-process environment variable; never echo it.
 4. Start with `scripts/dev.ps1`/`.sh` or Docker Compose.
-5. Run `scripts/verify.ps1`/`.sh` before trusting the instance.
+5. Run `scripts/verify.ps1`/`.sh` before trusting the instance. The test path includes the fixed representative-volume contract and automated accessibility checks.
 
 ## Production workflow
 
 1. Use PostgreSQL with pgvector, Redis, ClamAV, TLS, secure cookies, private blob storage, and encrypted off-host backups.
 2. Inject secrets from the VPS secret store. Never bake them into an image, Compose file, CI log, GitHub secret output, or shell history.
 3. Back up before migrations. Deploy an immutable image or pinned commit. Run migrations once as the database owner.
-4. Verify liveness, readiness, login, tenant isolation, profile upload/review, opportunity capture, match semantics, pipeline, configured agent provider, and restart persistence.
+4. Verify liveness, readiness, login, tenant isolation, profile upload/review/portability, opportunity snapshots/target sets, match semantics, contacts/calendar, durable agent queue/cancel/retry, configured provider behavior, and restart persistence.
 5. Run a restore test to an isolated database and record the evidence. A backup without a restore test is not verified.
+6. If Langfuse is configured, verify only the redacted run metadata contract is emitted; prompts, evidence bodies, outputs, account identifiers, and raw workspace IDs must remain absent.
 
 ## Incident rules
 

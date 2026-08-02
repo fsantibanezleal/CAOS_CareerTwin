@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any, ClassVar, cast
 
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from careertwin.config import get_settings
 from careertwin.database import SessionLocal
 from careertwin.models import AuthSession, CareerTask, EvidenceClaim, Source, SourceStatus, utcnow
+from careertwin.services.agent_runs import execute_agent_run
 from careertwin.services.blob import FileBlobStore
 from careertwin.services.ingestion import extract_text, propose_profile_claims
 
@@ -75,10 +77,20 @@ async def due_reminder_sweep(_: dict[Any, Any], *args: Any, **kwargs: Any) -> di
         return {"due": len(tasks)}
 
 
+async def process_agent_run(_: dict[Any, Any], workspace_id: str, run_id: str) -> dict[str, object]:
+    """Execute one durable bounded run without blocking the ARQ event loop."""
+    return await asyncio.to_thread(execute_agent_run, workspace_id, run_id)
+
+
 class WorkerSettings:
     """ARQ discovery contract used by `arq careertwin.worker.WorkerSettings`."""
 
-    functions: ClassVar[list[Any]] = [process_source, retention_sweep, due_reminder_sweep]
+    functions: ClassVar[list[Any]] = [
+        process_source,
+        process_agent_run,
+        retention_sweep,
+        due_reminder_sweep,
+    ]
     cron_jobs: ClassVar[list[Any]] = [
         cron(cast(WorkerCoroutine, retention_sweep), hour=3, minute=15),
         cron(cast(WorkerCoroutine, due_reminder_sweep), minute={0, 15, 30, 45}),

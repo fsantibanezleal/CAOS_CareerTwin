@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
@@ -38,6 +38,14 @@ from careertwin.services.ingestion import (
     extract_text,
     inspect_content,
     propose_profile_claims,
+)
+from careertwin.services.interchange import (
+    InterchangeError,
+    export_json_resume,
+    export_profile_interchange,
+    import_json_resume,
+    import_profile_interchange,
+    validate_json_object,
 )
 from careertwin.services.normalization import normalize_label
 
@@ -306,6 +314,60 @@ def list_sources(user: CurrentUser, db: Db) -> list[SourceRead]:
         .order_by(Source.created_at.desc())
     ).all()
     return [SourceRead.model_validate(item) for item in items]
+
+
+@router.get("/interchange")
+def profile_interchange(user: CurrentUser, db: Db) -> dict[str, object]:
+    """Export the lossless, versioned CareerTwin profile and evidence interchange document."""
+    return export_profile_interchange(db, user.workspace.id)
+
+
+@router.post("/interchange/import")
+def import_interchange(
+    user: CsrfUser, db: Db, payload: object = Body(), replace: bool = True
+) -> dict[str, object]:
+    """Import a validated CareerTwin profile while remapping tenant-local evidence references."""
+    try:
+        result = import_profile_interchange(
+            db, user.workspace.id, validate_json_object(payload), replace=replace
+        )
+    except InterchangeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    record_audit(
+        db,
+        user,
+        "profile.interchange_imported",
+        "professional_profile",
+        user.workspace.profile.id,
+        result,
+    )
+    return {"status": "imported", "counts": result}
+
+
+@router.get("/json-resume")
+def json_resume(user: CurrentUser, db: Db) -> dict[str, object]:
+    """Export standards-based JSON Resume with a lossless namespaced CareerTwin extension."""
+    return export_json_resume(
+        db, user.workspace.id, display_name=user.display_name, email=user.email
+    )
+
+
+@router.post("/json-resume/import")
+def import_resume(user: CsrfUser, db: Db, payload: object = Body()) -> dict[str, object]:
+    """Import JSON Resume; preserve the full CareerTwin extension when it is supplied."""
+    try:
+        result = import_json_resume(db, user.workspace.id, validate_json_object(payload))
+    except InterchangeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    record_audit(
+        db,
+        user,
+        "profile.json_resume_imported",
+        "professional_profile",
+        user.workspace.profile.id,
+        result,
+    )
+    return {"status": "imported", "counts": result}
 
 
 @router.post("/sources/upload", response_model=SourceRead, status_code=status.HTTP_201_CREATED)

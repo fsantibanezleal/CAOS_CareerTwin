@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 
 from careertwin.api.dependencies import CsrfUser, CurrentUser, Db
@@ -13,13 +13,22 @@ from careertwin.models import (
     Application,
     ApplicationStage,
     CareerTask,
+    Contact,
     Opportunity,
     StageEvent,
     utcnow,
 )
-from careertwin.schemas import ApplicationCreate, ApplicationRead, StageChange, TaskCreate, TaskRead
+from careertwin.schemas import (
+    ApplicationCreate,
+    ApplicationRead,
+    ContactCreate,
+    ContactRead,
+    StageChange,
+    TaskCreate,
+    TaskRead,
+)
 from careertwin.services.audit import record_audit
-from careertwin.services.calendar import export_calendar
+from careertwin.services.calendar import export_calendar, import_calendar
 
 router = APIRouter(prefix="/api/pipeline", tags=["application pipeline"])
 
@@ -160,6 +169,81 @@ def list_tasks(user: CurrentUser, db: Db) -> list[TaskRead]:
     return [TaskRead.model_validate(item) for item in items]
 
 
+@router.get("/contacts", response_model=list[ContactRead])
+def list_contacts(user: CurrentUser, db: Db) -> list[ContactRead]:
+    """List tenant-owned application and networking contacts."""
+    items = db.scalars(
+        select(Contact)
+        .where(Contact.workspace_id == user.workspace.id)
+        .order_by(Contact.updated_at.desc())
+    ).all()
+    return [ContactRead.model_validate(item) for item in items]
+
+
+@router.post("/contacts", response_model=ContactRead, status_code=status.HTTP_201_CREATED)
+def create_contact(payload: ContactCreate, user: CsrfUser, db: Db) -> ContactRead:
+    """Create a contact optionally linked to one tenant-owned application."""
+    if payload.application_id:
+        exists = db.scalar(
+            select(Application.id).where(
+                Application.id == payload.application_id,
+                Application.workspace_id == user.workspace.id,
+            )
+        )
+        if not exists:
+            raise HTTPException(
+                status_code=400, detail="Application does not belong to this workspace"
+            )
+    values = payload.model_dump(exclude={"email"})
+    item = Contact(
+        workspace_id=user.workspace.id,
+        email=str(payload.email) if payload.email else "",
+        **values,
+    )
+    db.add(item)
+    db.flush()
+    record_audit(db, user, "contact.created", "contact", item.id)
+    return ContactRead.model_validate(item)
+
+
+@router.put("/contacts/{contact_id}", response_model=ContactRead)
+def update_contact(contact_id: str, payload: ContactCreate, user: CsrfUser, db: Db) -> ContactRead:
+    """Update one tenant-owned contact and its optional application link."""
+    item = db.scalar(
+        select(Contact).where(Contact.id == contact_id, Contact.workspace_id == user.workspace.id)
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if payload.application_id:
+        exists = db.scalar(
+            select(Application.id).where(
+                Application.id == payload.application_id,
+                Application.workspace_id == user.workspace.id,
+            )
+        )
+        if not exists:
+            raise HTTPException(
+                status_code=400, detail="Application does not belong to this workspace"
+            )
+    for field, value in payload.model_dump(exclude={"email"}).items():
+        setattr(item, field, value)
+    item.email = str(payload.email) if payload.email else ""
+    record_audit(db, user, "contact.updated", "contact", item.id)
+    return ContactRead.model_validate(item)
+
+
+@router.delete("/contacts/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_contact(contact_id: str, user: CsrfUser, db: Db) -> None:
+    """Delete one tenant-owned contact while retaining meetings with a cleared link."""
+    item = db.scalar(
+        select(Contact).where(Contact.id == contact_id, Contact.workspace_id == user.workspace.id)
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    db.delete(item)
+    record_audit(db, user, "contact.deleted", "contact", contact_id)
+
+
 @router.post("/tasks", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 def create_task(payload: TaskCreate, user: CsrfUser, db: Db) -> TaskRead:
     """Create a career task, deadline, reminder or meeting."""
@@ -174,6 +258,16 @@ def create_task(payload: TaskCreate, user: CsrfUser, db: Db) -> TaskRead:
             raise HTTPException(
                 status_code=400, detail="Application does not belong to this workspace"
             )
+    if payload.contact_id:
+        contact = db.scalar(
+            select(Contact).where(
+                Contact.id == payload.contact_id, Contact.workspace_id == user.workspace.id
+            )
+        )
+        if not contact:
+            raise HTTPException(status_code=400, detail="Contact does not belong to this workspace")
+        if payload.application_id and contact.application_id not in {None, payload.application_id}:
+            raise HTTPException(status_code=400, detail="Contact belongs to another application")
     item = CareerTask(workspace_id=user.workspace.id, **payload.model_dump())
     db.add(item)
     db.flush()
@@ -207,6 +301,47 @@ def calendar_ics(user: CurrentUser, db: Db) -> Response:
         media_type="text/calendar; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="careertwin-calendar.ics"'},
     )
+
+
+@router.post("/calendar/import")
+async def calendar_import(user: CsrfUser, db: Db, file: UploadFile = File()) -> dict[str, object]:
+    """Import a bounded iCalendar file with UID-based idempotency inside this workspace."""
+    content = await file.read(1_048_577)
+    if len(content) > 1_048_576:
+        raise HTTPException(status_code=413, detail="Calendar exceeds the 1 MiB limit")
+    try:
+        values = import_calendar(content)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    existing_tasks = list(
+        db.scalars(select(CareerTask).where(CareerTask.workspace_id == user.workspace.id)).all()
+    )
+    known_uids = {
+        str(item.contact.get("calendar_uid"))
+        for item in existing_tasks
+        if item.contact.get("calendar_uid")
+    }
+    created = 0
+    skipped = 0
+    for value in values:
+        contact = value.get("contact", {})
+        uid = str(contact.get("calendar_uid", "")) if isinstance(contact, dict) else ""
+        if uid and uid in known_uids:
+            skipped += 1
+            continue
+        db.add(CareerTask(workspace_id=user.workspace.id, **value))
+        if uid:
+            known_uids.add(uid)
+        created += 1
+    record_audit(
+        db,
+        user,
+        "calendar.imported",
+        "workspace",
+        user.workspace.id,
+        {"created": created, "skipped": skipped},
+    )
+    return {"created": created, "skipped": skipped, "events": len(values)}
 
 
 @router.get("/analytics")

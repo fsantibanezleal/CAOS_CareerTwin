@@ -50,7 +50,7 @@ flowchart LR
   H -->|reject| N[no canonical change]
 ```
 
-The first alpha stores durable `AgentRun` state and visible conversation records. Production checkpoint integration is designed around PostgreSQL; canonical mutation remains outside the model graph.
+The API commits a queued `AgentRun` and visible user message before ARQ submission. The worker reapplies tenant context, rehydrates bounded inputs from PostgreSQL, commits a running checkpoint before provider work, and then commits completed, failed, or cancelled terminal state. Retry creates a child attempt; it never rewrites history. Canonical mutation remains outside the model graph.
 
 ## 4. Tenant/security view
 
@@ -79,11 +79,15 @@ erDiagram
   PROFILE ||--o{ SKILL : curates
   SKILL }o--o{ EVIDENCE_CLAIM : supported_by
   WORKSPACE ||--o{ OPPORTUNITY : researches
+  OPPORTUNITY ||--o{ OPPORTUNITY_SNAPSHOT : versions
+  WORKSPACE ||--o{ TARGET_SET : groups
   OPPORTUNITY ||--o{ REQUIREMENT : contains
   OPPORTUNITY ||--o{ MATCH_RUN : evaluated_by
   OPPORTUNITY ||--o| APPLICATION : tracked_as
   APPLICATION ||--o{ STAGE_EVENT : records
+  APPLICATION ||--o{ CONTACT : connects
   WORKSPACE ||--o{ CAREER_TASK : plans
+  CONTACT ||--o{ CAREER_TASK : attends
 ```
 
 ## 6. Deployment view

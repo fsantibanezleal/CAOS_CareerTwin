@@ -5,7 +5,7 @@ description: Run and explain CareerTwin's deterministic, versioned evidence alig
 
 # Analyze Career Match
 
-Skill contract version: 1.0.0.
+Skill contract version: 1.1.0.
 
 ## Outcome
 
@@ -20,7 +20,7 @@ Produce a reproducible match run and a plain-language evidence bridge from each 
 5. Report hard eligibility separately as passed, failed, or unknown.
 6. Report alignment only when the service returns a score. Always show evidence coverage and lower/upper uncertainty bounds.
 7. Explain each assessment: met, partial, missing, unknown, or conflict; cite evidence IDs when present.
-8. Compare saved roles only on their latest run and disclose differing coverage.
+8. Compare saved roles only on their latest run and disclose differing coverage. For a named target portfolio, use its explicit weights, role count, matched count, and shared-gap matrix.
 
 ## Interpretation rules
 

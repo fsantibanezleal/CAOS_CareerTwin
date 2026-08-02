@@ -6,13 +6,13 @@ The authoritative machine-readable contract is `/api/openapi.json`; interactive 
 |---|---|---|
 | Authentication | `/api/auth` | login, current user, logout, password change |
 | Administration | `/api/admin` | account metadata and lifecycle only |
-| Profile/evidence | `/api/profile` | canonical profile, skills, chronology, sources, decisions, graph |
-| Opportunities | `/api/opportunities` | capture, edit, requirements, landscape |
-| Matching/readiness | `/api/matches` | immutable runs, aggregate alignment, recommendations |
+| Profile/evidence | `/api/profile` | canonical profile, skills, chronology, sources, decisions, graph, CareerTwin/JSON Resume exchange |
+| Opportunities | `/api/opportunities` | capture, edit, immutable revisions, requirements, target portfolios, landscape |
+| Matching/readiness | `/api/matches` | immutable runs, named/global alignment, shared-gap matrix, editable recommendations |
 | Artifacts | `/api/artifacts` | evidence-grounded draft versions |
-| Pipeline | `/api/pipeline` | application stages/history, tasks, calendar, analytics |
+| Pipeline | `/api/pipeline` | application stages/history, contacts, tasks, calendar import/export, analytics |
 | Connectors | `/api/connectors` | bounded GitHub snapshot |
-| Agent | `/api/agent` | providers, chat, conversations, proposed-change decisions |
+| Agent | `/api/agent` | providers, synchronous chat, durable run queue/poll/cancel/retry, conversations, proposed-change decisions |
 | Taxonomy | `/api/taxonomy` | local ESCO search/status |
 | Workspace | `/api/workspace` | Today summary and portable export |
 | Operations | `/api/health/*`, `/metrics` | liveness, readiness, Prometheus |
@@ -23,4 +23,4 @@ Login sets an HttpOnly opaque session cookie and a readable CSRF cookie. Every m
 
 ## Errors and privacy
 
-Errors are bounded and sanitized. Connector/provider errors report class/category without credentials or upstream response bodies. Source list/export excludes storage keys and extracted document contents. Data export is CSRF-protected and returned as a private ZIP.
+Errors are bounded and sanitized. Connector/provider errors report class/category without credentials or upstream response bodies. Source list/profile interchange excludes storage keys, uploaded bytes and extracted document contents. Full data export is CSRF-protected and returned as a private ZIP. Durable-run reads expose visible checkpoints, digests, counts and error classes—never prompts, evidence bodies, outputs or hidden reasoning.
