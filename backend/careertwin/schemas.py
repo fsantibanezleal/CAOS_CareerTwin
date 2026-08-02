@@ -391,7 +391,7 @@ class CalendarSyncRequest(BaseModel):
 
 class ConnectionAuthorizeRequest(BaseModel):
     services: list[Literal["calendar", "email"]] = Field(min_length=1, max_length=2)
-    redirect_after: str = Field(default="/pipeline", pattern="^/[A-Za-z0-9_/?=&.-]*$")
+    redirect_after: Literal["/pipeline", "/profile", "/opportunities", "/today"] = "/pipeline"
 
 
 class EmailSyncRequest(BaseModel):

@@ -3,12 +3,28 @@ const tokenInput = document.querySelector('#token')
 const button = document.querySelector('#capture')
 const statusOutput = document.querySelector('#status')
 const openApp = document.querySelector('#openApp')
+const defaultBaseUrl = 'https://careertwin.ml.fasl-work.com'
+const allowedOrigins = new Set([
+  defaultBaseUrl,
+  'http://localhost:8000',
+])
+
+function normalizedBaseUrl(value) {
+  const parsed = new URL(value)
+  if (!allowedOrigins.has(parsed.origin) || parsed.username || parsed.password) {
+    throw new Error('Use a CareerTwin origin declared in the extension manifest.')
+  }
+  return parsed.origin
+}
 
 async function initialize() {
   const stored = await chrome.storage.local.get(['baseUrl', 'credential'])
-  baseInput.value = stored.baseUrl || 'https://careertwin.ml.fasl-work.com'
+  try {
+    baseInput.value = normalizedBaseUrl(stored.baseUrl || defaultBaseUrl)
+  } catch {
+    baseInput.value = defaultBaseUrl
+  }
   tokenInput.value = stored.credential || ''
-  openApp.href = baseInput.value
 }
 
 function visiblePageText() {
@@ -24,17 +40,22 @@ function visiblePageText() {
 }
 
 button.addEventListener('click', async () => {
-  const baseUrl = baseInput.value.trim().replace(/\/$/, '')
+  let baseUrl
+  try {
+    baseUrl = normalizedBaseUrl(baseInput.value.trim())
+  } catch (error) {
+    statusOutput.textContent = error instanceof Error ? error.message : 'Invalid CareerTwin address.'
+    return
+  }
   const credential = tokenInput.value.trim()
-  if (!/^https?:\/\//.test(baseUrl) || !credential) {
+  if (!credential) {
     statusOutput.textContent = 'Enter the app address and the credential issued in CareerTwin.'
     return
   }
   button.disabled = true
-  statusOutput.textContent = 'Capturing the visible page…'
+  statusOutput.textContent = 'Capturing the visible page...'
   try {
     await chrome.storage.local.set({ baseUrl, credential })
-    openApp.href = baseUrl
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab?.id) throw new Error('No active page is available.')
     const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: visiblePageText })
@@ -51,6 +72,14 @@ button.addEventListener('click', async () => {
     statusOutput.textContent = error instanceof Error ? error.message : 'Capture failed.'
   } finally {
     button.disabled = false
+  }
+})
+
+openApp.addEventListener('click', async () => {
+  try {
+    await chrome.tabs.create({ url: normalizedBaseUrl(baseInput.value.trim()) })
+  } catch (error) {
+    statusOutput.textContent = error instanceof Error ? error.message : 'Invalid CareerTwin address.'
   }
 })
 

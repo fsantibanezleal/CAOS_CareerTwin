@@ -126,6 +126,18 @@ def test_contract_agent_cites_only_confirmed_evidence_and_makes_no_write(
     assert client.get("/api/profile").json() == before
 
 
+def test_oauth_authorization_rejects_external_return_locations(client: TestClient) -> None:
+    """Prevent protocol-relative and external URLs from entering persisted OAuth state."""
+    create_account("oauth-redirect@example.com")
+    token = login(client, "oauth-redirect@example.com")
+    response = client.post(
+        "/api/connectors/oauth/google/authorize",
+        headers=csrf(token),
+        json={"services": ["calendar"], "redirect_after": "//attacker.example/path"},
+    )
+    assert response.status_code == 422
+
+
 def test_export_excludes_storage_paths_and_extracted_text(client: TestClient) -> None:
     create_account("export@example.com")
     token = login(client, "export@example.com")

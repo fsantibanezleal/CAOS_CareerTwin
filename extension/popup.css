@@ -10,4 +10,4 @@ p { margin: 0; font-size: 12px; }
 button { padding: 11px; border: 0; border-radius: 10px; font-weight: 750; color: #08101c; background: #7de2d1; cursor: pointer; }
 button:disabled { opacity: .55; cursor: wait; }
 output { min-height: 20px; color: #9ee8db; font-size: 12px; }
-a { color: #bba8ff; text-align: center; }
+.link-button { padding: 0; color: #bba8ff; background: transparent; text-align: center; }
