@@ -5,7 +5,7 @@
 
 ## Decision
 
-Ship a multi-stage image with digest-pinned Node and minimal Alpine Python bases, plus a Compose topology with migration, app, worker, PostgreSQL/pgvector, Redis, ClamAV, and persistent DB/blob/queue/scanner volumes. Production adds TLS/secret injection and encrypted off-host backups. A backup is not verified until an isolated restore test passes. CI rejects high or critical findings in the complete runtime image and publishes an SBOM.
+Ship a multi-stage image with digest-pinned Node and minimal Alpine Python bases, plus a Compose topology with digest-pinned PostgreSQL/pgvector, Redis, and ClamAV services and persistent DB/blob/queue/scanner volumes. The app port binds to loopback so only the TLS reverse proxy is public. Production adds secret injection and encrypted off-host backups. A backup is not verified until an isolated restore test passes. CI rejects high or critical findings in the complete runtime image and publishes an SBOM.
 
 ## Consequences
 

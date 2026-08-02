@@ -10,7 +10,7 @@ x-app-image: &app-image
   build: .
 services:
   db:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg17@sha256:7ae6051efd0e60444282c27c7e141af07f322ce033300e727a49c3dd11075e38
     environment:
       POSTGRES_DB: careertwin
       POSTGRES_USER: careertwin
@@ -24,7 +24,7 @@ services:
       - careertwin_db:/var/lib/postgresql/data
     restart: unless-stopped
   redis:
-    image: redis:8-alpine
+    image: redis:8-alpine@sha256:978f0e01593e65eed801f2402944efcd936d43b5027e4908a7897baf88ed6241
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -35,7 +35,7 @@ services:
       - careertwin_redis:/data
     restart: unless-stopped
   clamav:
-    image: clamav/clamav:1.4
+    image: clamav/clamav:1.4@sha256:6b7c8e09559250f25b0184516b0a2ae805136e57485260e16c780c9fd6e6aba9
     volumes:
       - careertwin_clamav:/var/lib/clamav
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
     volumes:
       - careertwin_blobs:/var/lib/careertwin/blobs
     restart: unless-stopped
