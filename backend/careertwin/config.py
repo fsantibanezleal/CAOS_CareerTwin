@@ -11,6 +11,8 @@ from urllib.parse import urlsplit
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from careertwin.services.crypto_keys import decode_aes256_key
+
 
 class Settings(BaseSettings):
     """Runtime settings loaded from environment variables and an ignored local `.env`."""
@@ -115,6 +117,13 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_secrets(self) -> Settings:
         """Reject known development secrets and insecure cookies in production."""
+        encryption_keys = (
+            ("BLOB_ENCRYPTION_KEY", self.blob_encryption_key),
+            ("CONNECTOR_ENCRYPTION_KEY", self.connector_encryption_key),
+        )
+        for name, secret in encryption_keys:
+            if secret is not None:
+                decode_aes256_key(secret.get_secret_value(), name)
         if self.app_env != "production":
             return self
         forbidden = {"", "development-secret-change-me", "development-csrf-change-me"}

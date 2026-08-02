@@ -4,6 +4,15 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-02
+
+### Fixed
+
+- Validate blob and connector AES-256 keys as canonical padded or unpadded URL-safe base64 during
+  settings construction, before the application accepts traffic.
+- Publish the validated encryption-key dependency in production readiness and document the exact
+  32-byte key-generation contract.
+
 ## [0.2.1] - 2026-08-02
 
 ### Fixed
