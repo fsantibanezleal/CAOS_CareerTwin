@@ -44,7 +44,7 @@ Start at [`Entry_point.md`](Entry_point.md), then use the [documentation map](do
 
 ## Status
 
-`0.2.0`: complete self-hosted career-research workflows with real private model/document services, encrypted sources, hybrid taxonomies, career artifacts, and consent-bound personal connectors. See `CHANGELOG.md` for release evidence and GitHub issues for tracked changes.
+`0.2.1`: complete self-hosted career-research workflows with real private model/document services, encrypted sources, hybrid taxonomies, career artifacts, consent-bound personal connectors, and distroless-compatible backup operations. See `CHANGELOG.md` for release evidence and GitHub issues for tracked changes.
 
 ## License
 

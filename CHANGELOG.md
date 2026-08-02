@@ -4,6 +4,16 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-02
+
+### Fixed
+
+- Make PostgreSQL and encrypted-blob backup entrypoints compatible with the non-root, distroless
+  application image by copying the volume through the Docker API and creating the private archive
+  on the operator host.
+- Constrain temporary blob-backup cleanup to a resolved staging directory under the ignored,
+  owner-only backup root.
+
 ## [0.2.0] - 2026-08-02
 
 ### Added
