@@ -14,7 +14,7 @@ CORS requests require a closed allowlist.
 ./scripts/dev.ps1
 ```
 
-Docker Compose is the default and starts PostgreSQL/pgvector, Redis, ClamAV, migration, app, and worker. Use `./scripts/dev.ps1 -Code` for FastAPI at port 8000 and Vite at 5173 using the `.env` database. Stop with `./scripts/stop.ps1` or `-Code`.
+Docker Compose is the default and starts PostgreSQL/pgvector, Redis, ClamAV, private Docling, private Ollama, migration, app, and worker. The first start downloads the pinned generation and embedding models and can take several minutes. Use `./scripts/dev.ps1 -Code` for FastAPI at port 8000 and Vite at 5173 using the `.env` database. Stop with `./scripts/stop.ps1` or `-Code`.
 
 ## Linux/macOS
 
@@ -24,7 +24,7 @@ Docker Compose is the default and starts PostgreSQL/pgvector, Redis, ClamAV, mig
 ./scripts/dev.sh
 ```
 
-Use `--code` for source mode. The setup script creates an ignored `.env` with local high-entropy secrets; review it without committing it.
+Use `--code` for source mode. The setup script creates an ignored `.env` with independent local application, CSRF, PostgreSQL, blob-encryption, connector-encryption, and Docling secrets; review it without committing it.
 
 ## Verification
 

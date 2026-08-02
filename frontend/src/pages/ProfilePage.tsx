@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { api, json } from '../api'
 import { CareerRiver, EvidenceMatrix, ProfileConstellation } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel } from '../components/Primitives'
-import type { Artifact, Claim, Education, Experience, Profile, ProfileGraphData, Skill } from '../types'
+import type { Accomplishment, Artifact, Claim, Education, Experience, Opportunity, Profile, ProfileGraphData, ResumeVariant, Skill, Source } from '../types'
 
 type ProfileTab = 'overview' | 'evidence' | 'graph' | 'river' | 'github' | 'artifacts'
 
@@ -45,12 +45,15 @@ function SkillsPanel({ skills, claims }: { skills: Skill[]; claims: Claim[] }) {
 function EvidenceInbox({ claims }: { claims: Claim[] }) {
   const client = useQueryClient()
   const fileRef = useRef<HTMLInputElement>(null)
+  const sources = useQuery({ queryKey: ['sources'], queryFn: () => api<Source[]>('/api/profile/sources'), refetchInterval: (query) => (query.state.data as Source[] | undefined)?.some((item) => item.status === 'pending') ? 2000 : false })
   const decide = useMutation({ mutationFn: ({ id, decision }: { id: string; decision: string }) => api(`/api/profile/claims/${id}/decision`, json('POST', { decision, note: 'Reviewed in evidence inbox' })), onSuccess: () => { client.invalidateQueries({ queryKey: ['claims'] }); client.invalidateQueries({ queryKey: ['profile-graph'] }); client.invalidateQueries({ queryKey: ['today'] }) } })
   const upload = useMutation({ mutationFn: (file: File) => { const form = new FormData(); form.append('file', file); form.append('label', file.name); return api('/api/profile/sources/upload', { method: 'POST', body: form }) }, onSuccess: () => { client.invalidateQueries({ queryKey: ['claims'] }); client.invalidateQueries({ queryKey: ['sources'] }) } })
+  const retry = useMutation({ mutationFn: (id: string) => api(`/api/profile/sources/${id}/retry`, { method: 'POST' }), onSuccess: () => client.invalidateQueries({ queryKey: ['sources'] }) })
   const proposed = claims.filter((claim) => claim.state === 'proposed')
   return (
     <Panel title="Evidence inbox" subtitle="Documents propose atomic claims; nothing becomes canonical until you decide" actions={<><input ref={fileRef} hidden type="file" accept=".pdf,.docx,.txt,.md,.html,.png,.jpg,.jpeg" onChange={(event) => event.target.files?.[0] && upload.mutate(event.target.files[0])} /><button className="button primary" onClick={() => fileRef.current?.click()}><FileUp /> Add CV or document</button></>}>
-      {(upload.error || decide.error) && <ErrorState error={upload.error || decide.error} />}
+      {(upload.error || decide.error || retry.error || sources.error) && <ErrorState error={upload.error || decide.error || retry.error || sources.error} />}
+      {!!sources.data?.length && <div className="source-jobs">{sources.data.map((source) => <article key={source.id}><div><b>{source.label}</b><small>{source.kind} · {source.status}{source.error && ` · ${source.error}`}</small></div>{source.status === 'pending' && <span className="status-badge proposed">Extracting…</span>}{source.status === 'ready' && <span className="status-badge confirmed"><Check /> Ready</span>}{source.status === 'failed' && <button className="button secondary" onClick={() => retry.mutate(source.id)}>Retry extraction</button>}</article>)}</div>}
       {proposed.length ? <div className="review-stack">{proposed.map((claim) => <article key={claim.id}><div className="claim-icon"><Sparkles /></div><div><span className="status-badge proposed">Proposed · {Math.round(claim.confidence * 100)}% extraction confidence</span><h3>{claim.statement}</h3><small>{claim.claim_type} · source locator preserved</small></div><div className="review-actions"><button className="button ghost danger" onClick={() => decide.mutate({ id: claim.id, decision: 'rejected' })}><X /> Reject</button><button className="button secondary" onClick={() => decide.mutate({ id: claim.id, decision: 'confirmed' })}><Check /> Confirm</button></div></article>)}</div> : <EmptyState title="No proposals waiting" description="Upload a résumé, CV, certificate, portfolio note, or screenshot. The extractor will stage reviewable claims here." />}
       <details className="evidence-history"><summary>Decision history ({claims.length - proposed.length})</summary>{claims.filter((claim) => claim.state !== 'proposed').map((claim) => <div key={claim.id}><span className={`status-badge ${claim.state}`}>{claim.state}</span><p>{claim.statement}</p></div>)}</details>
     </Panel>
@@ -87,6 +90,78 @@ function GithubImporter() {
   )
 }
 
+function AccomplishmentBank({ claims }: { claims: Claim[] }) {
+  const client = useQueryClient()
+  const accomplishments = useQuery({ queryKey: ['accomplishments'], queryFn: () => api<Accomplishment[]>('/api/artifacts/accomplishments') })
+  const [title, setTitle] = useState('')
+  const [situation, setSituation] = useState('')
+  const [task, setTask] = useState('')
+  const [action, setAction] = useState('')
+  const [result, setResult] = useState('')
+  const [skills, setSkills] = useState('')
+  const [evidenceIds, setEvidenceIds] = useState<string[]>([])
+  const confirmed = claims.filter((claim) => claim.state === 'confirmed')
+  const create = useMutation({
+    mutationFn: () => api<Accomplishment>('/api/artifacts/accomplishments', json('POST', {
+      title,
+      situation,
+      task,
+      action,
+      result,
+      skills: skills.split(',').map((value) => value.trim()).filter(Boolean),
+      evidence_ids: evidenceIds,
+      metrics: [],
+      status: evidenceIds.length ? 'confirmed' : 'draft',
+    })),
+    onSuccess: () => {
+      setTitle(''); setSituation(''); setTask(''); setAction(''); setResult(''); setSkills(''); setEvidenceIds([])
+      client.invalidateQueries({ queryKey: ['accomplishments'] })
+    },
+  })
+  const remove = useMutation({ mutationFn: (id: string) => api(`/api/artifacts/accomplishments/${id}`, { method: 'DELETE' }), onSuccess: () => client.invalidateQueries({ queryKey: ['accomplishments'] }) })
+  return (
+    <Panel title="Accomplishment bank" subtitle="Reusable STAR stories remain linked to confirmed evidence">
+      <form className="inline-editor" onSubmit={(event) => { event.preventDefault(); create.mutate() }}>
+        <div className="form-grid two"><label>Story title<input value={title} onChange={(event) => setTitle(event.target.value)} required /></label><label>Skills, comma separated<input value={skills} onChange={(event) => setSkills(event.target.value)} /></label></div>
+        <div className="form-grid two"><label>Situation<textarea rows={3} value={situation} onChange={(event) => setSituation(event.target.value)} /></label><label>Task<textarea rows={3} value={task} onChange={(event) => setTask(event.target.value)} /></label><label>Action<textarea rows={3} value={action} onChange={(event) => setAction(event.target.value)} /></label><label>Result<textarea rows={3} value={result} onChange={(event) => setResult(event.target.value)} /></label></div>
+        <label>Supporting evidence<select multiple value={evidenceIds} onChange={(event) => setEvidenceIds(Array.from(event.target.selectedOptions, (option) => option.value))}>{confirmed.map((claim) => <option key={claim.id} value={claim.id}>{claim.statement.slice(0, 120)}</option>)}</select><small>Stories without evidence remain drafts. Confirmed stories can be used in tailored resumes.</small></label>
+        {create.error && <ErrorState error={create.error} />}
+        <div className="form-actions"><button className="button secondary" disabled={create.isPending}><Plus /> Save STAR story</button></div>
+      </form>
+      {accomplishments.isPending ? <Loading label="Loading accomplishment bank" /> : accomplishments.error ? <ErrorState error={accomplishments.error} /> : accomplishments.data.length ? <div className="artifact-grid">{accomplishments.data.map((item) => <article key={item.id}><span className={`status-badge ${item.status === 'confirmed' ? 'confirmed' : ''}`}>{item.status}</span><h3>{item.title}</h3><small>{item.skills.join(' · ') || 'No skill labels'} · {item.evidence_ids.length} evidence links</small><p><b>Situation:</b> {item.situation || 'Not recorded'}</p><p><b>Action:</b> {item.action || 'Not recorded'}</p><p><b>Result:</b> {item.result || 'Not recorded'}</p><button className="button ghost danger" onClick={() => remove.mutate(item.id)}><X /> Delete</button></article>)}</div> : <EmptyState title="No accomplishment stories yet" description="Capture a concrete situation, task, action, and result, then anchor it to evidence." />}
+    </Panel>
+  )
+}
+
+function ResumeVariantStudio({ claims }: { claims: Claim[] }) {
+  const client = useQueryClient()
+  const variants = useQuery({ queryKey: ['resume-variants'], queryFn: () => api<ResumeVariant[]>('/api/artifacts/resume-variants') })
+  const accomplishments = useQuery({ queryKey: ['accomplishments'], queryFn: () => api<Accomplishment[]>('/api/artifacts/accomplishments') })
+  const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities') })
+  const [name, setName] = useState('Core resume')
+  const [summary, setSummary] = useState('')
+  const [opportunityId, setOpportunityId] = useState('')
+  const [accomplishmentIds, setAccomplishmentIds] = useState<string[]>([])
+  const evidenceIds = claims.filter((claim) => claim.state === 'confirmed').map((claim) => claim.id)
+  const create = useMutation({
+    mutationFn: () => api<ResumeVariant>('/api/artifacts/resume-variants', json('POST', { name, summary, opportunity_id: opportunityId || null, section_order: ['summary', 'experience', 'accomplishments', 'skills', 'education'], evidence_ids: evidenceIds, accomplishment_ids: accomplishmentIds })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['resume-variants'] }),
+  })
+  const confirmedStories = accomplishments.data?.filter((item) => item.status === 'confirmed') ?? []
+  return (
+    <Panel title="Tailored resume versions" subtitle="Immutable versions composed from confirmed claims and accomplishment stories">
+      <form className="inline-editor" onSubmit={(event) => { event.preventDefault(); create.mutate() }}>
+        <div className="form-grid two"><label>Resume family<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Target opportunity<select value={opportunityId} onChange={(event) => setOpportunityId(event.target.value)}><option value="">General resume</option>{opportunities.data?.map((item) => <option key={item.id} value={item.id}>{item.title} · {item.employer}</option>)}</select></label></div>
+        <label>Tailored summary<textarea rows={4} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="A concise target-specific summary; unsupported claims will not be added automatically." /></label>
+        <label>Confirmed accomplishment stories<select multiple value={accomplishmentIds} onChange={(event) => setAccomplishmentIds(Array.from(event.target.selectedOptions, (option) => option.value))}>{confirmedStories.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+        {create.error && <ErrorState error={create.error} />}
+        <div className="form-actions"><span>{evidenceIds.length} confirmed evidence items available</span><button className="button primary" disabled={create.isPending}><FileStack /> Create immutable version</button></div>
+      </form>
+      {variants.isPending ? <Loading label="Loading resume versions" /> : variants.error ? <ErrorState error={variants.error} /> : variants.data.length ? <div className="artifact-grid">{variants.data.map((variant) => <article key={variant.id}><span className="status-badge confirmed">Version {variant.version}</span><h3>{variant.name}</h3><small>{variant.evidence_ids.length} evidence citations · {variant.accomplishment_ids.length} STAR stories</small><pre>{variant.content.slice(0, 900)}</pre></article>)}</div> : <EmptyState title="No tailored resume versions" description="Create a general or opportunity-specific resume from reviewed professional evidence." />}
+    </Panel>
+  )
+}
+
 function ArtifactStudio({ claims }: { claims: Claim[] }) {
   const client = useQueryClient()
   const artifacts = useQuery({ queryKey: ['artifacts'], queryFn: () => api<Artifact[]>('/api/artifacts') })
@@ -94,11 +169,11 @@ function ArtifactStudio({ claims }: { claims: Claim[] }) {
   const [title, setTitle] = useState('Evidence-grounded résumé')
   const create = useMutation({ mutationFn: () => api('/api/artifacts', json('POST', { kind, title, evidence_ids: claims.filter((claim) => claim.state === 'confirmed').map((claim) => claim.id) })), onSuccess: () => client.invalidateQueries({ queryKey: ['artifacts'] }) })
   return (
-    <Panel title="Artifact studio" subtitle="Versioned drafts assembled only from confirmed evidence">
+    <div className="profile-layout"><AccomplishmentBank claims={claims} /><ResumeVariantStudio claims={claims} /><Panel title="Communication artifact studio" subtitle="Versioned drafts assembled only from confirmed evidence">
       <form className="artifact-compose" onSubmit={(event) => { event.preventDefault(); create.mutate() }}><select value={kind} onChange={(event) => setKind(event.target.value as Artifact['kind'])}><option value="resume">Résumé</option><option value="cover_letter">Cover letter</option><option value="interview_brief">Interview brief</option><option value="follow_up">Follow-up</option></select><input value={title} onChange={(event) => setTitle(event.target.value)} required /><button className="button primary"><FileStack /> Compose draft</button></form>
       {create.error && <ErrorState error={create.error} />}
       {artifacts.data?.length ? <div className="artifact-grid">{artifacts.data.map((artifact) => <article key={artifact.id}><span className="status-badge">{artifact.kind.replace('_', ' ')}</span><h3>{artifact.title}</h3><small>Version {artifact.version} · {artifact.evidence_ids.length} evidence citations</small><pre>{artifact.content.slice(0, 700)}</pre></article>)}</div> : <EmptyState title="No career artifacts yet" description="Compose a résumé, cover letter, interview brief, or follow-up grounded in your confirmed evidence." />}
-    </Panel>
+    </Panel></div>
   )
 }
 

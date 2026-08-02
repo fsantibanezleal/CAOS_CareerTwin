@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CareerTwin capture</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header><span>CT</span><div><b>CareerTwin</b><small>Opportunity capture</small></div></header>
+      <label>CareerTwin address<input id="baseUrl" type="url" spellcheck="false" /></label>
+      <label>Browser credential<input id="token" type="password" autocomplete="off" spellcheck="false" /></label>
+      <p>The credential is stored only in Chrome extension storage. Capture runs only when you press the button.</p>
+      <button id="capture">Capture this job page</button>
+      <output id="status" aria-live="polite"></output>
+      <a id="openApp" target="_blank" rel="noreferrer">Open CareerTwin</a>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

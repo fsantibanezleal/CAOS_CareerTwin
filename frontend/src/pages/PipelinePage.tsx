@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, CalendarDays, Check, ChevronRight, Clock3, ContactRound, Download, FileUp, KanbanSquare, ListChecks, Plus, TimerReset, Trash2 } from 'lucide-react'
+import { BarChart3, CalendarDays, Check, ChevronRight, Clock3, ContactRound, Download, FileUp, KanbanSquare, Link2, ListChecks, Plus, TimerReset, Trash2 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { api, json } from '../api'
+import { ConnectionsPanel } from '../components/ConnectionsPanel'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel } from '../components/Primitives'
 import type { Application, CareerTask, Contact, Opportunity, PipelineAnalytics } from '../types'
 
@@ -168,7 +169,7 @@ function CalendarImport() {
 }
 
 export function PipelinePage() {
-  const [view, setView] = useState<'board' | 'agenda' | 'analytics'>('board')
+  const [view, setView] = useState<'board' | 'agenda' | 'analytics' | 'connections'>('board')
   const applications = useQuery({ queryKey: ['applications'], queryFn: () => api<Application[]>('/api/pipeline/applications') })
   const tasks = useQuery({ queryKey: ['tasks'], queryFn: () => api<CareerTask[]>('/api/pipeline/tasks') })
   const contacts = useQuery({ queryKey: ['contacts'], queryFn: () => api<Contact[]>('/api/pipeline/contacts') })
@@ -181,10 +182,11 @@ export function PipelinePage() {
   return (
     <>
       <PageHeader eyebrow="Application operations" title="Keep every thread moving on your terms." description="Track roles, legal stage transitions, deadlines, meetings, follow-ups, and personal process signals—without automated applications or outreach." actions={<TaskComposer applications={applications.data} contacts={contacts.data} />} />
-      <div className="list-toolbar"><div className="segmented"><button className={view === 'board' ? 'active' : ''} onClick={() => setView('board')}><KanbanSquare /> Board</button><button className={view === 'agenda' ? 'active' : ''} onClick={() => setView('agenda')}><ListChecks /> Agenda</button><button className={view === 'analytics' ? 'active' : ''} onClick={() => setView('analytics')}><BarChart3 /> Process signals</button></div><div className="form-actions"><CalendarImport /><a className="button secondary" href="/api/pipeline/calendar.ics"><Download /> Export calendar</a></div></div>
+      <div className="list-toolbar"><div className="segmented"><button className={view === 'board' ? 'active' : ''} onClick={() => setView('board')}><KanbanSquare /> Board</button><button className={view === 'agenda' ? 'active' : ''} onClick={() => setView('agenda')}><ListChecks /> Agenda</button><button className={view === 'analytics' ? 'active' : ''} onClick={() => setView('analytics')}><BarChart3 /> Process signals</button><button className={view === 'connections' ? 'active' : ''} onClick={() => setView('connections')}><Link2 /> Connections</button></div><div className="form-actions"><CalendarImport /><a className="button secondary" href="/api/pipeline/calendar.ics"><Download /> Export calendar</a></div></div>
       {view === 'board' && (applications.data.length ? <div className="pipeline-board">{stages.map((stage) => { const items = applications.data.filter((item) => item.stage === stage); return <section className={`pipeline-column stage-${stage}`} key={stage}><header><span>{stage}</span><b>{items.length}</b></header><div>{items.map((item) => <PipelineCard key={item.id} application={item} opportunity={opportunityMap.get(item.opportunity_id)} />)}{!items.length && <span className="column-empty">No applications</span>}</div></section> })}</div> : <EmptyState title="Your pipeline has room for a first role" description="Run a match for a saved opportunity, then choose Track application. CareerTwin will preserve the stage history." />)}
       {view === 'agenda' && <div className="agenda-layout"><Panel title="Your career agenda" subtitle="Meetings, deadlines, reminders, and next actions"><TaskList tasks={tasks.data} /></Panel><Panel title="Time horizon" subtitle="Upcoming work grouped by urgency"><div className="horizon">{[['Next 7 days', 7], ['Next 30 days', 30], ['Later / unscheduled', Infinity]].map(([label, days], index) => { const previous = index === 0 ? 0 : Number([['', 7], ['', 30]][index - 1]?.[1] ?? 0); const count = tasks.data.filter((task) => { if (!task.due_at || task.completed_at) return days === Infinity; const delta = (new Date(task.due_at).getTime() - Date.now()) / 86400000; return delta <= Number(days) && delta > previous }).length; return <div key={String(label)}><span><TimerReset /></span><b>{count}</b><small>{label}</small></div> })}</div></Panel><ContactsPanel contacts={contacts.data} applications={applications.data} /></div>}
       {view === 'analytics' && <div className="analytics-layout"><section className="funnel-visual">{stages.slice(0, 7).map((stage, index) => { const count = analytics.data.by_stage[stage] ?? 0; const width = Math.max(22, 100 - index * 10); return <div key={stage} style={{ width: `${width}%` }}><span>{stage}</span><b>{count}</b><ChevronRight /></div> })}</section><Panel title="Personal process signals" subtitle={`Based on ${analytics.data.denominator} tracked application${analytics.data.denominator === 1 ? '' : 's'}`}><div className="analytics-stats"><div><b>{analytics.data.applied_count}</b><span>applications sent</span></div><div><b>{analytics.data.median_days_to_close === undefined || analytics.data.median_days_to_close === null ? '—' : Math.round(analytics.data.median_days_to_close)}</b><span>median days to close</span></div></div>{analytics.data.sample_warning && <div className="sample-warning">Small sample: treat patterns as descriptive, not predictive.</div>}<p className="chart-warning">{analytics.data.meaning}</p></Panel></div>}
+      {view === 'connections' && <ConnectionsPanel />}
     </>
   )
 }

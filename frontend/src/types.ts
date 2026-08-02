@@ -49,6 +49,19 @@ export type Claim = {
   created_at: string
 }
 
+export type Source = {
+  id: string
+  kind: string
+  label: string
+  status: 'pending' | 'ready' | 'failed' | 'quarantined'
+  media_type?: string
+  sha256?: string
+  source_url?: string
+  error?: string
+  source_metadata: Record<string, unknown>
+  created_at: string
+}
+
 export type Requirement = {
   id: string
   category: string
@@ -263,6 +276,76 @@ export type Artifact = {
   generator: string
   created_at: string
   updated_at: string
+}
+
+export type Accomplishment = {
+  id: string
+  title: string
+  situation: string
+  task: string
+  action: string
+  result: string
+  evidence_ids: string[]
+  skills: string[]
+  metrics: Array<Record<string, unknown>>
+  status: 'draft' | 'confirmed' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+export type ResumeVariant = {
+  id: string
+  name: string
+  version: number
+  opportunity_id?: string
+  summary: string
+  section_order: string[]
+  evidence_ids: string[]
+  accomplishment_ids: string[]
+  content: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export type ExternalConnection = {
+  id: string
+  provider: 'google' | 'microsoft'
+  account_subject: string
+  status: string
+  scopes: string[]
+  selected_resource?: string
+  last_synced_at?: string
+  connection_metadata: { display_name?: string; account_hint?: string; services?: string[] }
+  created_at: string
+}
+
+export type BrowserCredential = {
+  id: string
+  label: string
+  last_used_at?: string
+  expires_at?: string
+  revoked_at?: string
+  created_at: string
+}
+
+export type EmailThread = {
+  id: string
+  opportunity_id?: string
+  application_id?: string
+  external_thread_id: string
+  subject: string
+  participants: Array<{ name: string; email: string }>
+  messages: Array<{ id: string; from: string; to: string; sent_at?: string; excerpt: string; web_link?: string }>
+  last_message_at?: string
+  retention_until?: string
+  created_at: string
+}
+
+export type ConnectorStatus = {
+  oauth_providers: { google: boolean; microsoft: boolean }
+  connections: ExternalConnection[]
+  browser_credentials: BrowserCredential[]
 }
 
 export type AdminUser = User

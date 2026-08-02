@@ -198,6 +198,46 @@ class TaxonomyConcept(Base):
     description: Mapped[str] = mapped_column(Text, default="")
 
 
+class TaxonomyImport(Base):
+    """Immutable checksum and count record for one operator-supplied taxonomy archive."""
+
+    __tablename__ = "taxonomy_imports"
+    __table_args__ = (
+        UniqueConstraint("taxonomy", "release", "language", "archive_sha256"),
+        Index("ix_taxonomy_import_release", "taxonomy", "release", "language"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    taxonomy: Mapped[str] = mapped_column(String(30))
+    release: Mapped[str] = mapped_column(String(40))
+    language: Mapped[str] = mapped_column(String(8))
+    source_url: Mapped[str] = mapped_column(Text)
+    archive_sha256: Mapped[str] = mapped_column(String(64))
+    concept_count: Mapped[int] = mapped_column(Integer, default=0)
+    relation_count: Mapped[int] = mapped_column(Integer, default=0)
+    imported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class TaxonomyEmbedding(Base):
+    """Versioned multilingual semantic vector for one immutable taxonomy concept label."""
+
+    __tablename__ = "taxonomy_embeddings"
+    __table_args__ = (
+        UniqueConstraint("concept_id", "model", "model_revision"),
+        Index("ix_taxonomy_embedding_scope", "taxonomy", "release", "language"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    concept_id: Mapped[str] = mapped_column(
+        ForeignKey("taxonomy_concepts.id", ondelete="CASCADE"), index=True
+    )
+    taxonomy: Mapped[str] = mapped_column(String(30))
+    release: Mapped[str] = mapped_column(String(40))
+    language: Mapped[str] = mapped_column(String(8))
+    model: Mapped[str] = mapped_column(String(160))
+    model_revision: Mapped[str] = mapped_column(String(160))
+    embedding: Mapped[list[float]] = mapped_column(Vector(768).with_variant(JSON(), "sqlite"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class EvidenceClaim(Base, TimestampMixin):
     """Atomic, reviewable professional assertion bound to an exact source locator."""
 
@@ -636,3 +676,160 @@ class AuditEvent(Base):
     resource_id: Mapped[str | None] = mapped_column(String(36))
     details: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class TaxonomyRelation(Base):
+    """Versioned directed edge within an official occupational taxonomy snapshot."""
+
+    __tablename__ = "taxonomy_relations"
+    __table_args__ = (
+        UniqueConstraint("taxonomy", "release", "source_uri", "target_uri", "relation"),
+        Index("ix_taxonomy_relation_source", "taxonomy", "release", "source_uri"),
+        Index("ix_taxonomy_relation_target", "taxonomy", "release", "target_uri"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    taxonomy: Mapped[str] = mapped_column(String(30))
+    release: Mapped[str] = mapped_column(String(40))
+    source_uri: Mapped[str] = mapped_column(Text)
+    target_uri: Mapped[str] = mapped_column(Text)
+    relation: Mapped[str] = mapped_column(String(80))
+    provenance: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
+
+
+class Accomplishment(Base, TimestampMixin):
+    """Evidence-backed situation, task, action and result record owned by one seeker."""
+
+    __tablename__ = "accomplishments"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    title: Mapped[str] = mapped_column(String(300))
+    situation: Mapped[str] = mapped_column(Text, default="")
+    task: Mapped[str] = mapped_column(Text, default="")
+    action: Mapped[str] = mapped_column(Text, default="")
+    result: Mapped[str] = mapped_column(Text, default="")
+    evidence_ids: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    skills: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    metrics: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list)
+    status: Mapped[str] = mapped_column(String(30), default="draft")
+
+
+class ResumeVariant(Base, TimestampMixin):
+    """Versioned resume composition that references confirmed evidence and accomplishments."""
+
+    __tablename__ = "resume_variants"
+    __table_args__ = (UniqueConstraint("workspace_id", "name", "version"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(200))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    opportunity_id: Mapped[str | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), index=True
+    )
+    summary: Mapped[str] = mapped_column(Text, default="")
+    section_order: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    evidence_ids: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    accomplishment_ids: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    content: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(30), default="draft")
+
+
+class ExternalConnection(Base, TimestampMixin):
+    """Encrypted delegated connector grant and least-privilege synchronization state."""
+
+    __tablename__ = "external_connections"
+    __table_args__ = (UniqueConstraint("workspace_id", "provider", "account_subject"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    provider: Mapped[str] = mapped_column(String(40), index=True)
+    account_subject: Mapped[str] = mapped_column(String(320), default="default")
+    status: Mapped[str] = mapped_column(String(30), default="connected")
+    scopes: Mapped[list[str]] = mapped_column(JsonType, default=list)
+    encrypted_credentials: Mapped[str] = mapped_column(Text)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    selected_resource: Mapped[str | None] = mapped_column(String(500))
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    connection_metadata: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
+
+
+class OAuthAuthorization(Base):
+    """Short-lived one-time OAuth state and encrypted PKCE verifier."""
+
+    __tablename__ = "oauth_authorizations"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    provider: Mapped[str] = mapped_column(String(40))
+    state_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    encrypted_verifier: Mapped[str] = mapped_column(Text)
+    redirect_after: Mapped[str] = mapped_column(String(500), default="/pipeline")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class BrowserCaptureCredential(Base, TimestampMixin):
+    """Revocable high-entropy extension credential stored only as a one-way digest."""
+
+    __tablename__ = "browser_capture_credentials"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    label: Mapped[str] = mapped_column(String(200), default="Browser extension")
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class EmailThread(Base, TimestampMixin):
+    """Redacted, tenant-owned recruiting email thread imported with explicit consent."""
+
+    __tablename__ = "email_threads"
+    __table_args__ = (UniqueConstraint("workspace_id", "source_digest"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    opportunity_id: Mapped[str | None] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="SET NULL"), index=True
+    )
+    application_id: Mapped[str | None] = mapped_column(
+        ForeignKey("applications.id", ondelete="SET NULL"), index=True
+    )
+    source_digest: Mapped[str] = mapped_column(String(64), index=True)
+    external_thread_id: Mapped[str] = mapped_column(String(500), default="")
+    subject: Mapped[str] = mapped_column(String(500), default="")
+    participants: Mapped[list[dict[str, str]]] = mapped_column(JsonType, default=list)
+    messages: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list)
+    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    retention_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class AgentTrace(Base):
+    """Persisted redacted local observation independent of an external tracing vendor."""
+
+    __tablename__ = "agent_traces"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("agent_runs.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    trace_id: Mapped[str] = mapped_column(String(64), unique=True)
+    provider: Mapped[str] = mapped_column(String(60))
+    specialist: Mapped[str] = mapped_column(String(80), default="unknown")
+    status: Mapped[str] = mapped_column(String(30))
+    input_digest: Mapped[str] = mapped_column(String(64))
+    evidence_count: Mapped[int] = mapped_column(Integer, default=0)
+    citation_count: Mapped[int] = mapped_column(Integer, default=0)
+    attempt: Mapped[int] = mapped_column(Integer, default=1)
+    external_exported: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

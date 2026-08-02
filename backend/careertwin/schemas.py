@@ -306,6 +306,121 @@ class ArtifactRead(ApiModel):
     updated_at: datetime
 
 
+class AccomplishmentCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=300)
+    situation: str = Field(default="", max_length=20_000)
+    task: str = Field(default="", max_length=20_000)
+    action: str = Field(default="", max_length=20_000)
+    result: str = Field(default="", max_length=20_000)
+    evidence_ids: list[str] = Field(default_factory=list, max_length=200)
+    skills: list[str] = Field(default_factory=list, max_length=100)
+    metrics: list[dict[str, Any]] = Field(default_factory=list, max_length=100)
+    status: Literal["draft", "confirmed", "archived"] = "draft"
+
+
+class AccomplishmentRead(AccomplishmentCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ResumeVariantCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    opportunity_id: str | None = None
+    summary: str = Field(default="", max_length=20_000)
+    section_order: list[str] = Field(
+        default_factory=lambda: ["summary", "experience", "skills", "education"]
+    )
+    evidence_ids: list[str] = Field(default_factory=list, max_length=300)
+    accomplishment_ids: list[str] = Field(default_factory=list, max_length=200)
+
+
+class ResumeVariantRead(ApiModel):
+    id: str
+    name: str
+    version: int
+    opportunity_id: str | None
+    summary: str
+    section_order: list[str]
+    evidence_ids: list[str]
+    accomplishment_ids: list[str]
+    content: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class EmailThreadRead(ApiModel):
+    id: str
+    opportunity_id: str | None
+    application_id: str | None
+    external_thread_id: str
+    subject: str
+    participants: list[dict[str, str]]
+    messages: list[dict[str, Any]]
+    last_message_at: datetime | None
+    retention_until: datetime | None
+    created_at: datetime
+
+
+class BrowserCapture(BaseModel):
+    url: HttpUrl
+    title: str = Field(default="", max_length=500)
+    content: str = Field(min_length=1, max_length=500_000)
+    captured_at: datetime
+
+
+class ConnectionRead(ApiModel):
+    id: str
+    provider: str
+    account_subject: str
+    status: str
+    scopes: list[str]
+    selected_resource: str | None
+    last_synced_at: datetime | None
+    connection_metadata: dict[str, Any]
+    created_at: datetime
+
+
+class CalendarSyncRequest(BaseModel):
+    calendar_id: str | None = Field(default=None, max_length=500)
+    days_back: int = Field(default=30, ge=0, le=365)
+    days_forward: int = Field(default=180, ge=1, le=730)
+
+
+class ConnectionAuthorizeRequest(BaseModel):
+    services: list[Literal["calendar", "email"]] = Field(min_length=1, max_length=2)
+    redirect_after: str = Field(default="/pipeline", pattern="^/[A-Za-z0-9_/?=&.-]*$")
+
+
+class EmailSyncRequest(BaseModel):
+    days_back: int = Field(default=180, ge=1, le=730)
+    max_threads: int = Field(default=100, ge=1, le=200)
+    create_follow_up_tasks: bool = True
+
+
+class BrowserCredentialCreate(BaseModel):
+    label: str = Field(default="Browser extension", min_length=1, max_length=200)
+    expires_in_days: int = Field(default=180, ge=1, le=365)
+
+
+class BrowserCredentialIssued(BaseModel):
+    id: str
+    label: str
+    token: str
+    expires_at: datetime
+
+
+class BrowserCredentialRead(ApiModel):
+    id: str
+    label: str
+    last_used_at: datetime | None
+    expires_at: datetime | None
+    revoked_at: datetime | None
+    created_at: datetime
+
+
 class ApplicationCreate(BaseModel):
     opportunity_id: str
     channel: str = Field(default="direct", max_length=80)

@@ -5,7 +5,7 @@
 
 ## Decision
 
-Track one application per saved opportunity through explicit legal transitions. Append immutable stage events; attach tasks/meetings/deadlines/reminders; export RFC 5545 calendar data. Analytics include denominators and small-sample warnings.
+Track one application per saved opportunity through explicit legal transitions. Append immutable stage events; attach contacts, tasks, meetings, deadlines, and reminders; exchange RFC 5545 calendar data. Optional consent-bound Google/Microsoft connectors synchronize a user-selected calendar window and read bounded recruiting-thread excerpts without mailbox write scope. ADR 0024 defines connector consent, encryption, retention, and browser-capture boundaries. Analytics include denominators and small-sample warnings.
 
 ## Consequences
 

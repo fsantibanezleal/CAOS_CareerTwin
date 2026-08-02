@@ -5,10 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy import select
 
-from careertwin.api.dependencies import CsrfSuperuser, Db, Superuser
+from careertwin.api.dependencies import Config, CsrfSuperuser, Db, Superuser
 from careertwin.models import User
 from careertwin.schemas import AdminUserCreate, UserRead
 from careertwin.services.audit import record_audit
+from careertwin.services.blob import configured_blob_store
 from careertwin.services.security import create_user, revoke_all_sessions
 
 router = APIRouter(prefix="/api/admin", tags=["administration"])
@@ -79,7 +80,13 @@ def revoke_user_sessions(user_id: str, actor: CsrfSuperuser, db: Db) -> dict[str
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def purge_user(user_id: str, confirm: str, actor: CsrfSuperuser, db: Db) -> Response:
+def purge_user(
+    user_id: str,
+    confirm: str,
+    actor: CsrfSuperuser,
+    db: Db,
+    settings: Config,
+) -> Response:
     """Permanently purge an account only after an exact explicit confirmation value."""
     target = db.get(User, user_id)
     if not target:
@@ -91,6 +98,11 @@ def purge_user(user_id: str, confirm: str, actor: CsrfSuperuser, db: Db) -> Resp
             status_code=400, detail="Confirmation must exactly match the account email"
         )
     target_id = target.id
+    workspace_id = target.workspace.id
     db.delete(target)
     record_audit(db, actor, "admin.user_purged", "user", target_id)
+    # Remove private files inside the same request transaction. A filesystem failure
+    # rolls the database deletion back, leaving an operator-visible account that can
+    # be retried instead of silently reporting a partial purge.
+    configured_blob_store(settings).delete_workspace(workspace_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

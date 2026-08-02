@@ -50,8 +50,7 @@ def _resolve_public_target(url: str) -> _ResolvedTarget:
         raise UnsafeUrlError("Local hostnames are blocked")
     try:
         addresses = {
-            str(item[4][0])
-            for item in socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
+            str(item[4][0]) for item in socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
         }
     except socket.gaierror as exc:
         raise UnsafeUrlError("Hostname could not be resolved") from exc
@@ -131,9 +130,7 @@ def capture_url(url: str, max_bytes: int) -> CapturedOpportunity:
                     context = ssl.create_default_context()
                     context.minimum_version = ssl.TLSVersion.TLSv1_2
                     raw_socket = context.wrap_socket(raw_socket, server_hostname=current.hostname)
-                connection = http.client.HTTPConnection(
-                    current.hostname, current.port, timeout=15
-                )
+                connection = http.client.HTTPConnection(current.hostname, current.port, timeout=15)
                 connection.sock = raw_socket
                 break
             except (OSError, ssl.SSLError) as exc:

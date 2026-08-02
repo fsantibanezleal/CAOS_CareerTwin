@@ -12,9 +12,11 @@ One authenticated account represents one professional seeker and owns exactly on
 4. **Matching**: deterministic immutable runs with eligibility, alignment, coverage, uncertainty, category components, an evidence bridge, and explicit portfolio scenarios.
 5. **Readiness**: gap-derived editable learning/action plans, shared-gap matrices, and user-selected tasks.
 6. **Artifact studio**: versioned résumé, cover-letter, interview-brief, and follow-up drafts assembled from confirmed evidence.
-7. **Pipeline**: legal stage transitions, immutable history, contacts, tasks, meetings, deadlines, UID-idempotent calendar exchange, and denominator-aware personal analytics.
-8. **Career copilot**: provider-selectable, evidence-cited conversations, durable cancel/retry execution, and previewed changes.
-9. **Administration**: invite, disable/restore, session revocation, and explicit purge.
+7. **Pipeline**: legal stage transitions, immutable history, contacts, tasks, meetings, deadlines, UID-idempotent file/calendar synchronization, read-only recruiting-thread context, and denominator-aware personal analytics.
+8. **Career artifacts**: evidence-backed STAR stories, immutable tailored résumé versions, cover letters, interview briefs, and follow-ups.
+9. **Personal connectors**: request-memory-only GitHub review, consent-bound Google/Microsoft calendar/email, and explicit browser opportunity capture.
+10. **Career copilot**: provider-selectable, evidence-cited conversations, durable cancel/retry execution, and previewed changes.
+11. **Administration**: invite, disable/restore, session revocation, and explicit purge.
 
 ## Lifecycle
 
@@ -27,7 +29,7 @@ The normal path is source → proposed claims → human decision → curated gra
 - No protected-trait inference or use in scoring.
 - No unrestricted job-board crawling or access-control bypass.
 - No silent model write to canonical data.
-- No public profile sharing in the first alpha.
+- No public profile sharing; the product remains a private, candidate-controlled workspace.
 
 ## Honest language
 

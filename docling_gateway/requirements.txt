@@ -1,0 +1,6 @@
+docling-slim[feat-ocr-easyocr,format-docx,format-pdf,models-local]==2.117.0
+fastapi==0.141.1
+opencv-python-headless==5.0.0.93
+pillow==12.3.0
+python-multipart==0.0.32
+uvicorn==0.52.1

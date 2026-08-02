@@ -121,20 +121,42 @@ def test_profile_crud_document_review_and_graph(client: TestClient) -> None:
     skill = client.post(
         "/api/profile/skills",
         headers=csrf(token),
-        json={"name": "Python", "level": 0.85, "years": 6, "confidence": 0.9, "evidence_ids": [claim_id]},
+        json={
+            "name": "Python",
+            "level": 0.85,
+            "years": 6,
+            "confidence": 0.9,
+            "evidence_ids": [claim_id],
+        },
     )
     assert skill.status_code == 201, skill.text
-    assert client.post(
-        "/api/profile/skills",
-        headers=csrf(token),
-        json={"name": " python ", "evidence_ids": [claim_id]},
-    ).status_code == 409
+    assert (
+        client.post(
+            "/api/profile/skills",
+            headers=csrf(token),
+            json={"name": " python ", "evidence_ids": [claim_id]},
+        ).status_code
+        == 409
+    )
     graph = client.get("/api/profile/graph").json()
     assert {row["kind"] for row in graph["river"]} == {"experience", "education"}
     assert graph["matrix"][0]["evidence"][0]["id"] == claim_id
-    assert client.delete(f"/api/profile/skills/{skill.json()['id']}", headers=csrf(token)).status_code == 204
-    assert client.delete(f"/api/profile/experiences/{experience.json()['id']}", headers=csrf(token)).status_code == 204
-    assert client.delete(f"/api/profile/education/{education.json()['id']}", headers=csrf(token)).status_code == 204
+    assert (
+        client.delete(f"/api/profile/skills/{skill.json()['id']}", headers=csrf(token)).status_code
+        == 204
+    )
+    assert (
+        client.delete(
+            f"/api/profile/experiences/{experience.json()['id']}", headers=csrf(token)
+        ).status_code
+        == 204
+    )
+    assert (
+        client.delete(
+            f"/api/profile/education/{education.json()['id']}", headers=csrf(token)
+        ).status_code
+        == 204
+    )
     assert client.delete("/api/profile/education/missing", headers=csrf(token)).status_code == 404
 
 
@@ -145,7 +167,13 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
     client.post(
         "/api/profile/skills",
         headers=csrf(token),
-        json={"name": "Python", "level": 0.9, "years": 6, "confidence": 0.95, "evidence_ids": [claim_id]},
+        json={
+            "name": "Python",
+            "level": 0.9,
+            "years": 6,
+            "confidence": 0.95,
+            "evidence_ids": [claim_id],
+        },
     )
     payload = {
         "title": "Senior Platform Engineer",
@@ -160,7 +188,12 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
         "deadline_at": "2026-09-01T00:00:00Z",
         "status": "active",
         "requirements": [
-            {"category": "skill", "label": "Python", "importance": "required", "minimum_level": 0.8},
+            {
+                "category": "skill",
+                "label": "Python",
+                "importance": "required",
+                "minimum_level": 0.8,
+            },
             {"category": "skill", "label": "Kubernetes", "importance": "preferred"},
         ],
     }
@@ -176,9 +209,7 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
     assert len(proposals.json()) == 2
     payload["title"] = "Principal Platform Engineer"
     payload["requirements"] = [payload["requirements"][0]]
-    changed = client.put(
-        f"/api/opportunities/{opportunity_id}", headers=csrf(token), json=payload
-    )
+    changed = client.put(f"/api/opportunities/{opportunity_id}", headers=csrf(token), json=payload)
     assert changed.status_code == 200, changed.text
     assert changed.json()["version"] == 2
     landscape = client.get("/api/opportunities/visualization/landscape").json()
@@ -186,9 +217,12 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
     assert landscape["skills"]["python"] == 1
 
     assert client.get(f"/api/matches/{opportunity_id}/latest").status_code == 404
-    assert client.post(
-        f"/api/matches/{opportunity_id}/recommendations", headers=csrf(token)
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/matches/{opportunity_id}/recommendations", headers=csrf(token)
+        ).status_code
+        == 409
+    )
     run = client.post(f"/api/matches/{opportunity_id}/run", headers=csrf(token))
     assert run.status_code == 201, run.text
     assert client.get(f"/api/matches/{opportunity_id}/latest").json()["id"] == run.json()["id"]
@@ -205,21 +239,34 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
     artifact = client.post(
         "/api/artifacts",
         headers=csrf(token),
-        json={"kind": "resume", "title": "Platform resume", "opportunity_id": opportunity_id, "evidence_ids": [claim_id]},
+        json={
+            "kind": "resume",
+            "title": "Platform resume",
+            "opportunity_id": opportunity_id,
+            "evidence_ids": [claim_id],
+        },
     )
     assert artifact.status_code == 201, artifact.text
     second = client.post(
         "/api/artifacts",
         headers=csrf(token),
-        json={"kind": "resume", "title": "Platform resume", "opportunity_id": opportunity_id, "evidence_ids": [claim_id]},
+        json={
+            "kind": "resume",
+            "title": "Platform resume",
+            "opportunity_id": opportunity_id,
+            "evidence_ids": [claim_id],
+        },
     )
     assert second.json()["version"] == 2
     assert len(client.get("/api/artifacts").json()) == 2
-    assert client.post(
-        "/api/artifacts",
-        headers=csrf(token),
-        json={"kind": "resume", "title": "Invalid", "evidence_ids": ["missing"]},
-    ).status_code == 400
+    assert (
+        client.post(
+            "/api/artifacts",
+            headers=csrf(token),
+            json={"kind": "resume", "title": "Invalid", "evidence_ids": ["missing"]},
+        ).status_code
+        == 400
+    )
     today = client.get("/api/workspace/today").json()
     assert today["confirmed_evidence"] == 1
     assert today["active_opportunities"] == 1
@@ -244,36 +291,51 @@ def test_file_capture_chat_history_and_deletion(client: TestClient) -> None:
     assert captured.status_code == 201, captured.text
     assert captured.json()["source_kind"] == "file"
     providers = client.get("/api/agent/providers").json()
-    assert "mock" in providers["providers"]
-    assert providers["offline_available"] is True
-    assert client.post(
-        "/api/agent/chat",
-        headers=csrf(token),
-        json={"message": "Help with this role", "provider": "unconfigured"},
-    ).status_code == 400
+    assert "contract" in providers["providers"]
+    assert providers["local_private_provider"] is True
+    assert (
+        client.post(
+            "/api/agent/chat",
+            headers=csrf(token),
+            json={"message": "Help with this role", "provider": "unconfigured"},
+        ).status_code
+        == 400
+    )
     chat = client.post(
         "/api/agent/chat",
         headers=csrf(token),
-        json={"message": "Explain this job opportunity", "provider": "mock", "opportunity_id": captured.json()["id"]},
+        json={
+            "message": "Explain this job opportunity",
+            "provider": "contract",
+            "opportunity_id": captured.json()["id"],
+        },
     )
     assert chat.status_code == 200, chat.text
     conversation_id = chat.json()["conversation_id"]
     follow_up = client.post(
         "/api/agent/chat",
         headers=csrf(token),
-        json={"message": "How should I improve?", "provider": "mock", "conversation_id": conversation_id},
+        json={
+            "message": "How should I improve?",
+            "provider": "contract",
+            "conversation_id": conversation_id,
+        },
     )
     assert follow_up.status_code == 200
     assert len(client.get("/api/agent/conversations").json()) == 1
     messages = client.get(f"/api/agent/conversations/{conversation_id}/messages").json()
     assert [message["role"] for message in messages] == ["user", "assistant", "user", "assistant"]
     assert client.get("/api/agent/proposed-changes").json() == []
-    assert client.delete(
-        f"/api/agent/conversations/{conversation_id}", headers=csrf(token)
-    ).status_code == 204
+    assert (
+        client.delete(
+            f"/api/agent/conversations/{conversation_id}", headers=csrf(token)
+        ).status_code
+        == 204
+    )
     assert client.get(f"/api/agent/conversations/{conversation_id}/messages").status_code == 404
     opportunity_id = captured.json()["id"]
-    assert client.delete(
-        f"/api/opportunities/{opportunity_id}", headers=csrf(token)
-    ).status_code == 204
+    assert (
+        client.delete(f"/api/opportunities/{opportunity_id}", headers=csrf(token)).status_code
+        == 204
+    )
     assert client.get(f"/api/opportunities/{opportunity_id}").status_code == 404

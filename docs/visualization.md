@@ -24,7 +24,16 @@ CareerTwin carries forward evidence-bearing edges, stable IDs, legends, alternat
 - **React Flow** selected only for inspectable architecture/process diagrams, not canonical career data.
 - **Cytoscape.js** remains a strong alternative for compound graphs and algorithms; not needed for the first-alpha graph size.
 - **D3** offers maximum grammar control but would require more custom interaction/accessibility code.
-- **Cosmograph/GraphXR/3-D force graphs** were considered for scale or novelty but rejected for the first alpha's privacy, device, and accessibility needs.
+- **Cosmograph/GraphXR/3-D force graphs** were considered for scale or novelty but rejected for CareerTwin's privacy, device, and accessibility requirements.
+
+Current primary references are the official [Sigma.js](https://www.sigmajs.org/docs/),
+[Graphology](https://graphology.github.io/), [Cytoscape.js](https://js.cytoscape.org/),
+[Cosmos.gl](https://github.com/cosmosgl/graph), and
+[Apache ECharts](https://echarts.apache.org/en/cheat-sheet.html) documentation. Sigma's WebGL
+renderer is intended for thousands of nodes/edges; Graphology provides the eventful graph model and
+algorithm/layout standard library. Cytoscape.js would become preferable if CareerTwin adds nested
+compound taxonomies. Cosmos.gl is designed for GPU-scale networks far beyond a comprehensible
+single-person graph. Those capability differences, not aesthetic preference, drive the selection.
 
 ## Rules
 

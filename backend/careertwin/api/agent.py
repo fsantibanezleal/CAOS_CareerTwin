@@ -10,13 +10,15 @@ from arq.connections import RedisSettings
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
-from careertwin.agent.contracts import AgentContext
+from careertwin.agent.contracts import AgentContext, AgentDraft
+from careertwin.agent.prompts import registry_manifest
 from careertwin.agent.providers import provider_registry
 from careertwin.agent.workflow import run_workflow
 from careertwin.api.dependencies import Config, CsrfUser, CurrentUser, Db
 from careertwin.models import (
     AgentMessage,
     AgentRun,
+    AgentTrace,
     ClaimState,
     Conversation,
     EvidenceClaim,
@@ -27,6 +29,7 @@ from careertwin.models import (
 )
 from careertwin.schemas import AgentRunRead, ChatRequest, ChatResponse, ProposedChangeDecision
 from careertwin.services.audit import record_audit
+from careertwin.services.model_extraction import OpportunityExtraction, ProfileExtraction
 
 router = APIRouter(prefix="/api/agent", tags=["agentic concierge"])
 
@@ -45,8 +48,25 @@ async def _enqueue(settings: Config, workspace_id: str, run_id: str) -> None:
 @router.get("/providers")
 def available_providers(_: CurrentUser, settings: Config) -> dict[str, object]:
     """List configured provider names without exposing keys or provider configuration payloads."""
-    names = sorted(provider_registry(settings))
-    return {"providers": names, "default": settings.llm_default_provider, "offline_available": True}
+    providers = provider_registry(settings)
+    names = sorted(providers)
+    return {
+        "providers": names,
+        "default": settings.llm_default_provider,
+        "local_private_provider": "ollama" in providers,
+    }
+
+
+@router.get("/contracts")
+def agent_contracts(_: CurrentUser) -> list[dict[str, str]]:
+    """Expose version/digest provenance without returning operational prompt text."""
+    return registry_manifest(
+        {
+            "career-agent": AgentDraft.model_json_schema(),
+            "profile-evidence-extraction": ProfileExtraction.model_json_schema(),
+            "opportunity-requirement-extraction": OpportunityExtraction.model_json_schema(),
+        }
+    )
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -309,11 +329,38 @@ def get_run(run_id: str, user: CurrentUser, db: Db) -> AgentRunRead:
     return AgentRunRead.model_validate(run)
 
 
+@router.get("/runs/{run_id}/trace")
+def get_run_trace(run_id: str, user: CurrentUser, db: Db) -> dict[str, object]:
+    """Return the tenant-owned redacted trace contract, never prompts or model output."""
+    trace = db.scalar(
+        select(AgentTrace).where(
+            AgentTrace.run_id == run_id,
+            AgentTrace.workspace_id == user.workspace.id,
+        )
+    )
+    if not trace:
+        raise HTTPException(status_code=404, detail="Run trace not found")
+    return {
+        "trace_id": trace.trace_id,
+        "provider": trace.provider,
+        "specialist": trace.specialist,
+        "status": trace.status,
+        "input_digest": trace.input_digest,
+        "evidence_count": trace.evidence_count,
+        "citation_count": trace.citation_count,
+        "attempt": trace.attempt,
+        "external_exported": trace.external_exported,
+        "created_at": trace.created_at,
+    }
+
+
 @router.post("/runs/{run_id}/cancel", response_model=AgentRunRead)
 def cancel_run(run_id: str, user: CsrfUser, db: Db) -> AgentRunRead:
     """Cancel a queued run or request cancellation at the next durable boundary."""
     run = db.scalar(
-        select(AgentRun).where(AgentRun.id == run_id, AgentRun.workspace_id == user.workspace.id)
+        select(AgentRun)
+        .where(AgentRun.id == run_id, AgentRun.workspace_id == user.workspace.id)
+        .with_for_update()
     )
     if not run:
         raise HTTPException(status_code=404, detail="Agent run not found")
@@ -332,7 +379,9 @@ def cancel_run(run_id: str, user: CsrfUser, db: Db) -> AgentRunRead:
 async def retry_run(run_id: str, user: CsrfUser, db: Db, settings: Config) -> AgentRunRead:
     """Create a new attempt from a failed or cancelled checkpoint and preserve the prior run."""
     previous = db.scalar(
-        select(AgentRun).where(AgentRun.id == run_id, AgentRun.workspace_id == user.workspace.id)
+        select(AgentRun)
+        .where(AgentRun.id == run_id, AgentRun.workspace_id == user.workspace.id)
+        .with_for_update()
     )
     if not previous:
         raise HTTPException(status_code=404, detail="Agent run not found")
