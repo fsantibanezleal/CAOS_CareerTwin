@@ -4,7 +4,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_native.ps1')
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $BackupRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $OutputDirectory))
-if (-not $BackupRoot.StartsWith($RepoRoot, [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Backup directory must be inside the repository working copy.' }
+$RepoPrefix = $RepoRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+if (-not $BackupRoot.StartsWith($RepoPrefix, [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Backup directory must be inside the repository working copy.' }
 New-Item -ItemType Directory -Force -Path $BackupRoot | Out-Null
 if ($env:OS -eq 'Windows_NT') {
   & icacls.exe $BackupRoot /inheritance:r /grant:r "$($env:USERNAME):(OI)(CI)F" | Out-Null
@@ -13,6 +14,8 @@ if ($env:OS -eq 'Windows_NT') {
 $Stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $DatabaseFile = Join-Path $BackupRoot "careertwin-$Stamp.sql"
 $BlobFile = Join-Path $BackupRoot "careertwin-blobs-$Stamp.tar.gz"
+$BlobStage = Join-Path $BackupRoot ".careertwin-blobs-$Stamp"
+$BlobDirectory = Join-Path $BlobStage 'blobs'
 $ContainerDatabaseFile = '/tmp/careertwin-database-backup.sql'
 Set-Location $RepoRoot
 try {
@@ -23,11 +26,17 @@ try {
 } finally {
   docker compose exec -T db rm -f $ContainerDatabaseFile
 }
-docker compose exec -T app tar -czf /tmp/careertwin-blobs-backup.tar.gz -C /var/lib/careertwin blobs
-Assert-NativeSuccess 'Blob backup'
-docker compose cp app:/tmp/careertwin-blobs-backup.tar.gz $BlobFile
-Assert-NativeSuccess 'Blob backup copy'
-docker compose exec -T app rm -f /tmp/careertwin-blobs-backup.tar.gz
+New-Item -ItemType Directory -Force -Path $BlobStage | Out-Null
+try {
+  docker compose cp 'app:/var/lib/careertwin/blobs' $BlobDirectory
+  Assert-NativeSuccess 'Blob volume copy'
+  & tar.exe -czf $BlobFile -C $BlobStage blobs
+  Assert-NativeSuccess 'Blob backup archive'
+} finally {
+  $ResolvedStage = [System.IO.Path]::GetFullPath($BlobStage)
+  if (-not $ResolvedStage.StartsWith($BackupRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Refusing to clean an unexpected blob staging path.' }
+  Remove-Item -LiteralPath $ResolvedStage -Recurse -Force -ErrorAction SilentlyContinue
+}
 if ($env:OS -eq 'Windows_NT') {
   foreach ($PrivateFile in @($DatabaseFile, $BlobFile)) {
     & icacls.exe $PrivateFile /inheritance:r /grant:r "$($env:USERNAME):F" | Out-Null
