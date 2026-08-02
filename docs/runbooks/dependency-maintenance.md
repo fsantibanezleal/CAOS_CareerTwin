@@ -28,3 +28,5 @@ all native wheels, ingestion extras, providers, migrations, backup/restore, and 
 Security updates are reviewed immediately even when the corresponding routine major is held.
 Because supported Python runtime lines share semantic major version 3, Dependabot blocks versions
 `>=3.13` explicitly rather than relying on a semantic-major update category.
+Optional dependencies with open lower/upper ranges also have explicit next-major exclusions because
+widening an upper bound is not consistently classified as a semantic-major update.

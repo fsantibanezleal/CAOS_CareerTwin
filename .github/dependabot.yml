@@ -11,6 +11,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # Upper-bound widening is not always classified as a SemVer-major update.
+      - dependency-name: hatchling
+        versions: [">=2"]
+      - dependency-name: docling
+        versions: [">=3"]
+      - dependency-name: langfuse
+        versions: [">=4"]
+      - dependency-name: "opentelemetry-*"
+        versions: [">=2"]
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
