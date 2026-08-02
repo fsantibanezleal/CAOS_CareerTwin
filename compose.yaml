@@ -56,7 +56,7 @@ services:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
     ports:
-      - "127.0.0.1:${APP_PORT:-8000}:8000"
+      - "127.0.0.1:${CAREERTWIN_BIND_PORT:-8000}:8000"
     volumes:
       - careertwin_blobs:/var/lib/careertwin/blobs
     restart: unless-stopped

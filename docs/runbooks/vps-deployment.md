@@ -4,7 +4,7 @@ Target shape: Linux VPS, Docker Compose v2, TLS reverse proxy, PostgreSQL/pgvect
 
 1. Create a dedicated unprivileged deployment directory and service account.
 2. Clone/fetch the reviewed tag or exact commit. Never deploy a mutable working tree.
-3. Create private `.env` with `APP_ENV=production`, HTTPS public URL/origins, unique app/CSRF/PostgreSQL secrets, `SECURE_COOKIES=true`, and optional provider keys. Restrict file permissions.
+3. Create private `.env` with `APP_ENV=production`, `APP_PORT=8000`, a free loopback-only `CAREERTWIN_BIND_PORT`, HTTPS public URL/origins, unique app/CSRF/PostgreSQL secrets, `SECURE_COOKIES=true`, and optional provider keys. Restrict file permissions.
 4. Configure DNS/TLS and reverse-proxy body/rate/time limits. Forward only trusted proxy headers.
 5. Pull/build images, run the migration service once, and start app/worker dependencies.
 6. Bootstrap the superuser through an interactive process inside the app container; do not place its password in Compose, Git, or a deployment log.
