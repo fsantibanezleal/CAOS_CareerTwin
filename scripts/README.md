@@ -6,4 +6,4 @@ PowerShell and POSIX shell entrypoints cover setup, Compose or code-mode develop
 
 The frontend toolchain requires Node.js 24 LTS. This version is pinned in `.nvmrc`, CI, and the container build.
 
-Secrets and generated runtime files belong only in ignored `.env`, `data/`, `.run/`, and `backups/private/` paths. The scripts never add them to Git.
+Secrets and generated runtime files belong only in ignored `.env`, `data/`, `.run/`, and `backups/private/` paths. Backup scripts restrict the private directory to the current operator and the generated database/blob files to owner-only access. The scripts never add them to Git.
