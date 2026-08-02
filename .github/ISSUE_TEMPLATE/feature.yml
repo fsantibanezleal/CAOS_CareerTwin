@@ -1,0 +1,19 @@
+name: Feature request
+description: Propose a candidate-controlled capability
+title: "feature: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: User problem, description: Describe the seeker decision or workflow, not only a UI control. }
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: Evidence and alternatives, description: Link primary sources and comparable approaches. }
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Responsible scope
+      options:
+        - label: This does not add auto-apply, bulk outreach, protected-trait inference, employer candidate ranking, or unrestricted scraping.
+          required: true

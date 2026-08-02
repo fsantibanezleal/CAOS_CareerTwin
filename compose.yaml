@@ -1,0 +1,83 @@
+name: careertwin
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+psycopg://careertwin:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the ignored .env}@db:5432/careertwin
+  REDIS_URL: redis://redis:6379/0
+  BLOB_ROOT: /var/lib/careertwin/blobs
+  CLAMAV_HOST: clamav
+  SECURE_COOKIES: ${SECURE_COOKIES:-false}
+x-app-image: &app-image
+  image: careertwin-app:${CAREERTWIN_IMAGE_TAG:-local}
+  build: .
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: careertwin
+      POSTGRES_USER: careertwin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the ignored .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careertwin -d careertwin"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - careertwin_db:/var/lib/postgresql/data
+    restart: unless-stopped
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - careertwin_redis:/data
+    restart: unless-stopped
+  clamav:
+    image: clamav/clamav:1.4
+    volumes:
+      - careertwin_clamav:/var/lib/clamav
+    restart: unless-stopped
+  migrate:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db: { condition: service_healthy }
+    restart: "no"
+  app:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      - careertwin_blobs:/var/lib/careertwin/blobs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  worker:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    command: ["arq", "careertwin.worker.WorkerSettings"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    volumes:
+      - careertwin_blobs:/var/lib/careertwin/blobs
+    restart: unless-stopped
+volumes:
+  careertwin_db:
+  careertwin_redis:
+  careertwin_clamav:
+  careertwin_blobs:

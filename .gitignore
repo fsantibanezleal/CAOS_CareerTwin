@@ -25,10 +25,12 @@ data/private/
 data/blobs/
 data/exports/
 data/backups/
+backups/private/
+.run/
+*.pid
 *.sqlite
 *.sqlite3
 *.db
 *.log
 .DS_Store
 Thumbs.db
-
