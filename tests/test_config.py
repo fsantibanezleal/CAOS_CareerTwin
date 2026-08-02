@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -78,3 +80,16 @@ def test_production_settings_keep_fail_closed_secret_checks(
 
     with pytest.raises(ValidationError, match="APP_SECRET_KEY"):
         Settings(_env_file=None)
+
+
+def test_backup_entrypoints_enforce_owner_only_storage() -> None:
+    """Keep container-copy permissions from weakening private backup artifacts."""
+    root = Path(__file__).resolve().parents[1]
+    shell = (root / "scripts" / "backup.sh").read_text(encoding="utf-8")
+    powershell = (root / "scripts" / "backup.ps1").read_text(encoding="utf-8")
+
+    assert "umask 077" in shell
+    assert 'chmod 700 "$BACKUP_ROOT"' in shell
+    assert 'chmod 600 "$DATABASE_FILE" "$BLOB_FILE"' in shell
+    assert "/inheritance:r" in powershell
+    assert '$($env:USERNAME):F' in powershell
