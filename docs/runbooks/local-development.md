@@ -2,6 +2,10 @@
 
 Install Python 3.11+ and Node.js 24 LTS first. If you use NVM, `nvm use` reads the repository `.nvmrc`; the setup scripts reject older Node releases before changing the workspace.
 
+`ALLOWED_ORIGINS` accepts either a JSON string array or a comma-separated list of explicit HTTP(S)
+origins. Wildcards, credentials, paths, queries, and fragments are rejected because authenticated
+CORS requests require a closed allowlist.
+
 ## Windows
 
 ```powershell
@@ -25,6 +29,8 @@ Use `--code` for source mode. The setup script creates an ignored `.env` with lo
 ## Verification
 
 `scripts/test.*` runs Ruff, strict MyPy, Pytest, ESLint, Vitest, TypeScript, and Vite production build. With an instance running, `scripts/verify.*` adds liveness and response-header checks. `scripts/doctor.*` reports tool/database/runtime availability without printing connection strings or credentials.
+
+See [dependency maintenance](dependency-maintenance.md) before accepting automated updates.
 
 ## OpenAPI and data
 

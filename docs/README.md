@@ -21,6 +21,7 @@
 - [VPS deployment](runbooks/vps-deployment.md)
 - [Providers and Grok](runbooks/providers.md)
 - [Backup and restore](runbooks/backup-restore.md)
+- [Dependency maintenance](runbooks/dependency-maintenance.md)
 - [Incident response](runbooks/incident-response.md)
 
 The public documentation never contains a real account, token, secret, private endpoint credential, document, database row, backup, or personal export.

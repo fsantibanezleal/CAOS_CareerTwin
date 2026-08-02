@@ -1,6 +1,6 @@
 # Architecture decision records
 
-All records are accepted for `0.1.0-alpha.1`. A superseding ADR must link the prior record; historical decisions are not rewritten to hide trade-offs.
+Records are active from the release in which they were accepted unless superseded. A superseding ADR must link the prior record; historical decisions are not rewritten to hide trade-offs.
 
 | ADR | Decision |
 |---|---|
@@ -22,3 +22,4 @@ All records are accepted for `0.1.0-alpha.1`. A superseding ADR must link the pr
 | [0016](0016-public-code-private-data.md) | Public code/private runtime boundary |
 | [0017](0017-container-vps-operations.md) | Compose/VPS persistence and restore testing |
 | [0018](0018-responsible-scope.md) | Candidate-side assistance and prohibited automation |
+| [0019](0019-runtime-and-dependency-lifecycle.md) | Supported runtimes and deliberate dependency lifecycle |
