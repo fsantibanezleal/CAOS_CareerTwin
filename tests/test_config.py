@@ -91,7 +91,7 @@ def test_production_settings_keep_fail_closed_secret_checks(
 
 
 def test_backup_entrypoints_enforce_owner_only_storage() -> None:
-    """Keep container-copy permissions from weakening private backup artifacts."""
+    """Keep private backups safe and independent from tools absent in the app image."""
     root = Path(__file__).resolve().parents[1]
     shell = (root / "scripts" / "backup.sh").read_text(encoding="utf-8")
     powershell = (root / "scripts" / "backup.ps1").read_text(encoding="utf-8")
@@ -101,3 +101,9 @@ def test_backup_entrypoints_enforce_owner_only_storage() -> None:
     assert 'chmod 600 "$DATABASE_FILE" "$BLOB_FILE"' in shell
     assert "/inheritance:r" in powershell
     assert "$($env:USERNAME):F" in powershell
+    assert "docker compose cp app:/var/lib/careertwin/blobs" in shell
+    assert "docker compose cp 'app:/var/lib/careertwin/blobs'" in powershell
+    assert "docker compose exec -T app tar" not in shell
+    assert "docker compose exec -T app rm" not in shell
+    assert "docker compose exec -T app tar" not in powershell
+    assert "docker compose exec -T app rm" not in powershell
