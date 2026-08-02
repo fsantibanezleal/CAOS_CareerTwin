@@ -5,7 +5,7 @@ description: Set up, run, diagnose, back up, restore-test, upgrade, and deploy a
 
 # Operate CareerTwin
 
-Skill contract version: 1.1.0.
+Skill contract version: 1.2.0.
 
 ## Source of truth
 
@@ -24,14 +24,15 @@ Read `Entry_point.md`, then `references/operator-contract.md` and the relevant f
 1. Use PostgreSQL with pgvector, Redis, ClamAV, TLS, secure cookies, private blob storage, and encrypted off-host backups.
 2. Inject secrets from the VPS secret store. Never bake them into an image, Compose file, CI log, GitHub secret output, or shell history.
 3. Back up before migrations. Deploy an immutable image or pinned commit. Run migrations once as the database owner.
-4. Verify liveness, readiness, login, tenant isolation, profile upload/review/portability, opportunity snapshots/target sets, match semantics, contacts/calendar, durable agent queue/cancel/retry, configured provider behavior, and restart persistence.
+4. Verify liveness, readiness, login, tenant isolation, encrypted profile upload/Docling extraction/review/portability, opportunity snapshots/target sets/browser capture, match semantics, STAR/résumé artifacts, contacts/calendar/email, durable agent queue/cancel/retry, configured provider behavior, taxonomy benchmark, and restart persistence.
+   Production must use a real provider. The default Compose path is private Ollama; mock/test providers are forbidden outside isolated tests.
 5. Run a restore test to an isolated database and record the evidence. A backup without a restore test is not verified.
 6. If Langfuse is configured, verify only the redacted run metadata contract is emitted; prompts, evidence bodies, outputs, account identifiers, and raw workspace IDs must remain absent.
 
 ## Incident rules
 
 - Revoke sessions after suspected credential exposure.
-- Rotate the affected secret and provider key; do not paste it into an issue.
+- Rotate the affected application/provider/OAuth/blob/connector key; do not paste it into an issue. Re-encrypt retained blobs or connector grants before retiring an old encryption key.
 - Preserve redacted logs and audit events.
 - Prefer disabling an account to purge. Purge requires exact confirmation and a validated backup decision.
 

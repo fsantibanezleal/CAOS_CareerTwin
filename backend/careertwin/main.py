@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 import redis
 import structlog
 from fastapi import FastAPI, Request, Response
@@ -17,6 +18,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_
 from sqlalchemy import text
 
 from careertwin import __version__
+from careertwin.agent.providers import provider_registry
 from careertwin.api import (
     admin,
     agent,
@@ -32,6 +34,7 @@ from careertwin.api import (
 )
 from careertwin.config import get_settings
 from careertwin.database import SessionLocal
+from careertwin.services.ingestion import clamav_ready
 
 log = structlog.get_logger("careertwin")
 REQUESTS = Counter("careertwin_http_requests_total", "HTTP requests", ["method", "path", "status"])
@@ -102,7 +105,7 @@ def liveness() -> dict[str, str]:
 
 @app.get("/api/health/ready", tags=["operations"])
 def readiness() -> JSONResponse:
-    """Verify database and queue connectivity and return a dependency-specific status."""
+    """Verify every dependency required to accept normal user work."""
     checks: dict[str, str] = {}
     try:
         with SessionLocal() as db:
@@ -117,6 +120,18 @@ def readiness() -> JSONResponse:
         checks["redis"] = "ok" if client.ping() else "unavailable"
     except Exception as exc:
         checks["redis"] = type(exc).__name__
+    provider = provider_registry(settings).get(settings.llm_default_provider)
+    checks["model_provider"] = "ok" if provider and provider.ready() else "unavailable"
+    if settings.clamav_host:
+        checks["malware_scanner"] = (
+            "ok" if clamav_ready(settings.clamav_host, settings.clamav_port) else "unavailable"
+        )
+    if settings.docling_url:
+        try:
+            response = httpx.get(f"{settings.docling_url.rstrip('/')}/health", timeout=3)
+            checks["document_intelligence"] = "ok" if response.is_success else "unavailable"
+        except httpx.HTTPError as exc:
+            checks["document_intelligence"] = type(exc).__name__
     healthy = all(value == "ok" for value in checks.values())
     return JSONResponse(
         {"status": "ok" if healthy else "degraded", "version": __version__, "checks": checks},

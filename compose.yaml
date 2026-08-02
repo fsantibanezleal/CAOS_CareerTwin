@@ -4,13 +4,31 @@ x-app-environment: &app-environment
   REDIS_URL: redis://redis:6379/0
   BLOB_ROOT: /var/lib/careertwin/blobs
   CLAMAV_HOST: clamav
+  OLLAMA_BASE_URL: http://ollama:11434
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b-instruct-q4_K_M}
+  OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-embeddinggemma:300m}
+  DOCLING_URL: http://docling:5001
+  DOCLING_API_KEY: ${DOCLING_API_KEY:?set DOCLING_API_KEY in the ignored .env}
   SECURE_COOKIES: ${SECURE_COOKIES:-false}
 x-app-image: &app-image
   image: careertwin-app:${CAREERTWIN_IMAGE_TAG:-local}
   build: .
+x-ollama-image: &ollama-image
+  image: careertwin-ollama:${CAREERTWIN_IMAGE_TAG:-local}
+  build:
+    context: .
+    dockerfile: docker/ollama/Dockerfile
+x-docling-image: &docling-image
+  image: careertwin-docling:${CAREERTWIN_IMAGE_TAG:-local}
+  build:
+    context: .
+    dockerfile: docker/docling/Dockerfile
 services:
   db:
-    image: pgvector/pgvector:pg17@sha256:7ae6051efd0e60444282c27c7e141af07f322ce033300e727a49c3dd11075e38
+    image: careertwin-db:${CAREERTWIN_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
     environment:
       POSTGRES_DB: careertwin
       POSTGRES_USER: careertwin
@@ -22,6 +40,7 @@ services:
       retries: 20
     volumes:
       - careertwin_db:/var/lib/postgresql/data
+    mem_limit: 640m
     restart: unless-stopped
   redis:
     image: redis:8-alpine@sha256:978f0e01593e65eed801f2402944efcd936d43b5027e4908a7897baf88ed6241
@@ -33,12 +52,74 @@ services:
       retries: 20
     volumes:
       - careertwin_redis:/data
+    mem_limit: 192m
     restart: unless-stopped
   clamav:
     image: clamav/clamav:1.4@sha256:6b7c8e09559250f25b0184516b0a2ae805136e57485260e16c780c9fd6e6aba9
     volumes:
       - careertwin_clamav:/var/lib/clamav
+    mem_limit: 1280m
     restart: unless-stopped
+  docling:
+    <<: *docling-image
+    environment:
+      DOCLING_SERVE_API_KEY: ${DOCLING_API_KEY:?set DOCLING_API_KEY in the ignored .env}
+      OMP_NUM_THREADS: 2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+    volumes:
+      - careertwin_docling_cache:/var/cache/docling
+    mem_limit: 2300m
+    cpus: 2.0
+    restart: unless-stopped
+  ollama-volume-init:
+    <<: *ollama-image
+    user: "0:0"
+    entrypoint: ["/bin/chown"]
+    command: ["-R", "65532:65532", "/var/lib/ollama"]
+    volumes:
+      - careertwin_ollama:/var/lib/ollama
+    mem_limit: 64m
+    restart: "no"
+  ollama:
+    <<: *ollama-image
+    environment:
+      OLLAMA_KEEP_ALIVE: 5m
+      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_NUM_PARALLEL: 1
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - careertwin_ollama:/var/lib/ollama
+    depends_on:
+      ollama-volume-init: { condition: service_completed_successfully }
+    mem_limit: 1536m
+    cpus: 3.0
+    restart: unless-stopped
+  ollama-pull:
+    <<: *ollama-image
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODELS: /var/lib/ollama/models
+    command: ["pull", "${OLLAMA_MODEL:-qwen2.5:0.5b-instruct-q4_K_M}"]
+    depends_on:
+      ollama: { condition: service_healthy }
+    restart: "no"
+  ollama-pull-embedding:
+    <<: *ollama-image
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODELS: /var/lib/ollama/models
+    command: ["pull", "${OLLAMA_EMBEDDING_MODEL:-embeddinggemma:300m}"]
+    depends_on:
+      ollama: { condition: service_healthy }
+    restart: "no"
   migrate:
     <<: *app-image
     env_file: .env
@@ -46,6 +127,7 @@ services:
     command: ["alembic", "upgrade", "head"]
     depends_on:
       db: { condition: service_healthy }
+    mem_limit: 512m
     restart: "no"
   app:
     <<: *app-image
@@ -55,10 +137,15 @@ services:
       migrate: { condition: service_completed_successfully }
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      ollama-pull: { condition: service_completed_successfully }
+      ollama-pull-embedding: { condition: service_completed_successfully }
+      docling: { condition: service_healthy }
     ports:
       - "127.0.0.1:${CAREERTWIN_BIND_PORT:-8000}:8000"
     volumes:
       - careertwin_blobs:/var/lib/careertwin/blobs
+    mem_limit: 640m
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live', timeout=2)"]
@@ -73,11 +160,18 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      ollama-pull: { condition: service_completed_successfully }
+      ollama-pull-embedding: { condition: service_completed_successfully }
+      docling: { condition: service_healthy }
     volumes:
       - careertwin_blobs:/var/lib/careertwin/blobs
+    mem_limit: 896m
     restart: unless-stopped
 volumes:
   careertwin_db:
   careertwin_redis:
   careertwin_clamav:
   careertwin_blobs:
+  careertwin_ollama:
+  careertwin_docling_cache:

@@ -7,12 +7,24 @@ import getpass
 import os
 from pathlib import Path
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 
+from careertwin.config import get_settings
 from careertwin.database import SessionLocal
-from careertwin.models import User
+from careertwin.models import TaxonomyConcept, TaxonomyRelation, User
+from careertwin.services.blob import configured_blob_store
 from careertwin.services.security import create_user
-from careertwin.services.taxonomy import import_esco
+from careertwin.services.taxonomy import (
+    ESCO_RELEASE,
+    ESCO_SOURCE_URL,
+    ONET_RELEASE,
+    ONET_SOURCE_URL,
+    embed_taxonomy,
+    import_esco,
+    import_esco_relations,
+    import_onet,
+    record_taxonomy_import,
+)
 
 
 def _password_from_private_input() -> str:
@@ -52,7 +64,104 @@ def load_esco(args: argparse.Namespace) -> None:
         raise SystemExit("ESCO archive does not exist")
     with SessionLocal.begin() as db:
         count = import_esco(db, archive, args.language, replace=args.replace)
-    print(f"Imported {count} ESCO concepts for {args.language}")
+        relations = import_esco_relations(db, archive, replace=args.replace_relations)
+        snapshot_concepts = int(
+            db.scalar(
+                select(func.count(TaxonomyConcept.id)).where(
+                    TaxonomyConcept.taxonomy == "ESCO",
+                    TaxonomyConcept.release == ESCO_RELEASE,
+                    TaxonomyConcept.language == args.language,
+                )
+            )
+            or 0
+        )
+        snapshot_relations = int(
+            db.scalar(
+                select(func.count(TaxonomyRelation.id)).where(
+                    TaxonomyRelation.taxonomy == "ESCO",
+                    TaxonomyRelation.release == ESCO_RELEASE,
+                )
+            )
+            or 0
+        )
+        record_taxonomy_import(
+            db,
+            archive,
+            taxonomy="ESCO",
+            release=ESCO_RELEASE,
+            language=args.language,
+            source_url=ESCO_SOURCE_URL,
+            concept_count=snapshot_concepts,
+            relation_count=snapshot_relations,
+        )
+    print(f"Imported {count} ESCO concepts for {args.language} and {relations} relations")
+
+
+def load_onet(args: argparse.Namespace) -> None:
+    """Load an operator-downloaded official O*NET archive as US-specific enrichment."""
+    archive = Path(args.archive).resolve()
+    if not archive.is_file():
+        raise SystemExit("O*NET archive does not exist")
+    with SessionLocal.begin() as db:
+        result = import_onet(db, archive, release=args.release, replace=args.replace)
+        snapshot_concepts = int(
+            db.scalar(
+                select(func.count(TaxonomyConcept.id)).where(
+                    TaxonomyConcept.taxonomy == "O*NET",
+                    TaxonomyConcept.release == args.release,
+                )
+            )
+            or 0
+        )
+        snapshot_relations = int(
+            db.scalar(
+                select(func.count(TaxonomyRelation.id)).where(
+                    TaxonomyRelation.taxonomy == "O*NET",
+                    TaxonomyRelation.release == args.release,
+                )
+            )
+            or 0
+        )
+        record_taxonomy_import(
+            db,
+            archive,
+            taxonomy="O*NET",
+            release=args.release,
+            language="en",
+            source_url=ONET_SOURCE_URL,
+            concept_count=snapshot_concepts,
+            relation_count=snapshot_relations,
+        )
+    print(
+        f"Imported O*NET {args.release}: {result['concepts']} concepts and "
+        f"{result['relations']} relations"
+    )
+
+
+def build_taxonomy_embeddings(args: argparse.Namespace) -> None:
+    """Generate derived semantic vectors through the configured private Ollama service."""
+    with SessionLocal.begin() as db:
+        result = embed_taxonomy(
+            db,
+            get_settings(),
+            taxonomy=args.taxonomy,
+            release=args.release,
+            language=args.language,
+            limit=args.limit,
+        )
+    print(
+        f"Embedded {result['created']} concepts with {result['model']} at "
+        f"revision {str(result['revision'])[:12]}"
+    )
+
+
+def encrypt_blobs(_: argparse.Namespace) -> None:
+    """Seal legacy plaintext blobs in place before encrypted storage becomes mandatory."""
+    result = configured_blob_store(get_settings()).encrypt_existing()
+    print(
+        f"Encrypted {result['migrated']} legacy blobs; "
+        f"{result['already_encrypted']} were already encrypted"
+    )
 
 
 def doctor(_: argparse.Namespace) -> None:
@@ -76,7 +185,25 @@ def parser() -> argparse.ArgumentParser:
     esco.add_argument("--archive", required=True)
     esco.add_argument("--language", choices=("en", "es"), required=True)
     esco.add_argument("--replace", action="store_true")
+    esco.add_argument("--replace-relations", action="store_true")
     esco.set_defaults(handler=load_esco)
+    onet = commands.add_parser("import-onet", help="Import an official O*NET database archive")
+    onet.add_argument("--archive", required=True)
+    onet.add_argument("--release", default=ONET_RELEASE)
+    onet.add_argument("--replace", action="store_true")
+    onet.set_defaults(handler=load_onet)
+    embeddings = commands.add_parser(
+        "embed-taxonomy", help="Build local semantic vectors for a taxonomy snapshot"
+    )
+    embeddings.add_argument("--taxonomy", choices=("ESCO", "O*NET"), default="ESCO")
+    embeddings.add_argument("--release", default=ESCO_RELEASE)
+    embeddings.add_argument("--language", choices=("en", "es"), required=True)
+    embeddings.add_argument("--limit", type=int)
+    embeddings.set_defaults(handler=build_taxonomy_embeddings)
+    blob_migration = commands.add_parser(
+        "encrypt-blobs", help="Encrypt legacy document blobs in place"
+    )
+    blob_migration.set_defaults(handler=encrypt_blobs)
     health = commands.add_parser("doctor", help="Verify local dependencies")
     health.set_defaults(handler=doctor)
     return root

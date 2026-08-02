@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import base64
 import socket
+from pathlib import Path
 
 import pytest
+from cryptography.exceptions import InvalidTag
 from fastapi.testclient import TestClient
 
 from careertwin.services.audit import redact
+from careertwin.services.blob import MAGIC, FileBlobStore
 from careertwin.services.ingestion import inspect_content
 from careertwin.services.opportunity_ingestion import UnsafeUrlError, validate_public_url
 from tests.conftest import create_account, csrf, login
@@ -61,6 +65,37 @@ def test_mismatched_and_binary_uploads_are_rejected() -> None:
     assert not binary.safe
 
 
+def test_blob_store_encrypts_authenticates_and_scopes_content(tmp_path: Path) -> None:
+    """Private documents are opaque at rest and cannot cross tenant namespaces."""
+    key = base64.urlsafe_b64encode(bytes(range(32))).decode().rstrip("=")
+    store = FileBlobStore(tmp_path, key, "test-v1")
+    content = b"private professional evidence with a unique sentinel"
+    stored = store.put("workspace-a", content)
+    on_disk = (tmp_path / stored.key).read_bytes()
+    assert on_disk.startswith(MAGIC)
+    assert content not in on_disk
+    assert store.read("workspace-a", stored.key) == content
+    with pytest.raises(PermissionError):
+        store.read("workspace-b", stored.key)
+
+    tampered = bytearray(on_disk)
+    tampered[-1] ^= 1
+    (tmp_path / stored.key).write_bytes(tampered)
+    with pytest.raises(InvalidTag):
+        store.read("workspace-a", stored.key)
+
+
+def test_blob_migration_encrypts_legacy_plaintext_without_changing_key(tmp_path: Path) -> None:
+    """The deploy-time migration preserves database storage keys while sealing legacy bytes."""
+    key = base64.urlsafe_b64encode(bytes(reversed(range(32)))).decode().rstrip("=")
+    legacy = FileBlobStore(tmp_path)
+    stored = legacy.put("workspace-a", b"legacy private bytes")
+    encrypted = FileBlobStore(tmp_path, key, "test-v1")
+    assert encrypted.encrypt_existing() == {"migrated": 1, "already_encrypted": 0}
+    assert encrypted.read("workspace-a", stored.key) == b"legacy private bytes"
+    assert encrypted.encrypt_existing() == {"migrated": 0, "already_encrypted": 1}
+
+
 def test_structural_redaction_removes_nested_secrets() -> None:
     value = redact(
         {
@@ -74,17 +109,19 @@ def test_structural_redaction_removes_nested_secrets() -> None:
     assert value["safe"] == "visible"
 
 
-def test_mock_agent_cites_only_confirmed_evidence_and_makes_no_write(client: TestClient) -> None:
+def test_contract_agent_cites_only_confirmed_evidence_and_makes_no_write(
+    client: TestClient,
+) -> None:
     create_account("agent@example.com")
     token = login(client, "agent@example.com")
     before = client.get("/api/profile").json()
     response = client.post(
         "/api/agent/chat",
         headers=csrf(token),
-        json={"message": "How can I improve my profile?", "provider": "mock"},
+        json={"message": "How can I improve my profile?", "provider": "contract"},
     )
     assert response.status_code == 200, response.text
-    assert response.json()["provider"] == "mock"
+    assert response.json()["provider"] == "contract"
     assert response.json()["proposed_change_id"] is None
     assert client.get("/api/profile").json() == before
 
@@ -97,3 +134,17 @@ def test_export_excludes_storage_paths_and_extracted_text(client: TestClient) ->
     assert response.headers["content-type"] == "application/zip"
     assert b"storage_key" not in response.content
     assert b"extracted_text" not in response.content
+
+
+def test_ollama_runtime_is_non_root_with_scoped_volume_migration() -> None:
+    """Keep the model server non-root while permitting an existing volume upgrade."""
+    repository_root = Path(__file__).parents[1]
+    dockerfile = (repository_root / "docker" / "ollama" / "Dockerfile").read_text()
+    compose = (repository_root / "compose.yaml").read_text()
+
+    assert "USER 65532:65532" in dockerfile
+    assert "OLLAMA_MODELS=/var/lib/ollama/models" in dockerfile
+    assert "ollama-volume-init:" in compose
+    assert 'user: "0:0"' in compose
+    assert 'entrypoint: ["/bin/chown"]' in compose
+    assert "careertwin_ollama:/var/lib/ollama" in compose

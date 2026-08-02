@@ -24,7 +24,7 @@ from careertwin.models import (
     utcnow,
 )
 from careertwin.services.audit import record_audit
-from careertwin.services.tracing import emit_agent_trace, trace_payload
+from careertwin.services.tracing import emit_agent_trace, persist_agent_trace, trace_payload
 
 
 def _tenant(db: Session, workspace_id: str) -> None:
@@ -113,7 +113,9 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
     with SessionLocal.begin() as db:
         _tenant(db, workspace_id)
         run = db.scalar(
-            select(AgentRun).where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+            select(AgentRun)
+            .where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+            .with_for_update()
         )
         if not run:
             return {"status": "not-found"}
@@ -140,7 +142,9 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
         with SessionLocal.begin() as db:
             _tenant(db, workspace_id)
             run = db.scalar(
-                select(AgentRun).where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+                select(AgentRun)
+                .where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+                .with_for_update()
             )
             if run:
                 run.status = "failed"
@@ -158,6 +162,7 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
                     citation_count=0,
                     attempt=run.attempt,
                 )
+                persist_agent_trace(db, workspace_id, run.id, payload)
             else:
                 payload = None
         if payload:
@@ -167,7 +172,9 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
     with SessionLocal.begin() as db:
         _tenant(db, workspace_id)
         run = db.scalar(
-            select(AgentRun).where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+            select(AgentRun)
+            .where(AgentRun.id == run_id, AgentRun.workspace_id == workspace_id)
+            .with_for_update()
         )
         if not run:
             return {"status": "not-found"}
@@ -232,5 +239,6 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
             citation_count=len(citations),
             attempt=run.attempt,
         )
+        persist_agent_trace(db, workspace_id, run.id, payload)
     traced = emit_agent_trace(settings, payload)
     return {"status": "completed", "message_id": assistant.id, "traced": traced}

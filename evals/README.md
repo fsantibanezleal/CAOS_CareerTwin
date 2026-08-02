@@ -1,6 +1,6 @@
 # Agent contract evaluations
 
-This suite exercises the deterministic, offline `mock` provider through the same LangGraph router and evidence critic used by the web application. It is a release gate, not a benchmark of any hosted model.
+This suite exercises an isolated deterministic contract double through the same LangGraph router and evidence critic used by the web application. The double is registered only under `APP_ENV=test`; it is a release gate, never a product provider or a substitute for the required live-model evaluation.
 
 The cases verify:
 

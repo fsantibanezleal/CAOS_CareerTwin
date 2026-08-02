@@ -5,19 +5,36 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM python:3.12-alpine3.23@sha256:601d3d3797e90e2534782e69c85fafb7971b43f24c7b1b079b7e48dd435e458d AS runtime
+FROM cgr.dev/chainguard/python:latest-dev@sha256:b6ea84d6ad79b9537046467ef8f507f2787fb9138fdd5e9e3078f0e63fbb502d AS python-build
+USER root
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
-RUN addgroup -S careertwin && adduser -S -G careertwin careertwin
 WORKDIR /app
+RUN python -m venv /venv && /venv/bin/pip install --upgrade pip==26.2
 COPY requirements.txt ./
-RUN pip install -r requirements.txt
+RUN /venv/bin/pip install -r requirements.txt
 COPY pyproject.toml README.md ./
 COPY backend ./backend
-RUN pip install --no-deps .
-COPY --from=frontend /src/frontend/dist ./frontend/dist
-COPY alembic.ini ./
-COPY alembic ./alembic
-RUN mkdir -p /var/lib/careertwin/blobs && chown -R careertwin:careertwin /app /var/lib/careertwin
-USER careertwin
+RUN /venv/bin/pip install --no-deps .
+RUN /venv/bin/pip check \
+    && /venv/bin/pip uninstall -y setuptools wheel \
+    && rm -rf \
+        /venv/bin/pip \
+        /venv/bin/pip3 \
+        /venv/bin/pip3.14 \
+        /venv/lib/python3.14/site-packages/pip \
+        /venv/lib/python3.14/site-packages/pip-*.dist-info
+RUN mkdir -p /var/lib/careertwin/blobs && chown -R 65532:65532 /var/lib/careertwin
+
+FROM cgr.dev/chainguard/python:latest@sha256:231d4a76e8521327dbb3c23094b2c41151501845d2656da3c1a0610981c496c5 AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/venv/bin:$PATH"
+WORKDIR /app
+COPY --from=python-build --chown=65532:65532 /venv /venv
+COPY --from=python-build --chown=65532:65532 /var/lib/careertwin /var/lib/careertwin
+COPY --from=frontend --chown=65532:65532 /src/frontend/dist ./frontend/dist
+COPY --chown=65532:65532 extension ./extension
+COPY --chown=65532:65532 alembic.ini ./
+COPY --chown=65532:65532 alembic ./alembic
+USER 65532
 EXPOSE 8000
-CMD ["uvicorn", "careertwin.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+ENTRYPOINT []
+CMD ["/venv/bin/uvicorn", "careertwin.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

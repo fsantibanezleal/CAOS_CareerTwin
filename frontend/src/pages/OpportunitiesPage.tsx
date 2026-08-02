@@ -95,7 +95,7 @@ export function OpportunitiesPage() {
   const [view, setView] = useState<'cards' | 'landscape'>('cards')
   const [queryText, setQueryText] = useState('')
   const [selectedId, setSelectedId] = useState<string>()
-  const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities') })
+  const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities'), refetchInterval: (query) => (query.state.data as Opportunity[] | undefined)?.some((item) => item.structured_data.capture_status === 'pending') ? 2000 : false })
   const landscape = useQuery({ queryKey: ['landscape'], queryFn: () => api<Landscape>('/api/opportunities/visualization/landscape') })
   const filtered = useMemo(() => (opportunities.data ?? []).filter((item) => `${item.title} ${item.employer} ${item.industry}`.toLowerCase().includes(queryText.toLowerCase())), [opportunities.data, queryText])
   const selected = opportunities.data?.find((item) => item.id === selectedId)

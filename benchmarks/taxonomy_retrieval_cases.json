@@ -1,0 +1,22 @@
+[
+  {"id":"en-software-developer","language":"en","type":"occupation","query":"software developer","expected_labels":["software developer"]},
+  {"id":"en-data-scientist","language":"en","type":"occupation","query":"data scientist","expected_labels":["data scientist"]},
+  {"id":"en-project-manager","language":"en","type":"occupation","query":"project manager","expected_labels":["project manager"]},
+  {"id":"en-cybersecurity","language":"en","type":"skill","query":"protect computer systems from cyber attacks","expected_labels":["implement ICT risk management","manage ICT security"]},
+  {"id":"en-python","language":"en","type":"skill","query":"program software using Python","expected_labels":["computer programming"]},
+  {"id":"en-leadership","language":"en","type":"skill","query":"lead and motivate a technical team","expected_labels":["lead a team","motivate employees"]},
+  {"id":"en-sql","language":"en","type":"skill","query":"query relational databases with SQL","expected_labels":["use databases","manage database"]},
+  {"id":"en-public-speaking","language":"en","type":"skill","query":"present technical findings to an audience","expected_labels":["speak in public","present reports"]},
+  {"id":"en-machine-learning","language":"en","type":"skill","query":"build machine learning models","expected_labels":["machine learning"]},
+  {"id":"en-product-manager","language":"en","type":"occupation","query":"digital product manager","expected_labels":["ICT product manager","product manager"]},
+  {"id":"es-desarrollador","language":"es","type":"occupation","query":"desarrollador de software","expected_labels":["desarrollador de software"]},
+  {"id":"es-cientifico-datos","language":"es","type":"occupation","query":"científico de datos","expected_labels":["científico de datos"]},
+  {"id":"es-jefe-proyecto","language":"es","type":"occupation","query":"jefe de proyecto de tecnología","expected_labels":["jefe de proyecto de TIC","jefe de proyecto"]},
+  {"id":"es-ciberseguridad","language":"es","type":"skill","query":"proteger sistemas informáticos de ciberataques","expected_labels":["gestionar la seguridad de las TIC"]},
+  {"id":"es-programacion","language":"es","type":"skill","query":"programar aplicaciones en Python","expected_labels":["programación informática"]},
+  {"id":"es-liderazgo","language":"es","type":"skill","query":"liderar y motivar un equipo técnico","expected_labels":["dirigir un equipo","motivar a los empleados"]},
+  {"id":"es-base-datos","language":"es","type":"skill","query":"consultar bases de datos relacionales con SQL","expected_labels":["utilizar bases de datos","gestionar bases de datos"]},
+  {"id":"es-presentar","language":"es","type":"skill","query":"presentar resultados técnicos ante una audiencia","expected_labels":["hablar en público","presentar informes"]},
+  {"id":"es-aprendizaje-automatico","language":"es","type":"skill","query":"crear modelos de aprendizaje automático","expected_labels":["aprendizaje automático"]},
+  {"id":"es-producto-digital","language":"es","type":"occupation","query":"gestor de producto digital","expected_labels":["gestor de productos de TIC","gestor de producto"]}
+]

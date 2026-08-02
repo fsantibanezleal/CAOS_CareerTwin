@@ -1,4 +1,4 @@
-"""Offline release gate for the CareerTwin agent routing and evidence contract."""
+"""Isolated deterministic release gate for agent routing and evidence contracts."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pydantic_evals import Case, Dataset
 from pydantic_evals.evaluators import EqualsExpected
 
 from careertwin.agent.contracts import AgentContext
-from careertwin.agent.providers import MockProvider
+from careertwin.agent.providers import ContractTestProvider
 from careertwin.agent.workflow import run_workflow
 
 
@@ -23,7 +23,7 @@ class ContractResult(TypedDict):
 
 def run_contract(context: AgentContext) -> ContractResult:
     """Return only stable contract facts from a complete deterministic agent turn."""
-    draft = run_workflow(MockProvider(), context)
+    draft = run_workflow(ContractTestProvider(), context)
     available = {str(item.get("id")) for item in context.evidence if item.get("id")}
     citation_ids = [citation.evidence_id for citation in draft.citations]
     return {

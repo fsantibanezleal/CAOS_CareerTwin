@@ -15,12 +15,14 @@ Implementation follows the validated plan in
 ## What is included
 
 - One private seeker workspace per account, with superuser account administration but no cross-user content browser.
-- CV, resume, document, image OCR, manual-profile, GitHub, URL, paste, and job-document ingestion.
+- Encrypted CV, resume, document, private Docling/OCR, manual-profile, GitHub, URL, paste, browser-extension, and job-document ingestion with visible durable progress/retry.
 - Proposed/confirmed/rejected evidence with exact source locators and a rich professional graph.
 - Reviewed opportunity requirements, deterministic versioned matching, separate eligibility, evidence coverage, and uncertainty bounds.
-- Evidence-linked editable recommendations, résumé/cover-letter/interview/follow-up artifacts, and a candidate-owned board, contact book, agenda, calendar exchange, and process analytics.
+- Evidence-linked editable recommendations, STAR accomplishment bank, immutable tailored résumés, cover-letter/interview/follow-up artifacts, and a candidate-owned board, contact book, agenda, calendar, and process analytics.
 - Lossless CareerTwin profile/evidence portability, JSON Resume exchange, immutable opportunity snapshots, and explicit named target portfolios.
-- Bounded LangGraph/Pydantic AI routing with mock, xAI/Grok, OpenAI, Anthropic, Google, and Ollama adapters plus durable queue/cancel/retry checkpoints. Agents propose; deterministic services commit only after approval.
+- Bounded LangGraph/Pydantic AI routing with private Ollama as the production default and optional xAI/Grok, OpenAI, Anthropic, and Google adapters, plus durable queue/cancel/retry checkpoints and redacted local traces. Agents propose; deterministic services commit only after approval. A contract double exists only in isolated tests.
+- Pinned ESCO 1.2.1 and O*NET 30.3 importers, graph relations, local multilingual embeddings, hybrid retrieval, and an EN/ES non-degradation benchmark.
+- Consent-bound Google/Microsoft calendar and read-only recruiting-email synchronization plus a revocable, explicit-action Manifest V3 opportunity-capture extension.
 - React workbench with Sigma/Graphology, modular ECharts, React Flow architecture diagrams, dark/light themes, English/Spanish chrome, accessible fallbacks, and reduced-motion behavior.
 - Docker Compose, VPS-ready persistent services, local PowerShell/POSIX scripts, CI/security/load/accessibility gates, and seven validated Codex skills.
 
@@ -42,7 +44,7 @@ Start at [`Entry_point.md`](Entry_point.md), then use the [documentation map](do
 
 ## Status
 
-`0.1.0-alpha.3`: public-alpha completion contracts implemented and release-gated. See `CHANGELOG.md` for release notes and GitHub issues for tracked work.
+`0.2.0`: complete self-hosted career-research workflows with real private model/document services, encrypted sources, hybrid taxonomies, career artifacts, and consent-bound personal connectors. See `CHANGELOG.md` for release evidence and GitHub issues for tracked changes.
 
 ## License
 
