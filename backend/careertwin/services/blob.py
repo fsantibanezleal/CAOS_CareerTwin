@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import os
 from dataclasses import dataclass
@@ -11,6 +10,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from careertwin.config import Settings
+from careertwin.services.crypto_keys import decode_aes256_key
 
 MAGIC = b"CTB1"
 NONCE_BYTES = 12
@@ -36,13 +36,7 @@ class FileBlobStore:
     @staticmethod
     def _decode_key(value: str) -> bytes:
         """Decode one URL-safe base64 AES-256 key and reject ambiguous key material."""
-        try:
-            raw = base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
-        except (ValueError, TypeError) as exc:
-            raise ValueError("Blob encryption key must be URL-safe base64") from exc
-        if len(raw) != 32:
-            raise ValueError("Blob encryption key must decode to exactly 32 bytes")
-        return raw
+        return decode_aes256_key(value, "BLOB_ENCRYPTION_KEY")
 
     def _seal(self, workspace_id: str, key: str, content: bytes) -> bytes:
         if self.key is None:
