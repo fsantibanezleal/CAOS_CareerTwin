@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import socket
+
+import pytest
 from fastapi.testclient import TestClient
 
 from careertwin.services.audit import redact
@@ -23,6 +26,32 @@ def test_local_and_private_urls_are_rejected() -> None:
             pass
         else:
             raise AssertionError(f"unsafe URL accepted: {url}")
+
+
+def test_dns_results_are_all_required_to_be_public(monkeypatch: pytest.MonkeyPatch) -> None:
+    def mixed_resolution(*_args: object, **_kwargs: object) -> list[tuple[object, ...]]:
+        return [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("203.0.113.10", 0)),
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
+        ]
+
+    monkeypatch.setattr(socket, "getaddrinfo", mixed_resolution)
+    try:
+        validate_public_url("https://jobs.example.test/opening")
+    except UnsafeUrlError:
+        pass
+    else:
+        raise AssertionError("mixed public/private DNS response was accepted")
+
+
+def test_cross_scheme_standard_port_is_rejected() -> None:
+    for url in ("http://example.com:443/job", "https://example.com:80/job"):
+        try:
+            validate_public_url(url)
+        except UnsafeUrlError:
+            pass
+        else:
+            raise AssertionError(f"cross-scheme port was accepted: {url}")
 
 
 def test_mismatched_and_binary_uploads_are_rejected() -> None:

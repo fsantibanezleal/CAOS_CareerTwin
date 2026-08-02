@@ -5,7 +5,7 @@
 
 ## Decision
 
-Validate magic bytes and archive shape, impose byte/page/text limits, quarantine files, require ClamAV in production, and store opaque blobs outside the web root. URL capture permits public HTTP(S) only, rejects credentials/nonstandard ports/non-global addresses, revalidates redirects, and bounds content.
+Validate magic bytes and archive shape, impose byte/page/text limits, quarantine files, require ClamAV in production, and store opaque blobs outside the web root. URL capture permits public HTTP(S) only, rejects credentials/nonstandard ports/non-global addresses, pins the validated address while retaining TLS hostname verification, revalidates redirects, and bounds content.
 
 ## Consequences
 

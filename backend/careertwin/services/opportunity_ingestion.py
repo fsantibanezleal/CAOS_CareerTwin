@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import hashlib
+import http.client
 import ipaddress
 import json
 import re
 import socket
+import ssl
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from urllib.parse import urljoin, urlsplit
 
-import httpx
 from trafilatura import extract
 
 
@@ -20,19 +21,37 @@ class UnsafeUrlError(ValueError):
     """Raised when a URL could reach a non-public or unsupported target."""
 
 
-def validate_public_url(url: str) -> str:
-    """Reject credentials, non-HTTP schemes, local names and every non-global resolved address."""
+@dataclass(frozen=True)
+class _ResolvedTarget:
+    """A validated URL whose public addresses are pinned for the subsequent connection."""
+
+    url: str
+    scheme: str
+    hostname: str
+    port: int
+    request_target: str
+    addresses: tuple[str, ...]
+
+
+def _resolve_public_target(url: str) -> _ResolvedTarget:
+    """Resolve once and retain only global addresses to prevent DNS rebinding."""
     parsed = urlsplit(url)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise UnsafeUrlError("Only absolute HTTP(S) URLs are accepted")
-    if parsed.username or parsed.password or parsed.port not in {None, 80, 443}:
+    expected_port = 443 if parsed.scheme == "https" else 80
+    try:
+        port = parsed.port or expected_port
+    except ValueError as exc:
+        raise UnsafeUrlError("URL port is invalid") from exc
+    if parsed.username or parsed.password or port != expected_port:
         raise UnsafeUrlError("Credentials and non-standard ports are not accepted")
     hostname = parsed.hostname.rstrip(".").casefold()
     if hostname in {"localhost", "localhost.localdomain"} or hostname.endswith(".local"):
         raise UnsafeUrlError("Local hostnames are blocked")
     try:
         addresses = {
-            item[4][0] for item in socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
+            str(item[4][0])
+            for item in socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
         }
     except socket.gaierror as exc:
         raise UnsafeUrlError("Hostname could not be resolved") from exc
@@ -42,7 +61,22 @@ def validate_public_url(url: str) -> str:
         ip = ipaddress.ip_address(str(address).split("%")[0])
         if not ip.is_global:
             raise UnsafeUrlError("URL resolves to a private, local or reserved address")
-    return url
+    request_target = parsed.path or "/"
+    if parsed.query:
+        request_target = f"{request_target}?{parsed.query}"
+    return _ResolvedTarget(
+        url=url,
+        scheme=parsed.scheme,
+        hostname=hostname,
+        port=port,
+        request_target=request_target,
+        addresses=tuple(sorted(addresses)),
+    )
+
+
+def validate_public_url(url: str) -> str:
+    """Reject credentials, non-HTTP schemes, local names and every non-global address."""
+    return _resolve_public_target(url).url
 
 
 @dataclass(frozen=True)
@@ -78,32 +112,59 @@ def _parse_datetime(value: Any) -> datetime | None:
 
 
 def capture_url(url: str, max_bytes: int) -> CapturedOpportunity:
-    """Fetch a bounded page with each redirect target revalidated and no credential forwarding."""
-    current = validate_public_url(url)
-    headers = {"User-Agent": "CareerTwin/0.1 opportunity-research (+public self-hosted app)"}
+    """Fetch a bounded page using IP-pinned TLS and revalidate every redirect target."""
+    current = _resolve_public_target(url)
+    headers = {
+        "Accept-Encoding": "identity",
+        "User-Agent": "CareerTwin/0.1 opportunity-research (+public self-hosted app)",
+    }
     body = b""
     for _ in range(5):
-        with httpx.Client(timeout=httpx.Timeout(15, connect=5), follow_redirects=False) as client:
-            with client.stream("GET", current, headers=headers) as response:
-                if response.status_code in {301, 302, 303, 307, 308}:
-                    location = response.headers.get("location")
-                    if not location:
-                        raise ValueError("Redirect did not include a destination")
-                    current = validate_public_url(urljoin(current, location))
-                    continue
-                response.raise_for_status()
-                content_type = response.headers.get("content-type", "").casefold()
-                if "text/html" not in content_type and "application/xhtml+xml" not in content_type:
-                    raise ValueError("Opportunity URL did not return HTML")
-                chunks: list[bytes] = []
-                size = 0
-                for chunk in response.iter_bytes():
-                    size += len(chunk)
-                    if size > max_bytes:
-                        raise ValueError("Opportunity page exceeds the configured byte limit")
-                    chunks.append(chunk)
-                body = b"".join(chunks)
+        connection: http.client.HTTPConnection | None = None
+        last_error: OSError | ssl.SSLError | None = None
+        for address in current.addresses:
+            try:
+                raw_socket = socket.create_connection(  # lgtm[py/full-ssrf]
+                    (address, current.port), timeout=5
+                )
+                if current.scheme == "https":
+                    context = ssl.create_default_context()
+                    raw_socket = context.wrap_socket(raw_socket, server_hostname=current.hostname)
+                connection = http.client.HTTPConnection(
+                    current.hostname, current.port, timeout=15
+                )
+                connection.sock = raw_socket
                 break
+            except (OSError, ssl.SSLError) as exc:
+                last_error = exc
+        if connection is None:
+            raise ValueError("Opportunity host could not be reached") from last_error
+
+        host_header = current.hostname
+        if ":" in host_header:
+            host_header = f"[{host_header}]"
+        try:
+            connection.request(
+                "GET", current.request_target, headers={**headers, "Host": host_header}
+            )
+            response = connection.getresponse()
+            if response.status in {301, 302, 303, 307, 308}:
+                location = response.getheader("location")
+                if not location:
+                    raise ValueError("Redirect did not include a destination")
+                current = _resolve_public_target(urljoin(current.url, location))
+                continue
+            if response.status >= 400:
+                raise ValueError(f"Opportunity URL returned HTTP {response.status}")
+            content_type = (response.getheader("content-type") or "").casefold()
+            if "text/html" not in content_type and "application/xhtml+xml" not in content_type:
+                raise ValueError("Opportunity URL did not return HTML")
+            body = response.read(max_bytes + 1)
+            if len(body) > max_bytes:
+                raise ValueError("Opportunity page exceeds the configured byte limit")
+            break
+        finally:
+            connection.close()
     else:
         raise ValueError("Too many redirects")
     html = body.decode("utf-8", errors="replace")
@@ -125,7 +186,7 @@ def capture_url(url: str, max_bytes: int) -> CapturedOpportunity:
     organization = posting.get("hiringOrganization") or {}
     employer = str(organization.get("name", "")) if isinstance(organization, dict) else ""
     return CapturedOpportunity(
-        final_url=current,
+        final_url=current.url,
         sha256=hashlib.sha256(body).hexdigest(),
         title=title,
         employer=employer[:300],

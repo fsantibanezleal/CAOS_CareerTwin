@@ -20,7 +20,8 @@ jobs:
           tags: careertwin:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: aquasecurity/trivy-action@0.33.1
+      # Immutable v0.36.0 commit; do not replace with a mutable tag.
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: careertwin:ci
           format: sarif

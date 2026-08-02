@@ -17,7 +17,7 @@ Browser/API, tenant/database, API/external URL, API/GitHub, API/model providers,
 | Cross-tenant IDOR | workspace predicates on every content query, ownership validation, forced PostgreSQL RLS, two-account tests |
 | Admin overreach | account-metadata endpoints only; no other-user workspace selector or content route |
 | Malicious uploads | byte/magic validation, bounded DOCX/PDF/archive/page/size limits, quarantine, production ClamAV fail-closed, storage outside web root |
-| SSRF/DNS rebinding | HTTP(S) only, no credentials/nonstandard ports, reject local names and every non-global resolved IP, validate every redirect, bounded response |
+| SSRF/DNS rebinding | HTTP(S) only, no credentials/nonstandard ports, reject local names and every non-global resolved IP, pin the validated IP while preserving TLS hostname verification, revalidate every redirect, bounded response |
 | Prompt injection | content treated as data, no arbitrary model tools, bounded context, structured output, evidence critic, human approval |
 | Secret leakage | environment-only keys, recursive audit redaction, token never persisted, public-repo secret scans |
 | Supply-chain compromise | exact Python pins, lockfile, dependency review/audit, CodeQL, container scan, SBOM |
