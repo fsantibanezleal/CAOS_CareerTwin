@@ -7,6 +7,7 @@ enable in ignored `.env` or deployment secret storage:
 - `LLM_DEFAULT_PROVIDER=xai|openai|anthropic|google`
 - `XAI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GOOGLE_API_KEY`
 - Model overrides such as `XAI_MODEL=grok-4.5`
+- `LLM_REQUEST_TIMEOUT_SECONDS` and `LLM_MAX_OUTPUT_TOKENS` for provider cost and duration bounds
 
 Do not add Ollama endpoints, local model binaries, model volumes, or silent fallbacks. Production
 rejects test/mock providers and an unconfigured default. Restart API and worker after a provider

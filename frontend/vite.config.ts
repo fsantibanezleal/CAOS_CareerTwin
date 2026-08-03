@@ -1,6 +1,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
+const apiPort = process.env.CAREERTWIN_API_PORT ?? '8000'
+const webPort = Number(process.env.CAREERTWIN_WEB_PORT ?? '5173')
+
 export default defineConfig({
   plugins: [react()],
   build: {
@@ -23,11 +26,11 @@ export default defineConfig({
     css: true,
   },
   server: {
-    port: 5173,
+    port: webPort,
     strictPort: true,
     proxy: {
-      '/api': 'http://127.0.0.1:8000',
-      '/metrics': 'http://127.0.0.1:8000',
+      '/api': `http://127.0.0.1:${apiPort}`,
+      '/metrics': `http://127.0.0.1:${apiPort}`,
     },
   },
   preview: { port: 4173, strictPort: true },

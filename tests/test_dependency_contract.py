@@ -38,3 +38,28 @@ def test_runtime_requirements_match_project_dependencies_exactly() -> None:
         if line.strip() and not line.lstrip().startswith("#")
     }
     assert actual == expected
+
+
+def test_powershell_bootstrap_keeps_optional_arguments_as_an_array() -> None:
+    """Prevent PowerShell from splatting a single CLI argument one character at a time."""
+    root = Path(__file__).resolve().parents[1]
+    script = (root / "scripts/bootstrap-superuser.ps1").read_text(encoding="utf-8")
+
+    assert "[string[]]$PasswordPolicyArgs = @()" in script
+    assert "$PasswordPolicyArgs += '--no-force-change'" in script
+    assert "$PasswordPolicyArgs = if" not in script
+
+
+def test_native_launchers_use_collision_safe_configurable_ports() -> None:
+    """Keep native background launch reliable across concurrent local worktrees."""
+    root = Path(__file__).resolve().parents[1]
+    powershell = (root / "scripts/dev.ps1").read_text(encoding="utf-8")
+    posix = (root / "scripts/dev.sh").read_text(encoding="utf-8")
+    vite = (root / "frontend/vite.config.ts").read_text(encoding="utf-8")
+
+    assert "--reload" not in powershell
+    assert "--reload" not in posix
+    assert "-ApiPort/-WebPort" in powershell
+    assert "CAREERTWIN_API_PORT" in powershell
+    assert "CAREERTWIN_API_PORT" in posix
+    assert "CAREERTWIN_API_PORT" in vite
