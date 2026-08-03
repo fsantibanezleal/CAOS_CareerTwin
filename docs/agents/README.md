@@ -28,6 +28,11 @@ Cancel and terminal transitions lock the row. Retry creates a lineage-preserving
 worker restart returns stale pre-provider claims to the queue; an interrupted in-flight provider
 call fails with a sanitized interruption state instead of being duplicated silently.
 
+The web copilot lists the seeker's durable conversation history and can reload, begin a fresh view,
+or explicitly delete a conversation. Starting fresh never deletes the stored thread. Closing the
+drawer, unmounting it, cancelling microphone permission, or receiving a voice transport error stops
+every active microphone track, audio context, processor, and socket.
+
 ## Native skill path
 
 `scripts/career.ps1 chat "question"` and `scripts/career.sh chat "question"` authenticate through a

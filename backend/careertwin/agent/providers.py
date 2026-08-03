@@ -67,14 +67,28 @@ class ContractTestProvider:
 class PydanticAIProvider:
     """Thin typed adapter; Pydantic AI owns vendor protocol details and output validation."""
 
-    def __init__(self, name: str, model: str) -> None:
+    def __init__(
+        self,
+        name: str,
+        model: str,
+        request_timeout_seconds: int,
+        max_output_tokens: int,
+    ) -> None:
         self.name = name
         self.model = model
+        self.request_timeout_seconds = request_timeout_seconds
+        self.max_output_tokens = max_output_tokens
         self._usage: dict[str, int] = {}
 
     def complete(self, context: AgentContext, specialist: str) -> AgentDraft:
         agent: Agent[None, AgentDraft] = Agent(
-            self.model, output_type=AgentDraft, system_prompt=CAREER_AGENT.system
+            self.model,
+            output_type=AgentDraft,
+            system_prompt=CAREER_AGENT.system,
+            model_settings={
+                "timeout": self.request_timeout_seconds,
+                "max_tokens": self.max_output_tokens,
+            },
         )
         payload = {"specialist": specialist, **context.model_dump(mode="json")}
         result = agent.run_sync(json.dumps(payload, ensure_ascii=False))
@@ -101,15 +115,31 @@ def provider_registry(settings: Settings) -> dict[str, Provider]:
     if settings.app_env == "test":
         providers["contract"] = ContractTestProvider()
     if settings.xai_api_key:
-        providers["xai"] = PydanticAIProvider("xai", f"xai:{settings.xai_model}")
+        providers["xai"] = PydanticAIProvider(
+            "xai",
+            f"xai:{settings.xai_model}",
+            settings.llm_request_timeout_seconds,
+            settings.llm_max_output_tokens,
+        )
     if settings.openai_api_key:
-        providers["openai"] = PydanticAIProvider("openai", f"openai:{settings.openai_model}")
+        providers["openai"] = PydanticAIProvider(
+            "openai",
+            f"openai:{settings.openai_model}",
+            settings.llm_request_timeout_seconds,
+            settings.llm_max_output_tokens,
+        )
     if settings.anthropic_api_key:
         providers["anthropic"] = PydanticAIProvider(
-            "anthropic", f"anthropic:{settings.anthropic_model}"
+            "anthropic",
+            f"anthropic:{settings.anthropic_model}",
+            settings.llm_request_timeout_seconds,
+            settings.llm_max_output_tokens,
         )
     if settings.google_api_key:
         providers["google"] = PydanticAIProvider(
-            "google", f"google-gla:{settings.google_model}"
+            "google",
+            f"google-gla:{settings.google_model}",
+            settings.llm_request_timeout_seconds,
+            settings.llm_max_output_tokens,
         )
     return providers

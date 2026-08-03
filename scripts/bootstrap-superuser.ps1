@@ -11,7 +11,8 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $RepoRoot
 Write-Output 'The password will be requested without echo and is never written by this script.'
-$PasswordPolicyArgs = if ($ForcePasswordChange) { @() } else { @('--no-force-change') }
+[string[]]$PasswordPolicyArgs = @()
+if (-not $ForcePasswordChange) { $PasswordPolicyArgs += '--no-force-change' }
 if ($Compose) {
   docker compose exec app careertwin bootstrap-superuser --email $Email --display-name $DisplayName --locale $Locale @PasswordPolicyArgs
   Assert-NativeSuccess 'Compose superuser bootstrap'

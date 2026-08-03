@@ -37,6 +37,16 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 - Ollama, Qwen, local embeddings, Docling/OCR gateway, Redis, ARQ, model images, model volumes, and
   every production readiness dependency on local inference.
 
+### Fixed
+
+- Keep optional PowerShell superuser arguments as a true array, so a single flag is never splatted
+  into individual characters.
+- Make native launchers collision-safe with explicit API/web ports and stable background processes,
+  including automatic Vite proxy alignment in concurrent worktrees.
+- Apply bounded provider request duration and output-token limits to every managed model call.
+- Expose durable copilot history controls and close microphone, audio, and socket resources across
+  drawer close, component teardown, permission cancellation, and voice transport failures.
+
 ### Security
 
 - Preserve secrets in ignored/runtime-only storage, keep GitHub and harness tokens memory-only,

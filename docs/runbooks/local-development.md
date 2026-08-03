@@ -43,6 +43,18 @@ file, or documentation. The account is stored only in the ignored database.
 ./scripts/career.ps1 doctor
 ```
 
+If another local service owns a default port, select explicit loopback ports. The Vite proxy follows
+the API port automatically:
+
+```powershell
+./scripts/dev.ps1 -ApiPort 8001 -WebPort 5174
+$env:CAREERTWIN_LOCAL_URL = 'http://127.0.0.1:8001'
+./scripts/career.ps1 doctor
+```
+
+On Linux/macOS, set `CAREERTWIN_API_PORT` and `CAREERTWIN_WEB_PORT` for `scripts/dev.sh`. The lifecycle
+scripts run stable background processes; restart them after code changes.
+
 The native process set is:
 
 - Vite web client: `http://127.0.0.1:5173`

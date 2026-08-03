@@ -734,6 +734,10 @@ export const spanishMessages: Record<string, string> = {
   'Encrypted blob store': 'Almacén cifrado de objetos',
   'Managed external AI APIs': 'APIs externas de IA administradas',
   'Managed external AI': 'IA externa administrada',
+  'Conversation history': 'Historial de conversaciones',
+  'New conversation': 'Nueva conversaciÃ³n',
+  'Delete conversation': 'Eliminar conversaciÃ³n',
+  'Delete this conversation and its visible messages?': 'Â¿Eliminar esta conversaciÃ³n y sus mensajes visibles?',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {

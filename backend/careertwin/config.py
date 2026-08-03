@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     google_api_key: SecretStr | None = None
     google_model: str = "gemini-2.5-flash"
     llm_request_timeout_seconds: int = Field(default=300, ge=10, le=900)
+    llm_max_output_tokens: int = Field(default=4096, ge=256, le=32_768)
     blob_encryption_key: SecretStr | None = None
     blob_encryption_key_id: str = Field(default="local-v1", min_length=1, max_length=64)
     connector_encryption_key: SecretStr | None = None
