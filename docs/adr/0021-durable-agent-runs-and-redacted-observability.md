@@ -1,6 +1,6 @@
 # ADR 0021: Durable agent execution and redacted observability
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0026
 - Date: 2026-08-02
 
 ## Context

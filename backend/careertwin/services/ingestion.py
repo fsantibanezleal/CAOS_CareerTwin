@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+import base64
 import io
-import json
 import socket
-import tempfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -125,23 +124,7 @@ def extract_text(content: bytes, media_type: str) -> str:
         decoded = content.decode("utf-8", errors="replace")
         text = extract(decoded, include_links=False, include_images=False) or ""
     elif media_type in {"image/jpeg", "image/png"}:
-        try:
-            from docling.document_converter import (  # type: ignore[import-not-found]
-                DocumentConverter,
-            )
-        except ImportError as exc:
-            raise ValueError("Image OCR requires the optional ingestion dependencies") from exc
-        suffix = ".png" if media_type == "image/png" else ".jpg"
-        temporary_path: Path | None = None
-        try:
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temporary:
-                temporary.write(content)
-                temporary_path = Path(temporary.name)
-            result = DocumentConverter().convert(temporary_path)
-            text = result.document.export_to_markdown()
-        finally:
-            if temporary_path and temporary_path.exists():
-                temporary_path.unlink()
+        raise ValueError("Image transcription requires the configured external xAI provider")
     else:
         text = content.decode("utf-8", errors="replace")
     normalized = "\n".join(line.rstrip() for line in text.replace("\r\n", "\n").split("\n"))
@@ -156,23 +139,23 @@ def extract_document(
     filename: str,
     settings: Settings,
 ) -> DocumentExtraction:
-    """Extract with the configured Docling service, retaining a safe local text fallback.
+    """Extract deterministically, using xAI only when image or scanned-PDF vision is required.
 
-    Production configuration requires Docling. Plain text, Markdown, and HTML stay on the local
-    deterministic path because OCR/layout inference adds no information to those formats.
+    CareerTwin never starts a document or OCR model. Private binary content is sent to xAI only
+    when the operator configured ``XAI_API_KEY``; uploaded xAI files are deleted in ``finally``.
     """
-    if settings.docling_url and media_type not in {"text/plain", "text/markdown", "text/html"}:
-        text, metadata = _docling_extract(content, media_type, filename, settings)
-        engine = "docling-serve"
-        confidence = float(metadata.pop("confidence"))
-        timings = metadata.pop("timings")
-        warnings = metadata.pop("warnings")
-    else:
+    try:
         text = extract_text(content, media_type)
-        engine = "local-structured-text"
-        confidence = 1.0 if media_type.startswith("text/") else 0.7
-        timings = {}
-        warnings = []
+        engine = "deterministic-structured-text"
+        confidence = 1.0 if media_type.startswith("text/") else 0.8
+    except ValueError:
+        if not settings.xai_api_key or media_type not in {"application/pdf", "image/jpeg", "image/png"}:
+            raise
+        text = _xai_document_text(content, media_type, filename, settings)
+        engine = "xai-document-understanding"
+        confidence = 0.78
+    timings: dict[str, Any] = {}
+    warnings: list[str] = []
     spans = [
         {"line_start": number, "line_end": number}
         for number, line in enumerate(text.splitlines(), start=1)
@@ -188,62 +171,89 @@ def extract_document(
     )
 
 
-def _docling_extract(
+def _xai_output_text(payload: dict[str, Any]) -> str:
+    """Extract visible text from a Responses API payload without retaining provider internals."""
+    parts: list[str] = []
+    for output in payload.get("output", []):
+        if not isinstance(output, dict):
+            continue
+        for content in output.get("content", []):
+            if isinstance(content, dict) and isinstance(content.get("text"), str):
+                parts.append(content["text"])
+    text = "\n".join(parts).strip()
+    if not text:
+        raise ValueError("xAI returned no document text")
+    return text[:500_000]
+
+
+def _xai_document_text(
     content: bytes,
     media_type: str,
     filename: str,
     settings: Settings,
-) -> tuple[str, dict[str, Any]]:
-    """Call the pinned private Docling v1 service using its documented multipart contract."""
-    docling_url = settings.docling_url
-    if not docling_url:
-        raise ValueError("Docling service is not configured")
-    headers: dict[str, str] = {}
-    if settings.docling_api_key:
-        headers["X-Api-Key"] = settings.docling_api_key.get_secret_value()
-    response = httpx.post(
-        f"{docling_url.rstrip('/')}/v1/convert/file",
-        headers=headers,
-        files={"files": (filename[:255], content, media_type)},
-        data={
-            "to_formats": "md",
-            "do_ocr": "true",
-            "ocr_lang": "en,es",
-            "image_export_mode": "placeholder",
-            "table_mode": "accurate",
-        },
-        timeout=settings.docling_timeout_seconds,
-    )
-    response.raise_for_status()
-    payload = response.json()
-    status_value = str(payload.get("status", ""))
-    if status_value not in {"success", "partial_success"}:
-        raise ValueError("Docling conversion failed")
-    document = payload.get("document") or {}
-    text = str(document.get("md_content") or document.get("text_content") or "")
-    normalized = "\n".join(line.rstrip() for line in text.replace("\r\n", "\n").split("\n"))[
-        :500_000
-    ]
-    if not normalized.strip():
-        raise ValueError("Docling returned no extractable text")
-    errors = payload.get("errors") or []
-    warnings = [
-        str(item.get("component_type") or item.get("error_message") or "conversion-warning")[:200]
-        if isinstance(item, dict)
-        else type(item).__name__
-        for item in errors[:20]
-    ]
-    timings = payload.get("timings") if isinstance(payload.get("timings"), dict) else {}
-    # Persist only bounded operational timing metadata, never raw remote response bodies.
-    safe_timings = json.loads(json.dumps(timings, default=str))
-    confidence = 0.92 if status_value == "success" else 0.72
+) -> str:
+    """Transcribe an image or scanned PDF through xAI with bounded transient retention."""
+    if not settings.xai_api_key:
+        raise ValueError("xAI document understanding is not configured")
+    authorization = {"Authorization": f"Bearer {settings.xai_api_key.get_secret_value()}"}
+    base_url = settings.xai_base_url.rstrip("/")
+    input_item: dict[str, str]
+    remote_file_id: str | None = None
     if media_type.startswith("image/"):
-        confidence = min(confidence, 0.82)
-    return normalized, {
-        "confidence": confidence,
-        "timings": safe_timings,
-        "warnings": warnings,
-    }
+        encoded = base64.b64encode(content).decode("ascii")
+        input_item = {
+            "type": "input_image",
+            "image_url": f"data:{media_type};base64,{encoded}",
+        }
+    else:
+        upload = httpx.post(
+            f"{base_url}/files",
+            headers=authorization,
+            data={"expires_after": '{"anchor":"created_at","seconds":3600}'},
+            files={"file": (filename[:255], content, media_type)},
+            timeout=settings.llm_request_timeout_seconds,
+        )
+        upload.raise_for_status()
+        remote_file_id = str(upload.json().get("id") or "")
+        if not remote_file_id:
+            raise ValueError("xAI file upload returned no identifier")
+        input_item = {"type": "input_file", "file_id": remote_file_id}
+    try:
+        response = httpx.post(
+            f"{base_url}/responses",
+            headers={**authorization, "Content-Type": "application/json"},
+            json={
+                "model": settings.xai_model,
+                "store": False,
+                "input": [{
+                    "role": "user",
+                    "content": [
+                        input_item,
+                        {
+                            "type": "input_text",
+                            "text": (
+                                "Transcribe this professional document faithfully in reading order. "
+                                "Preserve headings, lists, tables, dates, employers, roles, skills, "
+                                "education and measurable outcomes. Return document text only."
+                            ),
+                        },
+                    ],
+                }],
+            },
+            timeout=settings.llm_request_timeout_seconds,
+        )
+        response.raise_for_status()
+        return _xai_output_text(response.json())
+    finally:
+        if remote_file_id:
+            try:
+                httpx.delete(
+                    f"{base_url}/files/{remote_file_id}",
+                    headers=authorization,
+                    timeout=30,
+                )
+            except httpx.HTTPError:
+                pass
 
 
 def propose_profile_claims(text: str, source_id: str) -> list[dict[str, object]]:

@@ -2,31 +2,41 @@
 
 ## Assets
 
-Account credentials, sessions, profile facts, uploaded documents, extracted text, GitHub snapshots, opportunity research, application history, conversations, provider/OAuth keys and grants, recruiting-email excerpts, calendar events, browser credentials, database/blobs/backups, and audit evidence.
+Credentials, sessions, profile evidence, documents/extracted text, GitHub snapshots, opportunities,
+applications, conversations, provider/OAuth grants, email excerpts, calendar events, browser/voice
+credentials, databases, encrypted blobs, backups, and audit evidence.
 
 ## Trust boundaries
 
-Browser/API, browser extension/capture token, tenant/database, API/external URL, API/GitHub, API/Google/Microsoft, API/model providers, API/encrypted blob store, API/ClamAV/Docling, app/worker/Redis, VPS/reverse proxy, backup/off-host storage, and public repository/private runtime.
+Browser/API, browser/xAI Voice, extension/capture token, tenant/database, API/public URL, API/GitHub,
+API/Google/Microsoft, worker/managed model provider, API/encrypted blobs, API/malware scanner,
+app/worker/database queue, VPS/TLS proxy, backup/off-host storage, and public repo/private runtime.
 
 ## Principal threats and controls
 
 | Threat | Controls |
 |---|---|
-| Credential/session theft | Argon2id, opaque high-entropy tokens stored as hashes, HttpOnly/secure cookies, revocation, expiry, password-change revocation |
-| CSRF/CORS | double-submit CSRF header, same-site cookies, explicit origins, no wildcard credentials |
-| Cross-tenant IDOR | workspace predicates on every content query, ownership validation, forced PostgreSQL RLS, two-account tests |
-| Admin overreach | account-metadata endpoints only; no other-user workspace selector or content route |
-| Malicious uploads | byte/magic validation, bounded DOCX/PDF/archive/page/size limits, quarantine, production ClamAV fail-closed, storage outside web root |
-| SSRF/DNS rebinding | HTTP(S) only, no credentials/nonstandard ports, reject local names and every non-global resolved IP, pin the validated IP while preserving TLS hostname verification with TLS 1.2+, revalidate every redirect, bounded response |
-| Prompt injection | content treated as data, no arbitrary model tools, bounded context, structured output, evidence critic, human approval |
-| Secret leakage | environment-only keys, encrypted OAuth grants, hashed sessions/browser credentials, recursive audit redaction, GitHub token never persisted, public-repo secret scans |
-| Source/blob disclosure | AES-256-GCM tenant/key-bound envelopes, storage outside web root, owner-only backup permissions, explicit legacy encryption migration |
-| Excessive connector access | PKCE, one-time state, service-specific delegated scopes, read-only email, user-triggered sync, bounded retention, disconnect/revoke controls |
-| Supply-chain compromise | exact Python pins, lockfile, dependency review/audit, CodeQL, container scan, SBOM |
-| Data loss/ransomware | persistent volumes, explicit backups, encrypted off-host copies, isolated restore tests |
-| Denial of service | upload/URL limits, provider/context bounds, worker timeouts, rate-limit seam, low-cardinality metrics |
-| Misleading decision support | deterministic versioned scoring, eligibility separation, coverage/bounds, no protected traits, no hiring-probability claim |
+| Credential/session theft | Argon2id, opaque high-entropy digest-stored sessions, HttpOnly/secure cookies, expiry, revocation |
+| CSRF/CORS | double-submit CSRF, same-site cookies, explicit origin allowlist, no credentialed wildcard |
+| Cross-tenant IDOR | workspace predicates, ownership validation, hosted forced RLS, two-account tests |
+| Admin overreach | account metadata/lifecycle only; no other-user content route or workspace selector |
+| Malicious uploads | magic/structure checks, archive/page/size bounds, production malware scan fail-closed, encrypted non-web storage |
+| SSRF/DNS rebinding | public HTTP(S) only, no credentials/nonstandard ports, reject non-global IPs, pin validated IP, revalidate redirects, bounded response |
+| Prompt injection | untrusted content is data, no arbitrary model tools, bounded context, typed output, evidence critic, explicit approval |
+| Managed-provider disclosure | explicit provider, environment-only key, bounded confirmed context, non-retained image request, transient file TTL plus deletion |
+| Voice exposure | five-minute ephemeral secret, no-store response, browser-to-xAI WebSocket, server key never in browser, audio-track cleanup |
+| Secret leakage | environment-only keys, encrypted grants, digest-only credentials, audit redaction, GitHub token never persisted, secret scans |
+| Blob disclosure | AES-256-GCM tenant/key-bound envelopes, storage outside web root, owner-only backups, migration tooling |
+| Excessive connector access | PKCE, one-time state, service-specific scopes, read-only email, explicit bounded sync, retention/disconnect/revoke controls |
+| Supply-chain compromise | exact Python pins, npm lockfile, supported Node line, dependency audits, CodeQL, image scan, SBOM |
+| Data loss/ransomware | persistent canonical store, encrypted off-host backup, isolated restore tests |
+| Duplicate/abandoned work | database row claims, locks, explicit states, lineage-preserving retry, conservative interruption recovery |
+| Denial of service | upload/URL/context bounds, worker batch limits/timeouts, reverse-proxy rate limits, low-cardinality metrics |
+| Misleading decisions | deterministic versioned scoring, separate eligibility, coverage/bounds, no protected traits or hiring-probability claim |
 
 ## Residual risk
 
-Self-hosting operators control the VPS, OAuth/model contracts, backups, TLS, runtime roles, monitoring, and legal compliance. Document parsing and external APIs remain attack surfaces. Version 0.2.0 does not provide multi-factor authentication, hardware-backed per-user keys, or distributed application-level rate limiting; public Internet deployments must add a reverse-proxy rate limit and restrict invitations.
+Operators control VPS access, provider/OAuth contracts, backups, TLS, runtime roles, monitoring, and
+legal compliance. Parsers and external APIs remain attack surfaces. CareerTwin does not provide MFA,
+hardware-backed per-user keys, or distributed application rate limiting; public deployments must
+restrict invitations and add reverse-proxy rate limits.

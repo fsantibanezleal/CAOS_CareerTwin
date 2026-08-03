@@ -10,11 +10,14 @@ from pydantic import ValidationError
 from careertwin.config import Settings
 
 
-def test_local_model_defaults_are_resource_bounded() -> None:
+def test_external_model_defaults_never_enable_local_inference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("LLM_DEFAULT_PROVIDER", raising=False)
     settings = Settings(_env_file=None)
-    assert settings.ollama_model == "qwen2.5:0.5b-instruct-q4_K_M"
-    assert settings.llm_context_window == 4096
-    assert settings.llm_max_output_tokens == 1024
+    assert settings.llm_default_provider == "xai"
+    assert settings.xai_model == "grok-4.5"
+    assert settings.xai_voice_model == "grok-voice-latest"
     assert settings.llm_request_timeout_seconds == 300
 
 

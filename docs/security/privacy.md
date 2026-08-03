@@ -1,27 +1,50 @@
 # Privacy model
 
-CareerTwin is user-controlled career research, not an employer selection product. Data minimization starts with one person per workspace and user-selected opportunities/sources.
+CareerTwin is user-controlled career research, not an employer selection product. One person owns
+each workspace and chooses every source, opportunity, connector, provider turn, and canonical change.
 
-## Data categories and purpose
+## Data and purpose
 
-- Account metadata: authentication and preferences.
-- Professional data and evidence: user-requested profile management and matching.
-- Opportunity/application data: personal job-search research and organization.
-- Conversations/model context: user-requested assistance.
-- Audit/operational data: security, debugging, and accountability.
+- Account metadata supports authentication and preferences.
+- Professional evidence supports the user's profile, graphs, matching, and artifacts.
+- Opportunity/application data supports personal job research and organization.
+- Visible conversations and citations support user-requested assistance.
+- Redacted audit/operational data supports security and reliability.
 
 ## Storage and disclosure
 
-Canonical data is in the private database; source bytes are AES-256-GCM encrypted in private blob storage. Public Git contains none of it. GitHub tokens are request-memory-only. OAuth refresh tokens are encrypted with tenant/provider/purpose binding; browser credentials and sessions are stored only as digests. Imported recruiting-email excerpts have bounded retention and calendar/email synchronization runs only after explicit consent. Provider and observability keys are server environment only. Confirmed evidence and optional opportunity context are disclosed to the provider chosen by the user/operator for a chat turn; the UI names that provider. The default Compose provider is private Ollama. Optional Langfuse observations receive redacted operational metadata only: hashed subject, input digest, counts, provider/specialist labels, attempt and terminal status—not prompts, evidence, answers, email/account values, or raw workspace IDs.
+Canonical data stays in the private SQLite/PostgreSQL database. Source bytes are AES-256-GCM
+encrypted in tenant-namespaced blob storage. Public Git contains none of it. Sessions and browser
+credentials are digest-only; OAuth refresh grants are encrypted with tenant/provider/purpose binding;
+GitHub tokens exist only for one request in memory.
+
+Confirmed evidence and optional opportunity context are disclosed only to the managed provider
+selected for a user-requested turn; the UI names it. There is no local or undisclosed fallback.
+Images/scanned PDFs are sent to xAI only when configured; remote files receive an expiry safety net
+and immediate deletion attempt. Grok Voice audio flows browser-to-xAI with a short-lived credential
+and does not pass through the VPS.
+
+Optional Langfuse observations contain only hashed subjects, digests, counts, lifecycle/provider
+labels, attempts, and status. Prompts, evidence, answers, email/account values, credentials, and raw
+workspace IDs are prohibited.
 
 ## User controls
 
-The seeker can review/reject extracted claims, retry failed extraction, edit profile/opportunities, curate STAR/resume artifacts, import/export a portable profile, delete conversations and opportunities, cancel/retry agent runs, connect/disconnect calendar and read-only email, revoke browser credentials, export all canonical data, change password, and request account disable/purge from the superuser. Disable is recoverable; purge is explicit and irreversible and removes both relational data and the tenant's encrypted blob tree. Retention schedules are operator-configurable and must include backups.
+The seeker reviews/rejects claims, edits profile/opportunities, curates artifacts, imports/exports a
+portable profile, deletes conversations/opportunities, cancels/retries runs, connects/disconnects
+calendar/read-only email, revokes browser credentials, exports canonical data, and changes password.
+Superusers may disable or explicitly purge accounts but cannot browse career content. Disable is
+recoverable; purge is irreversible and includes the tenant blob tree. Backup retention is operator-owned.
 
 ## Sensitive inference
 
-CareerTwin does not infer race, ethnicity, sex/gender, pregnancy, disability, health, religion, political belief, union status, sexual orientation, age, personality, or other protected/sensitive traits. Such fields are excluded from matching and agent change allowlists.
+CareerTwin does not infer or score race, ethnicity, sex/gender, pregnancy, disability, health,
+religion, political belief, union status, sexual orientation, age, personality, or other protected
+traits. Missing evidence means unknown, never weak or unemployable.
 
-## Open-source boundary
+## Public-repository boundary
 
-Example data, tests, screenshots, issues, and documentation must be synthetic. Before every release, run secret/history scans and verify ignored runtime paths. If a secret enters Git, removal does not revoke it: rotate first, then clean history according to the incident runbook.
+Examples, tests, screenshots, issues, docs, and skill payloads must be synthetic. `.env`, `.venv`,
+`node_modules`, databases, blobs, logs, exports, backups, provider keys, and personal documents are
+ignored. Run secret/history scans before releases. If a secret enters Git, rotate it first; history
+cleanup does not revoke it.

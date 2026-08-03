@@ -1,12 +1,13 @@
 {
   "schema_version": 1,
   "skills": {
-    "manage-career-profile": "1.2.0",
-    "ingest-job-opportunity": "1.2.0",
-    "review-github-portfolio": "1.0.0",
-    "analyze-career-match": "1.1.0",
-    "improve-career-readiness": "1.1.0",
-    "operate-career-twin": "1.2.0",
-    "manage-job-search-pipeline": "1.1.0"
+    "manage-career-profile": "2.0.0",
+    "ingest-job-opportunity": "2.0.0",
+    "review-github-portfolio": "2.0.0",
+    "analyze-career-match": "2.0.0",
+    "improve-career-readiness": "2.0.0",
+    "operate-career-twin": "2.0.0",
+    "manage-job-search-pipeline": "2.0.0",
+    "use-career-copilot": "1.0.0"
   }
 }

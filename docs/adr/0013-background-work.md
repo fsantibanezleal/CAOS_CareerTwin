@@ -1,6 +1,6 @@
 # ADR 0013: Redis and ARQ for background work
 
-- Status: Accepted
+- Status: Superseded by ADR 0026
 - Date: 2026-08-01
 
 ## Decision

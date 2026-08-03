@@ -2,7 +2,7 @@
 
 ## Backup set
 
-A recoverable set includes PostgreSQL and the blob volume from the same operational window, the deployed commit/image digest, migration revision, and the private environment/secret-store configuration. Redis is rebuildable and is not canonical.
+A recoverable set includes PostgreSQL and the blob volume from the same operational window, the deployed commit/image digest, migration revision, and the private environment/secret-store configuration. The database-backed worker has no separate queue backup: pending and running state is canonical in PostgreSQL.
 
 Run `scripts/backup.ps1` or `scripts/backup.sh`. The default path `backups/private/` is ignored. Blob files are copied through the Docker API and archived by the operator host, so the procedure does not assume that the non-root, distroless app image contains a shell, `tar`, or `rm`. The blob archive has one top-level `blobs/` directory. Encrypt and copy the set off-host; record a checksum and retention class without exposing names from user data.
 

@@ -1,5 +1,13 @@
 # GitHub connector contract
 
+Preferred native command:
+
+```powershell
+scripts/career.ps1 github-review --repository owner/repository
+```
+
+The harness asks for the token without echo and keeps it in process memory only. Repeat `--repository` for an allowlist.
+
 Call `POST /api/connectors/github/snapshot` with:
 
 ```json

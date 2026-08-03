@@ -7,6 +7,7 @@ import getpass
 import os
 from pathlib import Path
 
+from pydantic import EmailStr, TypeAdapter, ValidationError
 from sqlalchemy import func, select, text
 
 from careertwin.config import get_settings
@@ -19,7 +20,6 @@ from careertwin.services.taxonomy import (
     ESCO_SOURCE_URL,
     ONET_RELEASE,
     ONET_SOURCE_URL,
-    embed_taxonomy,
     import_esco,
     import_esco_relations,
     import_onet,
@@ -29,7 +29,7 @@ from careertwin.services.taxonomy import (
 
 def _password_from_private_input() -> str:
     password = os.getenv("CAREERTWIN_BOOTSTRAP_PASSWORD") or getpass.getpass(
-        "Temporary password (not echoed): "
+        "Password (not echoed): "
     )
     if len(password) < 12:
         raise SystemExit("Password must contain at least 12 characters")
@@ -38,15 +38,19 @@ def _password_from_private_input() -> str:
 
 def bootstrap_superuser(args: argparse.Namespace) -> None:
     """Create the first superuser without persisting or echoing its password."""
+    try:
+        email = str(TypeAdapter(EmailStr).validate_python(args.email)).casefold()
+    except ValidationError as exc:
+        raise SystemExit("A valid email address is required") from exc
     with SessionLocal.begin() as db:
         if db.bind is not None and db.bind.dialect.name == "postgresql":
             db.execute(text("SELECT set_config('app.is_admin', 'true', true)"))
-        existing = db.scalar(select(User).where(User.email == args.email.casefold().strip()))
+        existing = db.scalar(select(User).where(User.email == email))
         if existing:
             raise SystemExit("An account with this email already exists")
         user = create_user(
             db,
-            email=args.email,
+            email=email,
             display_name=args.display_name,
             password=_password_from_private_input(),
             is_superuser=True,
@@ -138,23 +142,6 @@ def load_onet(args: argparse.Namespace) -> None:
     )
 
 
-def build_taxonomy_embeddings(args: argparse.Namespace) -> None:
-    """Generate derived semantic vectors through the configured private Ollama service."""
-    with SessionLocal.begin() as db:
-        result = embed_taxonomy(
-            db,
-            get_settings(),
-            taxonomy=args.taxonomy,
-            release=args.release,
-            language=args.language,
-            limit=args.limit,
-        )
-    print(
-        f"Embedded {result['created']} concepts with {result['model']} at "
-        f"revision {str(result['revision'])[:12]}"
-    )
-
-
 def encrypt_blobs(_: argparse.Namespace) -> None:
     """Seal legacy plaintext blobs in place before encrypted storage becomes mandatory."""
     result = configured_blob_store(get_settings()).encrypt_existing()
@@ -192,14 +179,6 @@ def parser() -> argparse.ArgumentParser:
     onet.add_argument("--release", default=ONET_RELEASE)
     onet.add_argument("--replace", action="store_true")
     onet.set_defaults(handler=load_onet)
-    embeddings = commands.add_parser(
-        "embed-taxonomy", help="Build local semantic vectors for a taxonomy snapshot"
-    )
-    embeddings.add_argument("--taxonomy", choices=("ESCO", "O*NET"), default="ESCO")
-    embeddings.add_argument("--release", default=ESCO_RELEASE)
-    embeddings.add_argument("--language", choices=("en", "es"), required=True)
-    embeddings.add_argument("--limit", type=int)
-    embeddings.set_defaults(handler=build_taxonomy_embeddings)
     blob_migration = commands.add_parser(
         "encrypt-blobs", help="Encrypt legacy document blobs in place"
     )

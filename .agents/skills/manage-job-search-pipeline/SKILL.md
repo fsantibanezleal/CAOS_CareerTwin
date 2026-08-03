@@ -5,7 +5,7 @@ description: Organize one CareerTwin seeker's applications, legal stage transiti
 
 # Manage Job Search Pipeline
 
-Skill contract version: 1.1.0.
+Skill contract version: 2.0.0.
 
 ## Outcome
 
@@ -14,11 +14,11 @@ Keep a truthful, candidate-owned operating timeline for saved opportunities, peo
 ## Workflow
 
 1. Read `Entry_point.md`, then `references/pipeline-contract.md`.
-2. Inspect the current applications, legal next stages, tasks, contacts, opportunity titles, and analytics denominators before changing anything.
+2. Inspect current applications, legal next stages, tasks, contacts, opportunity titles, and analytics denominators with `scripts/career.* get` before changing anything.
 3. Create an application record only after the seeker chooses to track a saved opportunity. Preserve its channel and notes.
 4. Move stages only through server-advertised legal transitions. Record the seeker's factual note; never manufacture an interview, offer, rejection, or submission.
 5. Add contacts with the minimum useful context. Link a contact to an application only when the relationship is explicit.
-6. Add meetings, deadlines, reminders, and tasks with timezone-aware dates. Link compatible contacts and applications when known.
+6. Add meetings, deadlines, reminders, and tasks with timezone-aware dates through the web UI or a bounded ignored JSON body passed to `scripts/career.* request`. Link compatible contacts and applications when known.
 7. For calendar exchange, preview event counts and use RFC 5545 import/export. Treat UID-based skips as idempotency, not an error.
 8. If the seeker explicitly connects Google or Microsoft, verify the requested OAuth service and scopes before a user-triggered calendar or email synchronization. Read-only email context may create a private follow-up task but never send, draft, or alter mailbox content.
 9. Summarize overdue/open work and personal process analytics with their denominator and small-sample warning.

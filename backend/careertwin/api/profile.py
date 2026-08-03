@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from careertwin.api.dependencies import Config, CsrfUser, CurrentUser, Db
 from careertwin.models import (
+    Accomplishment,
     ClaimState,
     Education,
     EvidenceClaim,
@@ -501,6 +502,14 @@ def profile_graph(user: CurrentUser, db: Db) -> dict[str, object]:
             )
         ).all()
     )
+    sources = list(
+        db.scalars(select(Source).where(Source.workspace_id == user.workspace.id)).all()
+    )
+    accomplishments = list(
+        db.scalars(
+            select(Accomplishment).where(Accomplishment.workspace_id == user.workspace.id)
+        ).all()
+    )
     matrix = [
         {
             "skill_id": skill.id,
@@ -515,7 +524,9 @@ def profile_graph(user: CurrentUser, db: Db) -> dict[str, object]:
         for skill in skills
     ]
     return {
-        "graph": build_profile_graph(profile, skills, experiences, education, claims),
+        "graph": build_profile_graph(
+            profile, skills, experiences, education, claims, sources, accomplishments
+        ),
         "river": build_career_river(experiences, education),
         "matrix": matrix,
     }

@@ -1,15 +1,47 @@
-# Model providers and Grok
+# Managed model providers and Grok Voice
 
-CareerTwin requires a real model provider. Docker Compose runs a private Ollama service, pulls the pinned `OLLAMA_MODEL`, and selects it with `LLM_DEFAULT_PROVIDER=ollama`. The default `qwen2.5:0.5b-instruct-q4_K_M` was selected from a live constrained-CPU benchmark: it preserved schema-constrained output while avoiding the multi-minute timeouts observed with larger local models. `LLM_CONTEXT_WINDOW` and `LLM_MAX_OUTPUT_TOKENS` bound memory and latency. To use a hosted provider instead, inject a correctly scoped key into the ignored local `.env` or VPS secret environment:
+CareerTwin never hosts model inference. Supported managed providers are xAI, OpenAI, Anthropic, and
+Google through one typed contract. Set exactly one selected default and any keys you intentionally
+enable in ignored `.env` or deployment secret storage:
 
-- `XAI_API_KEY` for xAI/Grok.
-- `OPENAI_API_KEY` for OpenAI.
-- `ANTHROPIC_API_KEY` for Anthropic.
-- `GOOGLE_API_KEY` for Google.
-- `OLLAMA_BASE_URL` and `OLLAMA_MODEL` for a user-operated local endpoint.
+- `LLM_DEFAULT_PROVIDER=xai|openai|anthropic|google`
+- `XAI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GOOGLE_API_KEY`
+- Model overrides such as `XAI_MODEL=grok-4.5`
 
-Set `LLM_DEFAULT_PROVIDER` to `xai`, `openai`, `anthropic`, `google`, or `ollama`. Production rejects test/mock names and an unconfigured default. Restart app and worker, log in, and inspect `/api/agent/providers`; it returns names only. Readiness checks that the exact Ollama model is present. Run a synthetic evidence-cited chat against every enabled release provider and verify that unsupported citations fail closed.
+Do not add Ollama endpoints, local model binaries, model volumes, or silent fallbacks. Production
+rejects test/mock providers and an unconfigured default. Restart API and worker after a provider
+change, then inspect `GET /api/agent/providers`; it returns names/default/mode only.
 
-Provider keys must never be passed in browser JavaScript, repository files, Compose YAML literals, images, logs, issues, or exports. Provider selection changes where the chosen confirmed evidence/context is processed. Document retention/training terms and obtain the seeker's informed choice before sending private content.
+## xAI document path
 
-Optional Langfuse tracing uses `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST`. CareerTwin emits only the `redacted-v1` operational contract; never enable application-level prompt/output capture around it. Verify with synthetic sentinel content that the trace contains hashes, counts and lifecycle labels only. Tracing failure is non-fatal and cannot change the stored agent result.
+Native parsers handle extractable text. For a PNG/JPEG or scanned PDF, CareerTwin sends content to
+xAI only when `XAI_API_KEY` is configured. Images use a non-retained request. PDFs use the private
+Files API with a one-hour expiry safety net and immediate best-effort deletion in `finally`.
+Extracted output still passes exact-quotation and protected-trait critics and remains proposed.
+
+## Grok Voice path
+
+The authenticated browser requests `POST /api/agent/voice/session`. CareerTwin exchanges the
+long-lived server key for a five-minute xAI Realtime client secret and returns it with
+`Cache-Control: no-store`. The browser connects directly to xAI with the
+`xai-client-secret.<ephemeral>` WebSocket protocol. Never print this response through the generic
+harness, log it, or persist it. The VPS does not receive audio or run an audio model.
+
+## Verification
+
+1. Use synthetic confirmed evidence and inspect `/api/agent/providers`.
+2. Run `scripts/career.* chat "bounded synthetic question" --provider <name>`.
+3. Verify provider name, terminal run state, visible citation IDs, and rejection of unsupported citations.
+4. Verify cancellation/retry and worker restart behavior without duplicate canonical writes.
+5. For xAI, upload a synthetic scanned document and verify remote deletion is attempted.
+6. In the web UI, verify microphone permission, ephemeral voice connection, stop/cleanup, and no key in client logs/network payloads except the short-lived secret response.
+
+Provider keys must never appear in browser bundles, repository files, Compose literals, command
+arguments, images, issues, logs, exports, or observability. Document each provider's current data,
+retention, training, regional, availability, and cost terms before sending real professional data.
+
+Primary references: [Grok 4.5](https://docs.x.ai/developers/grok-4-5),
+[structured outputs](https://docs.x.ai/developers/model-capabilities/text/structured-outputs),
+[image understanding](https://docs.x.ai/developers/model-capabilities/images/understanding),
+[file lifecycle](https://docs.x.ai/developers/files/managing-files), and
+[ephemeral voice tokens](https://docs.x.ai/developers/model-capabilities/audio/ephemeral-tokens).

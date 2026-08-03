@@ -14,8 +14,6 @@ updates:
       # Upper-bound widening is not always classified as a SemVer-major update.
       - dependency-name: hatchling
         versions: [">=2"]
-      - dependency-name: docling
-        versions: [">=3"]
       - dependency-name: langfuse
         versions: [">=5"]
       - dependency-name: "opentelemetry-*"

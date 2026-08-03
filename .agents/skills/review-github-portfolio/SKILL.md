@@ -5,7 +5,7 @@ description: Review selected GitHub repositories as bounded professional evidenc
 
 # Review GitHub Portfolio
 
-Skill contract version: 1.0.0.
+Skill contract version: 2.0.0.
 
 ## Outcome
 
@@ -19,7 +19,7 @@ Ask for a fine-grained, read-only GitHub personal access token only when executi
 
 1. Read `Entry_point.md` and `references/github-contract.md`.
 2. Agree on an allowlist of at most 50 `owner/repository` values, or explicitly use the bounded recent-repository default.
-3. Run the snapshot endpoint once. If the connector fails, report only the sanitized error; never retry with broader scopes automatically.
+3. Run `scripts/career.ps1 github-review --repository owner/name` or the `.sh` equivalent. Enter the fine-grained token only at the hidden prompt or in the process-only `CAREERTWIN_GITHUB_TOKEN` environment variable. If the connector fails, report only the sanitized error; never retry with broader scopes automatically.
 4. Review ownership, fork, archive, language, release, description, and update signals.
 5. Present every proposed claim as a proposal. The seeker confirms or rejects it in the evidence inbox.
 6. Link only confirmed claims to curated skills. Explain the difference between language bytes, repository activity, a shipped release, and demonstrated expertise.
