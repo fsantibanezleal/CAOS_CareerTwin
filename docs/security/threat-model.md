@@ -24,7 +24,7 @@ app/worker/database queue, VPS/TLS proxy, backup/off-host storage, and public re
 | SSRF/DNS rebinding | public HTTP(S) only, no credentials/nonstandard ports, reject non-global IPs, pin validated IP, revalidate redirects, bounded response |
 | Prompt injection | untrusted content is data, no arbitrary model tools, bounded context, typed output, evidence critic, explicit approval |
 | Managed-provider disclosure | explicit provider, environment-only key, bounded confirmed context, non-retained image request, transient file TTL plus deletion |
-| Voice exposure | five-minute ephemeral secret, no-store response, browser-to-xAI WebSocket, server key never in browser, audio-track cleanup |
+| Voice exposure | five-minute ephemeral secret, no-store response, same-origin-only microphone policy plus explicit browser consent, browser-to-xAI WebSocket, server key never in browser, audio-track cleanup |
 | Secret leakage | environment-only keys, encrypted grants, digest-only credentials, audit redaction, GitHub token never persisted, secret scans |
 | Blob disclosure | AES-256-GCM tenant/key-bound envelopes, storage outside web root, owner-only backups, migration tooling |
 | Excessive connector access | PKCE, one-time state, service-specific scopes, read-only email, explicit bounded sync, retention/disconnect/revoke controls |

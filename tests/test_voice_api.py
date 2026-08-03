@@ -23,6 +23,18 @@ def test_voice_requires_an_external_xai_key(client: TestClient) -> None:
     assert response.json()["detail"] == "Grok voice is not configured"
 
 
+def test_security_policy_allows_only_same_origin_to_request_microphone(
+    client: TestClient,
+) -> None:
+    """Keep Grok Voice usable without delegating microphone access cross-origin."""
+    response = client.get("/api/health/live")
+
+    assert response.status_code == 200
+    assert response.headers["permissions-policy"] == (
+        "camera=(), microphone=(self), geolocation=()"
+    )
+
+
 def test_voice_mints_only_a_five_minute_ephemeral_secret(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
