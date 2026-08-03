@@ -1,12 +1,14 @@
-ARG POSTGRES_IMAGE=postgres:17.10-alpine3.23@sha256:8189a1f6e40904781fc9e2612687877791d21679866db58b1de996b31fc312e4
+ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:003627df3c1e1bba0c4116afcddb314aca9594ee2328c7e876a8081a6c988b2e
 
-FROM ${POSTGRES_IMAGE} AS vector-builder
+FROM ${WOLFI_IMAGE} AS vector-builder
 
-ARG PGVECTOR_COMMIT=778dacf20c07caf904557a88705142631818d8cb
-ARG PGVECTOR_SHA256=4c33cf053329784ba6d992d05c9588b93789e907a7511f20ff5a5a5b8a0703c1
+ARG PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c
+ARG PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299
 
-USER root
-RUN apk add --no-cache build-base
+RUN apk add --no-cache \
+        build-base=1-r9 \
+        ca-certificates-bundle \
+        postgresql-17-dev=17.10-r1
 ADD --checksum=sha256:${PGVECTOR_SHA256} \
     https://github.com/pgvector/pgvector/archive/${PGVECTOR_COMMIT}.tar.gz \
     /tmp/pgvector.tar.gz
@@ -15,14 +17,32 @@ RUN mkdir -p /tmp/pgvector \
     && make -C /tmp/pgvector OPTFLAGS="" with_llvm=no \
     && make -C /tmp/pgvector DESTDIR=/opt/pgvector-root with_llvm=no install
 
-FROM ${POSTGRES_IMAGE}
+FROM ${WOLFI_IMAGE}
+
+RUN addgroup -S -g 70 postgres \
+    && adduser -S -D -u 70 -G postgres -h /home/postgres -s /bin/sh postgres \
+    && apk add --no-cache \
+        ca-certificates-bundle \
+        glibc-locale-en=2.43-r11 \
+        gosu=1.19-r13 \
+        posix-libc-utils-bin=2.43-r11 \
+        postgresql-17=17.10-r1 \
+        postgresql-17-client=17.10-r1 \
+        postgresql-17-contrib=17.10-r1 \
+        postgresql-17-oci-entrypoint=17.10-r1 \
+    && mkdir -p /var/lib/postgresql/data /var/run/postgresql \
+    && chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
+
+ENV LANG=en_US.UTF-8 \
+    PATH=/usr/lib/postgresql17/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin \
+    PGDATA=/var/lib/postgresql/data \
+    PG_MAJOR=17 \
+    PG_VERSION=17.10
 
 LABEL org.opencontainers.image.title="CareerTwin PostgreSQL with pgvector" \
-      org.opencontainers.image.description="PostgreSQL 17.10 with pgvector 0.8.1 and a current privilege-drop helper" \
+      org.opencontainers.image.description="PostgreSQL 17.10 on Wolfi/glibc with pgvector 0.8.6 and verifiable collation provenance" \
       org.opencontainers.image.source="https://github.com/fsantibanezleal/CAOS_CareerTwin"
 
-USER root
-RUN apk add --no-cache su-exec \
-    && rm /usr/local/bin/gosu \
-    && ln -s /sbin/su-exec /usr/local/bin/gosu
 COPY --from=vector-builder /opt/pgvector-root/ /
+
+ENTRYPOINT ["/usr/bin/docker-entrypoint.sh", "postgres"]
