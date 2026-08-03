@@ -84,7 +84,7 @@ async def security_and_observability(
             "X-Content-Type-Options": "nosniff",
             "X-Frame-Options": "DENY",
             "Referrer-Policy": "strict-origin-when-cross-origin",
-            "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+            "Permissions-Policy": "camera=(), microphone=(self), geolocation=()",
             "Cross-Origin-Opener-Policy": "same-origin",
             "Content-Security-Policy": (
                 "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "

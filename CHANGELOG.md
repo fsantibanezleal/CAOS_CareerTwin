@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-03
+
+### Fixed
+
+- Allow only the same-origin CareerTwin document to request explicit browser microphone permission,
+  restoring the Grok Voice client while camera, geolocation, and cross-origin microphone delegation
+  remain denied.
+
 ## [0.3.0] - 2026-08-03
 
 ### Added
