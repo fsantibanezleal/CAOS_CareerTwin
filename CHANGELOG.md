@@ -14,6 +14,8 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
   Production upgrades rebuild affected indexes and refresh the recorded version before normal
   service resumes, while the database runtime continues to pass the zero-high-vulnerability
   container gate.
+- Align the pgvector runtime with the persistent cluster's 0.8.6 extension metadata so the release
+  never places an older shared library beneath newer stored extension objects.
 
 ### Security
 

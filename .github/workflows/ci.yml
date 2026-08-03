@@ -46,7 +46,7 @@ jobs:
           database_contract="$(docker exec careertwin-postgres \
             psql -U careertwin -d careertwin_test -Atc \
             "SELECT (datcollversion IS NOT NULL AND datcollversion = pg_database_collation_actual_version(oid))::text || '|' || (SELECT extversion FROM pg_extension WHERE extname = 'vector') FROM pg_database WHERE datname = current_database();")"
-          test "$database_contract" = "true|0.8.1"
+          test "$database_contract" = "true|0.8.6"
       - run: python -m pytest --cov --cov-report=term-missing
       - run: python evals/agent_contract.py
       - run: python scripts/representative-load.py
