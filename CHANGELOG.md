@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-08-03
+
+### Fixed
+
+- Synchronize the root release manifest, Python package/runtime metadata, frontend package,
+  browser extension, documentation, tag, and deployment version.
+- Add a regression contract that rejects drift between canonical version surfaces.
+
 ## [0.2.4] - 2026-08-03
 
 ### Fixed
