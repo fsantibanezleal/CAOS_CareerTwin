@@ -2,8 +2,29 @@
 
 from __future__ import annotations
 
+import json
 import tomllib
 from pathlib import Path
+
+from careertwin import __version__
+
+
+def test_canonical_release_versions_match() -> None:
+    """Keep every independently consumed release surface on one exact version."""
+    root = Path(__file__).resolve().parents[1]
+    canonical = (root / "VERSION").read_text(encoding="utf-8").strip()
+    project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+    frontend = json.loads((root / "frontend/package.json").read_text(encoding="utf-8"))
+    extension = json.loads((root / "extension/manifest.json").read_text(encoding="utf-8"))
+
+    assert {
+        project["project"]["version"],
+        __version__,
+        frontend["version"],
+        extension["version"],
+    } == {canonical}
+    assert f"## [{canonical}]" in (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert f"`{canonical}`" in (root / "README.md").read_text(encoding="utf-8")
 
 
 def test_runtime_requirements_match_project_dependencies_exactly() -> None:
