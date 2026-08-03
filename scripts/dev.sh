@@ -11,6 +11,9 @@ if [ "${1:-}" = '--docker' ]; then
 fi
 [ -x .venv/bin/python ] || { echo 'Run scripts/setup.sh first; the repository .venv is missing.' >&2; exit 1; }
 [ -f frontend/node_modules/vite/bin/vite.js ] || { echo 'Run scripts/setup.sh first; frontend/node_modules is missing or incomplete.' >&2; exit 1; }
+API_PORT=${CAREERTWIN_API_PORT:-8000}
+WEB_PORT=${CAREERTWIN_WEB_PORT:-5173}
+export CAREERTWIN_API_PORT=$API_PORT CAREERTWIN_WEB_PORT=$WEB_PORT
 mkdir -p .run
 for name in api worker web; do
   path=".run/$name.pid"
@@ -21,11 +24,11 @@ for name in api worker web; do
   rm -f "$path"
 done
 .venv/bin/python -m alembic upgrade head
-nohup .venv/bin/python -m uvicorn careertwin.main:app --host 127.0.0.1 --port 8000 --reload >.run/api.out.log 2>.run/api.err.log &
+nohup .venv/bin/python -m uvicorn careertwin.main:app --host 127.0.0.1 --port "$API_PORT" >.run/api.out.log 2>.run/api.err.log &
 echo $! >.run/api.pid
 nohup .venv/bin/python -m careertwin.worker >.run/worker.out.log 2>.run/worker.err.log &
 echo $! >.run/worker.pid
-(cd frontend && nohup node node_modules/vite/bin/vite.js --host 127.0.0.1 >../.run/web.out.log 2>../.run/web.err.log & echo $! >../.run/web.pid)
+(cd frontend && nohup node node_modules/vite/bin/vite.js --host 127.0.0.1 --port "$WEB_PORT" --strictPort >../.run/web.out.log 2>../.run/web.err.log & echo $! >../.run/web.pid)
 sleep 1
 for name in api worker web; do
   if ! kill -0 "$(cat ".run/$name.pid")" 2>/dev/null; then
@@ -34,4 +37,4 @@ for name in api worker web; do
     exit 1
   fi
 done
-echo 'Native CareerTwin started: web http://127.0.0.1:5173, API http://127.0.0.1:8000, database-backed worker active.'
+echo "Native CareerTwin started: web http://127.0.0.1:$WEB_PORT, API http://127.0.0.1:$API_PORT, database-backed worker active."

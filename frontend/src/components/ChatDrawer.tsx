@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Ban, Bot, FileUp, Mic, MicOff, RotateCcw, Send, ShieldCheck, Sparkles, X } from 'lucide-react'
+import { Ban, Bot, FileUp, MessageSquarePlus, Mic, MicOff, RotateCcw, Send, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { api, json } from '../api'
 import { useI18n } from '../i18n'
@@ -26,6 +26,12 @@ type VoiceCredential = {
   websocket_url: string
   model: string
   voice: string
+}
+
+type ConversationSummary = {
+  id: string
+  title: string
+  updated_at: string
 }
 
 function pcm16Base64(samples: Float32Array): string {
@@ -63,9 +69,11 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const voiceContext = useRef<AudioContext | null>(null)
   const voiceProcessor = useRef<ScriptProcessorNode | null>(null)
   const voicePlayhead = useRef(0)
+  const voiceAttempt = useRef(0)
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking' | 'error'>('idle')
   const [voiceTranscript, setVoiceTranscript] = useState('')
   const providers = useQuery({ queryKey: ['providers'], queryFn: () => api<ProviderManifest>('/api/agent/providers'), enabled: open })
+  const conversations = useQuery({ queryKey: ['agent-conversations'], queryFn: () => api<ConversationSummary[]>('/api/agent/conversations'), enabled: open })
   const [provider, setProvider] = useState('')
   const selectedProvider = provider || providers.data?.default || ''
   const run = useQuery({
@@ -81,6 +89,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       setConversationId(result.conversation_id)
       setActiveRun(result)
       handledRun.current = undefined
+      void conversations.refetch()
     },
   })
   const cancel = useMutation({
@@ -103,6 +112,28 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     },
     onSuccess: () => setMessages((current) => [...current, { role: 'assistant', content: t('Document ingested into the review inbox. Confirm its proposed claims before the agent treats them as evidence.') }]),
   })
+  const startFreshConversation = () => {
+    setConversationId(undefined)
+    setActiveRun(undefined)
+    setMessages([])
+    handledRun.current = undefined
+  }
+  const loadConversation = useMutation({
+    mutationFn: (id: string) => api<ChatMessage[]>(`/api/agent/conversations/${id}/messages`),
+    onSuccess: (stored, id) => {
+      setConversationId(id)
+      setActiveRun(undefined)
+      setMessages(stored)
+      handledRun.current = undefined
+    },
+  })
+  const removeConversation = useMutation({
+    mutationFn: (id: string) => api(`/api/agent/conversations/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      startFreshConversation()
+      void conversations.refetch()
+    },
+  })
 
   useEffect(() => {
     if (currentRun?.status !== 'completed' || handledRun.current === currentRun.id) return
@@ -124,9 +155,10 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     send.mutate(message)
   }
   const busy = send.isPending || ['queued', 'claimed', 'retrying', 'running'].includes(currentRun?.status ?? '')
-  const error = send.error || run.error || cancel.error || retry.error || upload.error
+  const error = send.error || run.error || cancel.error || retry.error || upload.error || conversations.error || loadConversation.error || removeConversation.error
 
   const stopVoice = () => {
+    voiceAttempt.current += 1
     voiceProcessor.current?.disconnect()
     voiceProcessor.current = null
     voiceStream.current?.getTracks().forEach((track) => track.stop())
@@ -140,6 +172,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   }
 
   useEffect(() => () => {
+    voiceAttempt.current += 1
     voiceProcessor.current?.disconnect()
     voiceStream.current?.getTracks().forEach((track) => track.stop())
     voiceSocket.current?.close()
@@ -147,11 +180,18 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   }, [])
 
   const startVoice = async () => {
+    const attempt = voiceAttempt.current + 1
+    voiceAttempt.current = attempt
     setVoiceStatus('connecting')
     setVoiceTranscript('')
     try {
       const credential = await api<VoiceCredential>('/api/agent/voice/session', { method: 'POST' })
+      if (attempt !== voiceAttempt.current) return
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+      if (attempt !== voiceAttempt.current) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
       const context = new AudioContext({ sampleRate: 24000 })
       const source = context.createMediaStreamSource(stream)
       const processor = context.createScriptProcessor(4096, 1, 1)
@@ -167,6 +207,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       source.connect(processor)
       processor.connect(context.destination)
       socket.onopen = () => {
+        if (attempt !== voiceAttempt.current) { socket.close(); return }
         socket.send(JSON.stringify({
           type: 'session.update',
           session: {
@@ -182,6 +223,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         setVoiceStatus('listening')
       }
       socket.onmessage = (message) => {
+        if (attempt !== voiceAttempt.current) return
         const event = JSON.parse(String(message.data)) as Record<string, unknown>
         const type = String(event.type ?? '')
         if (type === 'conversation.item.input_audio_transcription.updated' || type === 'conversation.item.input_audio_transcription.completed') {
@@ -208,19 +250,35 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           voicePlayhead.current += buffer.duration
         }
         if (type === 'response.done') setVoiceStatus('listening')
-        if (type === 'error') setVoiceStatus('error')
+        if (type === 'error') {
+          stopVoice()
+          setVoiceStatus('error')
+        }
       }
-      socket.onerror = () => setVoiceStatus('error')
-      socket.onclose = () => setVoiceStatus((current) => current === 'error' ? 'error' : 'idle')
+      socket.onerror = () => {
+        if (attempt !== voiceAttempt.current) return
+        stopVoice()
+        setVoiceStatus('error')
+      }
+      socket.onclose = () => {
+        if (attempt === voiceAttempt.current) setVoiceStatus((current) => current === 'error' ? 'error' : 'idle')
+      }
     } catch {
-      stopVoice()
-      setVoiceStatus('error')
+      if (attempt === voiceAttempt.current) {
+        stopVoice()
+        setVoiceStatus('error')
+      }
     }
   }
   return (
     <aside className={`chat-drawer ${open ? 'open' : ''}`} aria-hidden={!open} aria-label={t('Career copilot')}>
-      <header><div className="bot-mark"><Bot /></div><div><span>{t('Career copilot')}</span><small><i /> {t('Evidence-bounded')}</small></div><button className="icon-button" onClick={onClose} aria-label={t('Close chat')}><X /></button></header>
+      <header><div className="bot-mark"><Bot /></div><div><span>{t('Career copilot')}</span><small><i /> {t('Evidence-bounded')}</small></div><button className="icon-button" onClick={() => { stopVoice(); onClose() }} aria-label={t('Close chat')}><X /></button></header>
       <div className="chat-context"><ShieldCheck size={15} /> {t('Durable runs can be cancelled or retried. Only your approval can change canonical data.')}</div>
+      <div className="chat-history">
+        <label>{t('Conversation history')}<select aria-label={t('Conversation history')} value={conversationId ?? ''} disabled={busy || loadConversation.isPending} onChange={(event) => event.target.value ? loadConversation.mutate(event.target.value) : startFreshConversation()}><option value="">{t('New conversation')}</option>{(conversations.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+        <button type="button" className="icon-button" disabled={busy || !conversationId} onClick={startFreshConversation} aria-label={t('New conversation')}><MessageSquarePlus /></button>
+        <button type="button" className="icon-button danger" disabled={busy || !conversationId || removeConversation.isPending} onClick={() => conversationId && window.confirm(t('Delete this conversation and its visible messages?')) && removeConversation.mutate(conversationId)} aria-label={t('Delete conversation')}><Trash2 /></button>
+      </div>
       <div className="chat-messages" aria-live="polite">
         {messages.length === 0 && <div className="chat-welcome"><Sparkles /><h3>{t('What are you working toward?')}</h3><p>{t('Ask about your evidence, a saved opportunity, a match gap, or your application plan.')}</p><button onClick={() => setInput(t('Where is my profile evidence weakest?'))}>{t('Review my evidence coverage')}</button><button onClick={() => setInput(t('What should I prioritize for my saved opportunities?'))}>{t('Prioritize next actions')}</button></div>}
         {messages.map((message, index) => <article key={index} className={`chat-message ${message.role}`}><span>{message.role === 'assistant' ? 'CareerTwin' : t('You')}</span><p>{message.content}</p>{message.citations && message.citations.length > 0 && <details><summary>{plural(message.citations.length, '{count} evidence citation', '{count} evidence citations')}</summary>{message.citations.map((citation) => <div key={citation.evidence_id} className="citation">{citation.label}</div>)}</details>}</article>)}
