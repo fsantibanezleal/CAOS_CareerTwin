@@ -53,18 +53,40 @@ def _poll_json(
     *,
     timeout: float = 240.0,
 ) -> dict[str, Any]:
-    """Poll one authenticated resource until its payload satisfies ``predicate``."""
+    """Poll one authenticated resource while respecting public proxy back-pressure."""
     deadline = time.monotonic() + timeout
     latest: dict[str, Any] = {}
+    throttles = 0
     while time.monotonic() < deadline:
-        response = _expect(client.get(path), 200)
+        response = client.get(path)
+        if response.status_code == 429:
+            throttles += 1
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(_retry_after_seconds(response, throttles), remaining))
+            continue
+        response = _expect(response, 200)
+        throttles = 0
         payload = response.json()
         if isinstance(payload, dict):
             latest = payload
             if predicate(payload):
                 return payload
-        time.sleep(1.0)
+        time.sleep(min(2.0, max(0.0, deadline - time.monotonic())))
     raise RuntimeError(f"Timed out waiting for {path}; latest={json.dumps(latest)[:300]}")
+
+
+def _retry_after_seconds(response: httpx.Response, attempt: int) -> float:
+    """Return a bounded Retry-After delay without retrying state-changing requests."""
+    header = response.headers.get("Retry-After", "")
+    try:
+        delay = float(header)
+        if delay < 0:
+            raise ValueError
+    except ValueError:
+        delay = float(2 ** min(max(attempt, 1), 4))
+    return min(30.0, max(1.0, delay))
 
 
 def _arguments() -> argparse.Namespace:
