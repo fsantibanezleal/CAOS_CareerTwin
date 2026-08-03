@@ -1,6 +1,6 @@
 # ADR 0019: Supported runtimes and deliberate dependency lifecycle
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0026
 - Date: 2026-08-02
 
 ## Context

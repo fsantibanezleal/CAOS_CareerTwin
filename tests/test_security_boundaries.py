@@ -148,15 +148,11 @@ def test_export_excludes_storage_paths_and_extracted_text(client: TestClient) ->
     assert b"extracted_text" not in response.content
 
 
-def test_ollama_runtime_is_non_root_with_scoped_volume_migration() -> None:
-    """Keep the model server non-root while permitting an existing volume upgrade."""
+def test_runtime_topology_contains_no_local_inference_or_document_model() -> None:
+    """Keep every language, embedding, vision and speech model outside the VPS topology."""
     repository_root = Path(__file__).parents[1]
-    dockerfile = (repository_root / "docker" / "ollama" / "Dockerfile").read_text()
     compose = (repository_root / "compose.yaml").read_text()
-
-    assert "USER 65532:65532" in dockerfile
-    assert "OLLAMA_MODELS=/var/lib/ollama/models" in dockerfile
-    assert "ollama-volume-init:" in compose
-    assert 'user: "0:0"' in compose
-    assert 'entrypoint: ["/bin/chown"]' in compose
-    assert "careertwin_ollama:/var/lib/ollama" in compose
+    forbidden = ("ollama", "qwen", "embeddinggemma", "docling", "torch", "model volume")
+    assert all(term not in compose.casefold() for term in forbidden)
+    assert not (repository_root / "docker" / "ollama" / "Dockerfile").exists()
+    assert not (repository_root / "docker" / "docling" / "Dockerfile").exists()

@@ -13,7 +13,6 @@ CSRF_VALUE=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')
 PG_VALUE=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
 BLOB_VALUE=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
 CONNECTOR_VALUE=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
-DOCLING_VALUE=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
-sed -i.bak "s|^APP_SECRET_KEY=$|APP_SECRET_KEY=$APP_VALUE|; s|^APP_CSRF_SECRET=$|APP_CSRF_SECRET=$CSRF_VALUE|; s|^POSTGRES_PASSWORD=$|POSTGRES_PASSWORD=$PG_VALUE|; s|^BLOB_ENCRYPTION_KEY=$|BLOB_ENCRYPTION_KEY=$BLOB_VALUE|; s|^CONNECTOR_ENCRYPTION_KEY=$|CONNECTOR_ENCRYPTION_KEY=$CONNECTOR_VALUE|; s|^DOCLING_API_KEY=$|DOCLING_API_KEY=$DOCLING_VALUE|" .env
+sed -i.bak "s|^APP_SECRET_KEY=$|APP_SECRET_KEY=$APP_VALUE|; s|^APP_CSRF_SECRET=$|APP_CSRF_SECRET=$CSRF_VALUE|; s|^POSTGRES_PASSWORD=$|POSTGRES_PASSWORD=$PG_VALUE|; s|^BLOB_ENCRYPTION_KEY=$|BLOB_ENCRYPTION_KEY=$BLOB_VALUE|; s|^CONNECTOR_ENCRYPTION_KEY=$|CONNECTOR_ENCRYPTION_KEY=$CONNECTOR_VALUE|" .env
 rm -f .env.bak
 echo 'Created ignored .env with generated local secrets.'

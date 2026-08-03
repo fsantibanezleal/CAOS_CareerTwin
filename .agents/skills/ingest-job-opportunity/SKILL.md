@@ -1,11 +1,11 @@
 ---
 name: ingest-job-opportunity
-description: Capture and normalize one job opportunity in CareerTwin from a public URL, supported document, pasted posting, or manual fields. Use when adding a role, reviewing extracted requirements, preserving deadlines and provenance, or deduplicating a saved posting. Never bypass site access controls or silently accept extracted requirements.
+description: Capture and normalize one job opportunity in CareerTwin from a public URL, supported document, pasted posting, or manual fields. Use when adding a role through the native harness or web UI, reviewing extracted requirements, preserving deadlines and provenance, deduplicating a posting, or adding it to a target set. Never bypass site controls or silently accept extracted requirements.
 ---
 
 # Ingest Job Opportunity
 
-Skill contract version: 1.2.0.
+Skill contract version: 2.0.0.
 
 ## Outcome
 
@@ -13,25 +13,24 @@ Create a reviewable, versioned opportunity snapshot with atomic requirements, pr
 
 ## Workflow
 
-1. Read `Entry_point.md` and `references/opportunity-contract.md`.
-2. Choose exactly one capture mode: public URL, file, paste/manual, or an explicit browser-extension capture of the visible page.
-3. For URLs, capture only an unauthenticated public HTTP(S) page. Do not weaken SSRF checks, use local addresses, forward credentials, or scrape search result lists.
-4. For documents and browser captures, keep content within upload limits and supported formats. The production scanner must pass before queued private Docling/model extraction. Poll its source state; never treat `pending` as completed.
-5. Detect duplicates by the returned source snapshot/hash; do not create near-identical copies without the seeker's instruction.
-6. Review the title, employer, full description, source, dates, location, remote mode, industry, area, seniority, compensation, and status.
-7. Split the posting into atomic requirements. Mark each as eligibility, required, or preferred; choose a category and bounded weight. Preserve its source locator.
-8. Save a reviewed version and inspect its immutable revision history when the source changed.
-9. Add the opportunity to a named target portfolio only when the seeker wants it in that explicit comparison scenario. Explain that structured content is the seeker's research record, not a claim about the entire labor market.
+1. Read `Entry_point.md` and `references/opportunity-contract.md`; verify the native instance with `scripts/career.* doctor`.
+2. Choose one capture mode: public URL, file, manual/paste, or explicit browser-extension capture of the visible page.
+3. Use `scripts/career.ps1 opportunity-url <https-url>` or `opportunity-file --file <path>` (use `.sh` on POSIX). Use a bounded ignored JSON body plus `request POST /api/opportunities` for manual capture.
+4. For URLs, capture only a user-selected unauthenticated public HTTP(S) page. Never weaken SSRF checks, use local addresses, forward credentials, or crawl result lists.
+5. Poll the returned capture/source through `pending` and `processing` until ready. Supported text extraction runs natively; configured external xAI document understanding is used only when an image or scanned PDF needs it. No local model service is involved.
+6. Review title, employer, description, source, dates, location, remote mode, industry, area, seniority, compensation, and status.
+7. Split the posting into atomic requirements. Mark each as eligibility, required, or preferred; choose category and bounded weight; preserve its locator. Save a reviewed version rather than silently accepting extraction.
+8. Inspect immutable history when a source changes. Add the role to a named target set only when the seeker wants it in that scenario.
+9. Run `scripts/career.* opportunity-graph` to inspect the typed role/employer/requirement network. Use the web graph for its interactive network, adjacency matrix, table, facets, and node inspector.
 
 ## Guardrails
 
 - Never log authenticated URLs, cookies, job-board credentials, or full private documents.
-- Browser capture credentials are displayed once, revocable, and must never enter Git, shell history, screenshots, or issue text.
-- Respect robots, terms, and access controls; this skill is for user-selected individual opportunities, not unrestricted crawling.
-- Do not interpret employer language as objective truth.
-- Keep discriminatory, protected-trait, and unrelated personal requirements out of scoring; flag them for human review.
-- Do not apply, message, or submit data to an employer.
+- Browser capture credentials are shown once and revocable; never put them in Git, command history, screenshots, or issues.
+- Respect terms, robots, and access controls. This workflow captures individual opportunities selected by the user; it is not unrestricted scraping.
+- Exclude protected-trait or unrelated personal requirements from scoring and flag them for review.
+- Never apply, message, or submit data to an employer.
 
 ## Completion
 
-Return the opportunity ID and version, capture provenance, requirement counts by importance/category, extracted dates, and every field still needing human review.
+Return opportunity ID and version, provenance, requirement counts by importance/category, extracted dates, duplicate state, and every field still requiring review.

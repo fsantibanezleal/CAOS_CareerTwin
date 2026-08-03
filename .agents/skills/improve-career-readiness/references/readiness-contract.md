@@ -1,5 +1,7 @@
 # Readiness contract
 
+Native command: `scripts/career.ps1 recommend <opportunity-id>` or `scripts/career.sh recommend <opportunity-id>`. Use `scripts/career.* get /api/matches/recommendations/all` to inspect the cross-role plan.
+
 - Generate for one role: `POST /api/matches/{opportunity_id}/recommendations`.
 - List across roles: `GET /api/matches/recommendations/all`.
 - Edit a plan: `PATCH /api/matches/recommendations/{recommendation_id}`.

@@ -1,18 +1,22 @@
 # Operator contract
 
-Required production properties:
+## Native runtime
 
-- `APP_ENV=production`, unique high-entropy application and CSRF secrets, `SECURE_COOKIES=true`.
-- PostgreSQL URL using the SQLAlchemy PostgreSQL driver; Redis must be reachable.
-- TLS termination with trusted proxy configuration and request-body limits.
-- ClamAV must be configured; production uploads fail closed without it.
-- Blob and connector encryption keys are unique, runtime-only, and included in private restore procedures. Private Docling must authenticate with a runtime-only API key.
-- Hosted-provider keys are optional and environment-only. Production uses a real provider; Compose supplies private Ollama and mock/test modes are not valid runtime configurations.
-- Production readiness includes the exact private Ollama chat/extraction model, local embedding model, Docling, ClamAV, PostgreSQL, and Redis.
-- ARQ worker execution requires Redis. Queued agent runs persist checkpoint state and expose tenant-scoped poll, cancel, and retry operations.
-- Langfuse is optional and receives only hashed subjects, input digests, counts, provider/specialist labels, attempt, and terminal status.
-- Liveness: `/api/health/live`; dependency readiness: `/api/health/ready`; metrics: `/metrics`.
-- Database migrations are controlled through Alembic. Never use destructive downgrades on production data.
+- Python lives in repo-root `.venv`; Node packages live in `frontend/node_modules` and come only from `npm ci` plus `frontend/package-lock.json`.
+- Node 24 LTS and npm 11 are pinned by repository metadata. Python 3.11 or newer is required.
+- Native local use defaults to an ignored SQLite database. `scripts/dev.*` starts API, worker, and web without Docker; `scripts/stop.*` stops only recorded repo-local processes.
+- `scripts/career.*` is the credential-safe automation surface for repository skills. It retains cookies and CSRF state only in memory and reads passwords/tokens from a hidden prompt or process environment.
+- Docker Compose is an optional deployment/packaging profile, never a prerequisite.
+
+## Production runtime
+
+- Set `APP_ENV=production`, unique high-entropy application and CSRF secrets, and `SECURE_COOKIES=true`.
+- Use PostgreSQL through the SQLAlchemy PostgreSQL driver, TLS termination, trusted proxy configuration, request-body limits, malware scanning, and encrypted off-host backups.
+- Keep blob and connector encryption keys unique, runtime-only, and covered by private restore procedures.
+- Keep external-provider keys environment-only. Production agent features require at least one managed provider; mock/test modes and local inference are invalid runtime configurations.
+- Do not deploy Ollama, Docling, a local embedding server, Redis, or ARQ. The worker claims durable source and agent-run rows directly from the database and recovers interrupted work conservatively.
+- Liveness is `/api/health/live`, dependency readiness is `/api/health/ready`, metrics are `/metrics`, and API documentation is `/api/docs`.
+- Control schema changes through Alembic. Never use a destructive downgrade on production data.
 - Superusers manage account lifecycle only and have no cross-account career-content browser.
-- Release gates include the exact 10-seeker representative fixture and a serious/critical automated accessibility scan.
-- Dataset imports retain ESCO/O*NET release provenance; semantic changes must pass the pinned retrieval benchmark before promotion.
+- Keep ESCO/O*NET release provenance; lexical and graph retrieval changes must pass the pinned benchmark.
+- Release gates include backend tests, Ruff, strict mypy, frontend type/build, zero-warning lint, i18n coverage, accessibility, and the representative fixture.

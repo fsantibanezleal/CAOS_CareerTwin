@@ -22,7 +22,6 @@ try {
   $EnvText = $EnvText.Replace('POSTGRES_PASSWORD=', "POSTGRES_PASSWORD=$(New-PrivateValue 24)")
   $EnvText = $EnvText.Replace('BLOB_ENCRYPTION_KEY=', "BLOB_ENCRYPTION_KEY=$(New-PrivateValue 32)")
   $EnvText = $EnvText.Replace('CONNECTOR_ENCRYPTION_KEY=', "CONNECTOR_ENCRYPTION_KEY=$(New-PrivateValue 32)")
-  $EnvText = $EnvText.Replace('DOCLING_API_KEY=', "DOCLING_API_KEY=$(New-PrivateValue 32)")
   [System.IO.File]::WriteAllText(
     $Destination,
     $EnvText,

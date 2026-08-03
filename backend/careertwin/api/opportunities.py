@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import Counter
+from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import delete, select
@@ -101,6 +102,151 @@ def list_opportunities(user: CurrentUser, db: Db) -> list[OpportunityRead]:
         .order_by(Opportunity.updated_at.desc())
     ).all()
     return [OpportunityRead.model_validate(item) for item in items]
+
+
+@router.get("/visualization/landscape")
+def opportunity_landscape(user: CurrentUser, db: Db) -> dict[str, object]:
+    """Return honest category counts and plot-ready rows with explicit denominators."""
+    items = db.scalars(
+        select(Opportunity)
+        .options(selectinload(Opportunity.requirements))
+        .where(Opportunity.workspace_id == user.workspace.id)
+    ).all()
+    industries = Counter(item.industry or "Unspecified" for item in items)
+    seniority = Counter(item.seniority or "Unspecified" for item in items)
+    skills = Counter(
+        requirement.normalized_name
+        for item in items
+        for requirement in item.requirements
+        if requirement.category == "skill"
+    )
+    return {
+        "denominator": len(items),
+        "industries": dict(industries.most_common()),
+        "seniority": dict(seniority.most_common()),
+        "skills": dict(skills.most_common(30)),
+        "opportunities": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "employer": item.employer,
+                "industry": item.industry or "Unspecified",
+                "seniority": item.seniority or "Unspecified",
+                "requirements": len(item.requirements),
+                "deadline_at": item.deadline_at,
+                "status": item.status.value,
+            }
+            for item in items
+        ],
+        "warning": "Counts describe only the opportunities saved by this user, not the labor market.",
+    }
+
+
+def _concept_id(kind: str, label: str) -> str:
+    digest = hashlib.sha256(f"{kind}:{normalize_label(label)}".encode()).hexdigest()[:20]
+    return f"{kind}:{digest}"
+
+
+@router.get("/visualization/graph")
+def opportunity_graph(user: CurrentUser, db: Db) -> dict[str, object]:
+    """Project saved opportunity research as a typed, tenant-owned knowledge graph."""
+    items = db.scalars(
+        select(Opportunity)
+        .options(selectinload(Opportunity.requirements))
+        .where(Opportunity.workspace_id == user.workspace.id)
+        .order_by(Opportunity.updated_at.desc())
+    ).all()
+    target_sets = db.scalars(
+        select(TargetSet).where(TargetSet.workspace_id == user.workspace.id)
+    ).all()
+    nodes: dict[str, dict[str, Any]] = {}
+    edges: list[dict[str, object]] = []
+
+    def add_node(identifier: str, label: str, kind: str, **metadata: object) -> None:
+        if identifier not in nodes:
+            nodes[identifier] = {"id": identifier, "label": label, "type": kind, **metadata}
+
+    def link(source: str, target: str, relation: str, weight: float = 1) -> None:
+        edges.append(
+            {
+                "id": f"link:{len(edges) + 1}",
+                "source": source,
+                "target": target,
+                "type": relation,
+                "weight": weight,
+            }
+        )
+
+    for item in items:
+        opportunity_id = f"opportunity:{item.id}"
+        add_node(
+            opportunity_id,
+            item.title,
+            "opportunity",
+            employer=item.employer,
+            status=item.status.value,
+            version=item.version,
+            requirement_count=len(item.requirements),
+            deadline_at=item.deadline_at,
+        )
+        for kind, label, relation in (
+            ("employer", item.employer, "posted_by"),
+            ("industry", item.industry, "in_industry"),
+            ("seniority", item.seniority, "targets_seniority"),
+            ("location", item.location, "located_in"),
+            ("work_mode", item.remote_mode if item.remote_mode != "unspecified" else "", "work_mode"),
+        ):
+            if not label:
+                continue
+            concept_id = _concept_id(kind, label)
+            add_node(concept_id, label, kind)
+            link(opportunity_id, concept_id, relation)
+        for requirement in item.requirements:
+            label = requirement.normalized_name or normalize_label(requirement.label)
+            requirement_id = _concept_id("requirement", f"{requirement.category}:{label}")
+            add_node(
+                requirement_id,
+                requirement.label,
+                "requirement",
+                category=requirement.category,
+                occurrences=0,
+                importance=[],
+            )
+            node = nodes[requirement_id]
+            node["occurrences"] = int(node["occurrences"]) + 1
+            importance = list(node["importance"])
+            if requirement.importance not in importance:
+                importance.append(requirement.importance)
+            node["importance"] = importance
+            link(
+                opportunity_id,
+                requirement_id,
+                f"requires_{requirement.importance}",
+                max(0.2, requirement.weight),
+            )
+
+    available = {item.id for item in items}
+    for target_set in target_sets:
+        target_id = f"target_set:{target_set.id}"
+        add_node(
+            target_id,
+            target_set.name,
+            "target_set",
+            opportunity_count=len([item for item in target_set.opportunity_ids if item in available]),
+        )
+        for opportunity_id in target_set.opportunity_ids:
+            if opportunity_id in available:
+                link(target_id, f"opportunity:{opportunity_id}", "contains")
+
+    return {
+        "graph": {"nodes": list(nodes.values()), "edges": edges},
+        "summary": {
+            "opportunities": len(items),
+            "requirements": sum(1 for node in nodes.values() if node["type"] == "requirement"),
+            "target_sets": len(target_sets),
+        },
+        "warning": "This graph describes only the opportunities saved by this user.",
+    }
 
 
 @router.get("/target-sets", response_model=list[TargetSetRead])
@@ -427,41 +573,3 @@ def delete_opportunity(opportunity_id: str, user: CsrfUser, db: Db) -> None:
     if not getattr(result, "rowcount", 0):
         raise HTTPException(status_code=404, detail="Opportunity not found")
     record_audit(db, user, "opportunity.deleted", "opportunity", opportunity_id)
-
-
-@router.get("/visualization/landscape")
-def opportunity_landscape(user: CurrentUser, db: Db) -> dict[str, object]:
-    """Return honest category counts and plot-ready opportunity rows with explicit denominators."""
-    items = db.scalars(
-        select(Opportunity)
-        .options(selectinload(Opportunity.requirements))
-        .where(Opportunity.workspace_id == user.workspace.id)
-    ).all()
-    industries = Counter(item.industry or "Unspecified" for item in items)
-    seniority = Counter(item.seniority or "Unspecified" for item in items)
-    skills = Counter(
-        requirement.normalized_name
-        for item in items
-        for requirement in item.requirements
-        if requirement.category == "skill"
-    )
-    return {
-        "denominator": len(items),
-        "industries": dict(industries.most_common()),
-        "seniority": dict(seniority.most_common()),
-        "skills": dict(skills.most_common(30)),
-        "opportunities": [
-            {
-                "id": item.id,
-                "title": item.title,
-                "employer": item.employer,
-                "industry": item.industry or "Unspecified",
-                "seniority": item.seniority or "Unspecified",
-                "requirements": len(item.requirements),
-                "deadline_at": item.deadline_at,
-                "status": item.status.value,
-            }
-            for item in items
-        ],
-        "warning": "Counts describe only the opportunities saved by this user, not the labor market.",
-    }

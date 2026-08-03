@@ -5,9 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 
-from arq import create_pool
-from arq.connections import RedisSettings
+import httpx
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
 from careertwin.agent.contracts import AgentContext, AgentDraft
@@ -34,27 +34,62 @@ from careertwin.services.model_extraction import OpportunityExtraction, ProfileE
 router = APIRouter(prefix="/api/agent", tags=["agentic concierge"])
 
 
-async def _enqueue(settings: Config, workspace_id: str, run_id: str) -> None:
-    """Submit a durable run to ARQ and close the short-lived producer connection."""
-    pool = await create_pool(RedisSettings.from_dsn(settings.redis_url))
-    try:
-        job = await pool.enqueue_job("process_agent_run", workspace_id, run_id, _job_id=run_id)
-        if job is None:
-            raise RuntimeError("Agent run is already queued")
-    finally:
-        await pool.aclose()
-
-
 @router.get("/providers")
 def available_providers(_: CurrentUser, settings: Config) -> dict[str, object]:
     """List configured provider names without exposing keys or provider configuration payloads."""
     providers = provider_registry(settings)
     names = sorted(providers)
+    default = settings.llm_default_provider if settings.llm_default_provider in providers else None
     return {
         "providers": names,
-        "default": settings.llm_default_provider,
-        "local_private_provider": "ollama" in providers,
+        "default": default,
+        "mode": "external-only",
+        "configured": bool(names),
+        "voice": {
+            "available": bool(settings.xai_api_key),
+            "provider": "xai",
+            "model": settings.xai_voice_model,
+        },
     }
+
+
+@router.post("/voice/session")
+async def create_voice_session(user: CsrfUser, db: Db, settings: Config) -> JSONResponse:
+    """Mint a five-minute xAI browser credential without exposing the long-lived API key."""
+    if not settings.xai_api_key:
+        raise HTTPException(status_code=503, detail="Grok voice is not configured")
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"{settings.xai_base_url.rstrip('/')}/realtime/client_secrets",
+                headers={
+                    "Authorization": f"Bearer {settings.xai_api_key.get_secret_value()}",
+                    "Content-Type": "application/json",
+                },
+                json={"expires_after": {"seconds": 300}},
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="Grok voice session is unavailable") from exc
+    payload = response.json()
+    value = payload.get("value")
+    expires_at = payload.get("expires_at")
+    if not isinstance(value, str) or not value or not isinstance(expires_at, int):
+        raise HTTPException(status_code=502, detail="Grok voice returned an invalid session")
+    record_audit(db, user, "agent.voice_session_issued", "workspace", user.workspace.id)
+    return JSONResponse(
+        {
+            "value": value,
+            "expires_at": expires_at,
+            "websocket_url": (
+                "wss://api.x.ai/v1/realtime"
+                f"?model={settings.xai_voice_model}&reasoning.effort=high"
+            ),
+            "model": settings.xai_voice_model,
+            "voice": settings.xai_voice,
+        },
+        headers={"Cache-Control": "no-store, private"},
+    )
 
 
 @router.get("/contracts")
@@ -185,6 +220,7 @@ def chat(payload: ChatRequest, user: CsrfUser, db: Db, settings: Config) -> Chat
     agent_run.state = {**agent_run.state, "phase": "completed", "citations": len(draft.citations)}
     agent_run.finished_at = utcnow()
     citations = [item.model_dump() for item in draft.citations]
+    usage = provider.usage()
     assistant = AgentMessage(
         workspace_id=user.workspace.id,
         conversation_id=conversation.id,
@@ -193,7 +229,7 @@ def chat(payload: ChatRequest, user: CsrfUser, db: Db, settings: Config) -> Chat
         specialist=draft.specialist,
         provider=provider_name,
         citations=citations,
-        usage={},
+        usage=usage,
     )
     db.add(assistant)
     db.flush()
@@ -236,7 +272,7 @@ def chat(payload: ChatRequest, user: CsrfUser, db: Db, settings: Config) -> Chat
         provider=provider_name,
         citations=citations,
         proposed_change_id=proposed.id if proposed else None,
-        usage={},
+        usage=usage,
         run_id=agent_run.id,
     )
 
@@ -294,14 +330,6 @@ async def queue_run(payload: ChatRequest, user: CsrfUser, db: Db, settings: Conf
     db.flush()
     record_audit(db, user, "agent.run_queued", "agent_run", run.id)
     db.commit()
-    try:
-        await _enqueue(settings, user.workspace.id, run.id)
-    except Exception as exc:
-        run.status = "failed"
-        run.error_code = type(exc).__name__
-        run.finished_at = utcnow()
-        db.commit()
-        raise HTTPException(status_code=503, detail="Agent queue is unavailable") from exc
     db.refresh(run)
     return AgentRunRead.model_validate(run)
 
@@ -367,7 +395,7 @@ def cancel_run(run_id: str, user: CsrfUser, db: Db) -> AgentRunRead:
     if run.status in {"completed", "failed", "cancelled"}:
         raise HTTPException(status_code=409, detail="Agent run is already terminal")
     run.cancel_requested_at = utcnow()
-    if run.status in {"queued", "retrying"}:
+    if run.status in {"queued", "retrying", "claimed"}:
         run.status = "cancelled"
         run.finished_at = utcnow()
         run.state = {**run.state, "phase": "cancelled"}
@@ -408,14 +436,6 @@ async def retry_run(run_id: str, user: CsrfUser, db: Db, settings: Config) -> Ag
     db.flush()
     record_audit(db, user, "agent.run_retried", "agent_run", retry.id)
     db.commit()
-    try:
-        await _enqueue(settings, user.workspace.id, retry.id)
-    except Exception as exc:
-        retry.status = "failed"
-        retry.error_code = type(exc).__name__
-        retry.finished_at = utcnow()
-        db.commit()
-        raise HTTPException(status_code=503, detail="Agent queue is unavailable") from exc
     db.refresh(retry)
     return AgentRunRead.model_validate(retry)
 

@@ -1,5 +1,7 @@
 # Match API and semantics
 
+Native command: `scripts/career.ps1 match <opportunity-id>` or `scripts/career.sh match <opportunity-id>`. Read other resources with `scripts/career.* get <relative-api-path>`.
+
 - Run: `POST /api/matches/{opportunity_id}/run`.
 - Latest: `GET /api/matches/{opportunity_id}/latest`.
 - History: `GET /api/matches`.

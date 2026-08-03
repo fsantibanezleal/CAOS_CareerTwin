@@ -4,9 +4,9 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_native.ps1')
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $RepoRoot
-& '.\.venv\Scripts\python.exe' -m ruff check backend docling_gateway tests evals scripts/representative-load.py
+& '.\.venv\Scripts\python.exe' -m ruff check backend tests evals scripts/representative-load.py benchmarks/taxonomy_retrieval.py
 Assert-NativeSuccess 'Ruff'
-& '.\.venv\Scripts\python.exe' -m mypy backend docling_gateway evals
+& '.\.venv\Scripts\python.exe' -m mypy backend evals
 Assert-NativeSuccess 'MyPy'
 & '.\.venv\Scripts\python.exe' -m pytest
 Assert-NativeSuccess 'Pytest'

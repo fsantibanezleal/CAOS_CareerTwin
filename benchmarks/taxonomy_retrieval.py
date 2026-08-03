@@ -1,4 +1,4 @@
-"""Measure lexical, ESCO-graph and local-semantic retrieval on a bilingual gold set."""
+"""Measure lexical and ESCO-graph retrieval on a bilingual gold set."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from pathlib import Path
 from statistics import mean
 from typing import Any
 
-from careertwin.config import get_settings
 from careertwin.database import SessionLocal
 from careertwin.services.taxonomy import search_concepts
 
@@ -28,7 +27,6 @@ def evaluate(cases: list[dict[str, Any]], mode: str) -> dict[str, Any]:
     recall_five: list[float] = []
     latencies: list[float] = []
     details: list[dict[str, Any]] = []
-    settings = get_settings()
     with SessionLocal() as db:
         for case in cases:
             started = time.perf_counter()
@@ -38,7 +36,6 @@ def evaluate(cases: list[dict[str, Any]], mode: str) -> dict[str, Any]:
                 str(case["language"]),
                 str(case["type"]),
                 limit=10,
-                settings=settings,
                 mode=mode,
             )
             latency_ms = (time.perf_counter() - started) * 1_000
@@ -87,7 +84,7 @@ def main() -> None:
         "dataset": args.cases.name,
         "settings": {
             "esco_release": "1.2.1",
-            "embedding_model": get_settings().ollama_embedding_model,
+            "hybrid_mode": "wire-compatible alias of lexical_graph; no local embeddings",
         },
         "results": results,
     }
@@ -96,7 +93,7 @@ def main() -> None:
         json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     if args.require_nondegradation and results[-1]["mrr"] < results[0]["mrr"]:
-        raise SystemExit("Hybrid retrieval degraded MRR; semantic score promotion is rejected")
+        raise SystemExit("Graph retrieval degraded MRR; graph weighting promotion is rejected")
     for result in results:
         print(
             f"{result['mode']}: MRR={result['mrr']:.4f} "
