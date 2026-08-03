@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-02
+
+### Fixed
+
+- Make the public release journey honor numeric `Retry-After` responses and bounded exponential
+  backoff for idempotent status polling without ever replaying a state-changing request.
+- Use a proxy-safe normal poll cadence and retain the existing finite operation deadline.
+
 ## [0.2.2] - 2026-08-02
 
 ### Fixed
