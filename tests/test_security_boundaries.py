@@ -156,3 +156,27 @@ def test_runtime_topology_contains_no_local_inference_or_document_model() -> Non
     assert all(term not in compose.casefold() for term in forbidden)
     assert not (repository_root / "docker" / "ollama" / "Dockerfile").exists()
     assert not (repository_root / "docker" / "docling" / "Dockerfile").exists()
+
+
+def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
+    """Keep the persistent cluster on glibc with immutable PostgreSQL and pgvector inputs."""
+    repository_root = Path(__file__).parents[1]
+    dockerfile = (repository_root / "docker" / "postgres" / "Dockerfile").read_text()
+    assert (
+        "cgr.dev/chainguard/wolfi-base:latest@sha256:"
+        "003627df3c1e1bba0c4116afcddb314aca9594ee2328c7e876a8081a6c988b2e"
+        in dockerfile
+    )
+    assert "17.10-alpine" not in dockerfile
+    assert "17.10-bookworm" not in dockerfile
+    assert "17.10-trixie" not in dockerfile
+    assert "postgresql-17=17.10-r1" in dockerfile
+    assert "postgresql-17-oci-entrypoint=17.10-r1" in dockerfile
+    assert "glibc-locale-en=2.43-r11" in dockerfile
+    assert "gosu=1.19-r13" in dockerfile
+    assert "posix-libc-utils-bin=2.43-r11" in dockerfile
+    assert "PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c" in dockerfile
+    assert "PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299" in dockerfile
+    runtime_stage = dockerfile.split("FROM ${WOLFI_IMAGE}", maxsplit=2)[-1]
+    assert "apt-get" not in runtime_stage
+    assert "build-essential" not in runtime_stage
