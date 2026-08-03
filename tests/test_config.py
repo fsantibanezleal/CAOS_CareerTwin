@@ -95,6 +95,9 @@ def test_backup_entrypoints_enforce_owner_only_storage() -> None:
     root = Path(__file__).resolve().parents[1]
     shell = (root / "scripts" / "backup.sh").read_text(encoding="utf-8")
     powershell = (root / "scripts" / "backup.ps1").read_text(encoding="utf-8")
+    restore_shell = (root / "scripts" / "restore-check.sh").read_text(encoding="utf-8")
+    restore_powershell = (root / "scripts" / "restore-check.ps1").read_text(encoding="utf-8")
+    compose = (root / "compose.yaml").read_text(encoding="utf-8")
 
     assert "umask 077" in shell
     assert 'chmod 700 "$BACKUP_ROOT"' in shell
@@ -107,3 +110,8 @@ def test_backup_entrypoints_enforce_owner_only_storage() -> None:
     assert "docker compose exec -T app rm" not in shell
     assert "docker compose exec -T app tar" not in powershell
     assert "docker compose exec -T app rm" not in powershell
+    for restore in (restore_shell, restore_powershell):
+        assert "--template=template0" in restore
+        assert "--locale-provider=builtin" in restore
+        assert "--builtin-locale=C.UTF-8" in restore
+    assert 'POSTGRES_INITDB_ARGS: "--locale-provider=builtin --builtin-locale=C.UTF-8"' in compose

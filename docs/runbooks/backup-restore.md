@@ -8,6 +8,6 @@ Run `scripts/backup.ps1` or `scripts/backup.sh`. The default path `backups/priva
 
 ## Restore test
 
-Run `restore-check.*` against an explicitly selected SQL backup. It creates only `careertwin_restore_check`, restores with `ON_ERROR_STOP`, counts schema tables, and drops that isolated database in a finally/trap. For a full drill, restore blobs to an isolated volume, start the exact release on an unused hostname, verify login/profile/source references/opportunities/matches/tasks, and destroy the isolated drill environment.
+Run `restore-check.*` against an explicitly selected SQL backup. It creates only `careertwin_restore_check` from `template0` with PostgreSQL's versioned built-in `C.UTF-8` locale provider, restores with `ON_ERROR_STOP`, counts schema tables, and drops that isolated database in a finally/trap. The built-in provider keeps restore verification independent from glibc/musl collation-version metadata. A legacy volume may continue to warn that its recorded libc collation version is unavailable after a base-image change; do not edit system catalogs or label that warning resolved. A successful isolated built-in-locale restore is the recovery gate. For a full drill, restore blobs to an isolated volume, start the exact release on an unused hostname, verify login/profile/source references/opportunities/matches/tasks, and destroy the isolated drill environment.
 
 Never call a backup verified until a restore test succeeds. Before production migration, confirm a recent verified set and available disk space.
