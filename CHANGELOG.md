@@ -8,9 +8,12 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ### Fixed
 
-- Run the PostgreSQL 17.10 deployment image on digest-pinned Debian Bookworm/glibc so a database
-  cluster carrying glibc collation provenance can verify its recorded version instead of emitting a
-  no-actual-collation-version warning on every connection under Alpine/musl.
+- Run the PostgreSQL 17.10 deployment image on digest-pinned Wolfi/glibc with exact package versions
+  so a database cluster carrying glibc collation provenance can verify its recorded version instead
+  of emitting a no-actual-collation-version warning on every connection under Alpine/musl.
+  Production upgrades rebuild affected indexes and refresh the recorded version before normal
+  service resumes, while the database runtime continues to pass the zero-high-vulnerability
+  container gate.
 
 ### Security
 
