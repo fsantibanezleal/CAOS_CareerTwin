@@ -1,121 +1,140 @@
 # Architecture
 
-CareerTwin is a modular monolith with explicit deterministic and probabilistic lanes. The monolith keeps transactions and tenant boundaries understandable for a personal self-hosted system; worker processes handle slow or resumable jobs. PostgreSQL is canonical, while graph and chart structures are projections, not independent truth stores.
+CareerTwin is a native-first modular monolith with deterministic domain services, typed graph
+projections, an external-only probabilistic lane, and a database-backed worker. The repository is
+the product; the CLI harness and web workbench are peer interfaces.
 
-## 1. System view
+## System view
 
 ```mermaid
 flowchart LR
-  B[React workbench] -->|opaque session + CSRF| A[FastAPI command/query API]
-  A --> P[(PostgreSQL + pgvector)]
-  A --> R[(Redis)]
-  A --> S[(private blob store)]
-  W[ARQ worker] --> R
-  W --> P
-  W --> S
-  A --> G[GitHub API]
-  A --> L[optional model providers]
-  C[ClamAV] --> A
-  C --> W
+  Skills[Versioned repository skills] --> Harness[Credential-safe local harness]
+  Web[React workbench] -->|opaque session + CSRF| API[FastAPI API]
+  Harness -->|opaque session + CSRF| API
+  API --> DB[(SQLite local / PostgreSQL hosted)]
+  API --> Blob[(encrypted blob store)]
+  Worker[database-backed worker] --> DB
+  Worker --> Blob
+  API --> GitHub[GitHub API]
+  API --> Connectors[Google / Microsoft APIs]
+  Worker --> Providers[xAI / OpenAI / Anthropic / Google]
+  Web -->|ephemeral WebSocket| Voice[xAI Grok Voice]
+  Scanner[malware scanner in production] --> API
+  Scanner --> Worker
 ```
 
-The browser never receives provider keys or storage paths. The API validates tenant ownership and sets PostgreSQL session context. The worker repeats that context before processing a private source.
+No local or VPS process performs LLM, OCR, embedding, or audio inference. The browser never receives
+long-lived provider keys or blob paths. Voice uses a short-lived server-minted client secret.
 
-## 2. Evidence lifecycle
+## Native process view
+
+```mermaid
+flowchart TB
+  Setup[scripts/setup] --> Py[repo .venv]
+  Setup --> Node[frontend/node_modules via npm ci]
+  Setup --> Env[ignored .env + SQLite]
+  Dev[scripts/dev] --> API[FastAPI :8000]
+  Dev --> Worker[DB worker]
+  Dev --> Vite[Vite :5173]
+  Career[scripts/career] --> API
+```
+
+Docker is absent from this path. The POSIX and PowerShell scripts resolve the repository root, reject
+unsupported runtimes, and never install Python or Node dependencies globally.
+
+## Evidence lifecycle
 
 ```mermaid
 flowchart LR
-  X[document / manual / GitHub] --> Q[quarantine and bounded extraction]
-  Q --> S[source snapshot + hash]
+  X[document / manual / GitHub] --> Q[inspect + scan + bounded parse]
+  Q --> S[encrypted source + hash]
   S --> C[atomic proposed claims]
   C --> H{seeker decision}
   H -->|confirm| E[canonical evidence]
   H -->|reject| J[decision history]
-  E --> K[skills / profile graph / artifacts / matching]
+  E --> G[professional graph]
+  E --> M[matching + artifacts]
 ```
 
-Extractors never update canonical profile fields. A claim retains source ID, locator, confidence, lifecycle state, and decision note.
+Supported text formats parse natively. Image/scanned-PDF content uses xAI only when configured;
+uploaded remote files have a TTL safety net and are deleted immediately after processing. Every
+extractor output remains proposed and quotation-bound.
 
-## 3. Agent view
+## Opportunity lifecycle
 
 ```mermaid
 flowchart LR
-  U[user message] --> I[intent router]
-  I --> X[bounded specialist]
-  X --> V[evidence critic]
-  V --> O[visible answer + citations]
-  V --> D[proposed JSON operations]
-  D --> H{human approval}
-  H -->|approve| C[allowlisted deterministic commit]
-  H -->|reject| N[no canonical change]
+  I[URL / file / paste / manual] --> O[versioned opportunity]
+  O --> R[reviewed atomic requirements]
+  O --> OG[opportunity graph]
+  R --> Match[deterministic match]
+  Match --> Rec[evidence-linked recommendations]
+  O --> App[candidate-owned application]
+  App --> Timeline[tasks / meetings / deadlines / contacts]
 ```
 
-The API commits a queued `AgentRun` and visible user message before ARQ submission. The worker reapplies tenant context, rehydrates bounded inputs from PostgreSQL, commits a running checkpoint before provider work, and then commits completed, failed, or cancelled terminal state. Retry creates a child attempt; it never rewrites history. Canonical mutation remains outside the model graph.
+The opportunity graph shares requirement concept nodes across roles and adds employer, industry,
+seniority, location, work-mode, and target-set relationships. It describes only the user's saved
+research universe.
 
-## 4. Tenant/security view
+## Agent lifecycle
 
 ```mermaid
-flowchart TB
-  L[invite-only login] --> A[Argon2id verification]
-  A --> S[opaque revocable session]
-  S --> C[CSRF double-submit check]
-  C --> T[workspace dependency]
-  T --> R[PostgreSQL RLS context]
-  R --> D[tenant rows]
-  M[superuser] --> U[account lifecycle only]
-  U -. no content endpoint .-> D
+flowchart LR
+  U[user message] --> Row[committed queued AgentRun]
+  Row --> Claim[worker atomically claims row]
+  Claim --> Route[bounded intent specialist]
+  Route --> API[configured managed provider]
+  API --> Critic[evidence and schema critic]
+  Critic --> Visible[visible answer + citations]
+  Critic --> Proposal[allowlisted proposed operations]
+  Proposal --> H{explicit approval}
+  H -->|approve| Commit[deterministic canonical write]
+  H -->|reject| No[no change]
 ```
 
-Application scoping and forced RLS are defense in depth. Owners/migration roles must be separated from the runtime role in production because table owners can bypass RLS unless forced and correctly configured.
+Queued work is canonical database state. Retry creates a child attempt; cancellation and terminal
+transitions acquire the row. Interrupted in-flight provider work fails conservatively rather than
+being replayed silently.
 
-## 5. Domain/data view
+## Tenant and storage view
 
-```mermaid
-erDiagram
-  USER ||--|| WORKSPACE : owns
-  WORKSPACE ||--|| PROFILE : describes
-  WORKSPACE ||--o{ SOURCE : controls
-  SOURCE ||--o{ EVIDENCE_CLAIM : proposes
-  PROFILE ||--o{ SKILL : curates
-  SKILL }o--o{ EVIDENCE_CLAIM : supported_by
-  WORKSPACE ||--o{ OPPORTUNITY : researches
-  OPPORTUNITY ||--o{ OPPORTUNITY_SNAPSHOT : versions
-  WORKSPACE ||--o{ TARGET_SET : groups
-  OPPORTUNITY ||--o{ REQUIREMENT : contains
-  OPPORTUNITY ||--o{ MATCH_RUN : evaluated_by
-  OPPORTUNITY ||--o| APPLICATION : tracked_as
-  APPLICATION ||--o{ STAGE_EVENT : records
-  APPLICATION ||--o{ CONTACT : connects
-  WORKSPACE ||--o{ CAREER_TASK : plans
-  CONTACT ||--o{ CAREER_TASK : attends
-```
+One account owns exactly one seeker workspace. Every domain query includes the workspace boundary;
+hosted PostgreSQL adds forced RLS defense. A superuser can create, disable, restore, revoke, and purge
+accounts but has no other-user profile/job/conversation browser.
 
-## 6. Deployment view
+SQLite is the complete local/single-user profile. PostgreSQL is the hosted multi-user profile.
+Relational rows are canonical. Graphs, matrices, chart series, search indexes, and scores are
+recomputable projections with version/digest provenance.
+
+## Hosted deployment view
 
 ```mermaid
 flowchart LR
   Internet --> TLS[TLS reverse proxy]
   TLS --> App[app container]
-  App --> DB[(persistent PostgreSQL)]
-  App --> Redis[(persistent Redis)]
+  App --> DB[(PostgreSQL)]
   Worker[worker container] --> DB
-  Worker --> Redis
-  App --> AV[ClamAV]
+  App --> AV[malware scanner]
   Worker --> AV
-  App --> Blob[(persistent blobs)]
+  App --> Blob[(encrypted blobs)]
   Worker --> Blob
+  Worker --> External[managed AI APIs]
   DB --> Backup[encrypted off-host backup]
   Blob --> Backup
 ```
 
-`compose.yaml` includes a one-shot migration service and health-gated app/worker services. Production adds a reverse proxy, secret injection, resource limits, monitoring, and scheduled backup/restore verification.
+Compose is optional packaging. The hosted profile contains no Redis, Ollama, Docling, embedding
+server, model volume, or inference initializer.
 
 ## Code map
 
-- `backend/careertwin/models.py`: relational domain.
+- `backend/careertwin/models.py`: canonical relational domain and durable work state.
 - `backend/careertwin/api/`: authenticated command/query endpoints.
-- `backend/careertwin/services/`: deterministic ingestion, graph, matching, recommendation, artifact, security, and connector services.
-- `backend/careertwin/agent/`: provider abstraction and bounded graph.
-- `backend/careertwin/worker.py`: resumable ingestion, retention, and reminder seams.
-- `frontend/src/pages/`: user workflows.
-- `frontend/src/components/Visualizations.tsx`: graph/chart projections with accessible alternatives.
+- `backend/careertwin/services/`: ingestion, graph, matching, recommendation, artifact, security, and connector services.
+- `backend/careertwin/agent/`: typed external providers, prompt contracts, routing, and critic.
+- `backend/careertwin/worker.py`: database claiming, source processing, agent execution, retention, and reminders.
+- `backend/careertwin/harness.py`: repository-skill automation surface.
+- `frontend/src/pages/`: human workflows.
+- `frontend/src/components/Visualizations.tsx`: network/matrix/table and chart projections.
+- `.agents/skills/`: versioned local operating workflows.

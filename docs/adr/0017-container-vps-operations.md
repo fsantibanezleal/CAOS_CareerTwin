@@ -1,6 +1,6 @@
 # ADR 0017: Compose-first VPS persistence and verified restoration
 
-- Status: Accepted
+- Status: Superseded by ADR 0026
 - Date: 2026-08-01
 
 ## Decision

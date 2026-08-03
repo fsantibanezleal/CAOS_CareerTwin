@@ -5,7 +5,7 @@ description: Turn CareerTwin match gaps and evidence coverage into transparent, 
 
 # Improve Career Readiness
 
-Skill contract version: 1.1.0.
+Skill contract version: 2.0.0.
 
 ## Outcome
 
@@ -15,10 +15,10 @@ Create a practical improvement plan grounded in the latest immutable requirement
 
 1. Read `Entry_point.md` and `references/readiness-contract.md`.
 2. Run or retrieve the latest match for the selected opportunity.
-3. Regenerate recommendations only when the current match reflects the intended profile and opportunity versions.
+3. Regenerate recommendations with `scripts/career.ps1 recommend <opportunity-id>` or the `.sh` equivalent only when the current match reflects the intended profile and opportunity versions.
 4. Separate actions into evidence, capability, positioning, application preparation, and eligibility clarification.
 5. Rank by transparent impact, effort, and derived priority. Preserve associated requirement IDs.
-6. Let the seeker edit prerequisites, steps, effort, status, and progress; preserve the gap rationale and requirement IDs.
+6. Let the seeker edit prerequisites, steps, effort, status, and progress through the web UI or a bounded ignored JSON body passed to `scripts/career.* request`; preserve the gap rationale and requirement IDs.
 7. Convert a selected recommendation into an agenda task only after the seeker chooses it.
 8. Re-run matching only after canonical evidence or reviewed requirements actually change.
 

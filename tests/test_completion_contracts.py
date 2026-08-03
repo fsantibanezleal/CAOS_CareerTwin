@@ -8,11 +8,11 @@ from typing import Any
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from careertwin.api import agent as agent_api
 from careertwin.database import SessionLocal
 from careertwin.models import AgentRun
 from careertwin.services.agent_runs import execute_agent_run
 from careertwin.services.tracing import trace_payload
+from careertwin.worker import _claim_agent_runs
 from tests.conftest import create_account, csrf, login
 
 
@@ -316,15 +316,9 @@ def test_contacts_and_calendar_import_are_tenant_safe_and_idempotent(client: Tes
 
 
 def test_durable_agent_run_cancel_retry_execution_and_redacted_trace(
-    client: TestClient, monkeypatch: Any
+    client: TestClient,
 ) -> None:
     """Persist queue checkpoints, preserve retries and emit metadata-only trace payloads."""
-    queued_jobs: list[tuple[str, str]] = []
-
-    async def fake_enqueue(_: object, workspace_id: str, run_id: str) -> None:
-        queued_jobs.append((workspace_id, run_id))
-
-    monkeypatch.setattr(agent_api, "_enqueue", fake_enqueue)
     create_account("agent@example.com")
     token = login(client, "agent@example.com")
     queued = client.post(
@@ -335,7 +329,9 @@ def test_durable_agent_run_cancel_retry_execution_and_redacted_trace(
     assert queued.status_code == 201, queued.text
     run = queued.json()
     assert run["status"] == "queued"
-    assert len(queued_jobs) == 1
+    claimed = _claim_agent_runs(1)
+    assert len(claimed) == 1
+    assert claimed[0][1] == run["id"]
     cancelled = client.post(f"/api/agent/runs/{run['id']}/cancel", headers=csrf(token))
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"

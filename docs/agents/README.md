@@ -1,35 +1,54 @@
 # Agent harness
 
-## Boundary
+Agents extract, draft, explain, and propose. Deterministic application services authenticate,
+authorize, validate, version, audit, and write. Provider output is never a database command.
 
-Agents extract, draft, explain, and propose. Deterministic application services authenticate, authorize, validate, version, audit, and write. Provider output is never trusted as a database command.
+## External-only provider boundary
 
-## Turn lifecycle
+Runtime providers are xAI/Grok, OpenAI, Anthropic, and Google when their environment-only key is
+configured. There is no Ollama adapter or local model fallback. `GET /api/agent/providers` exposes
+configured names, selected default, `external-only` mode, and Grok Voice availability without keys.
 
-1. Persist the visible user message in a tenant conversation.
-2. Build bounded context from at most 100 confirmed claims plus an optional latest match.
-3. Route to `profile`, `opportunity`, `matching`, `improvement`, `pipeline`, or `guide` using an explicit vocabulary.
-4. Invoke the selected provider through a typed `AgentContext`/`AgentDraft` contract.
-5. Run an evidence critic: all citation IDs must exist in supplied evidence; proposed operations require citations.
-6. Persist visible answer, citations, provider, specialist, and durable `AgentRun` state. No hidden chain of thought is stored or exposed. Queued runs commit before ARQ submission and can be polled, cancelled at durable boundaries, or retried as a new lineage-preserving attempt.
-7. If operations exist, create a `ProposedChange`. Only a later explicit decision can apply allowlisted profile paths.
+The deterministic core does not require a model. Text/DOCX/PDF/HTML extraction and conservative
+proposal generation still work with no provider. Chat fails clearly until a real external provider
+is configured.
 
-Prompt templates and JSON-schema contracts are versioned in `careertwin.agent.prompts`. The API exposes prompt/schema metadata but never system-prompt bodies. Tenant-scoped traces persist digests, counts, versions, latency, and sanitized error classes; raw evidence, prompts, outputs, and credentials are excluded.
+## Durable turn lifecycle
 
-## Providers
+1. Persist the visible user message and queued `AgentRun` in the tenant database.
+2. Let the worker atomically claim the row; Redis/ARQ is not involved.
+3. Build bounded context from confirmed claims plus an optional latest match.
+4. Route to profile, opportunity, matching, improvement, pipeline, or guide using an explicit vocabulary.
+5. Invoke the selected managed provider through `AgentContext`/`AgentDraft`.
+6. Reject citations outside supplied evidence and reject proposed operations without citations.
+7. Persist visible answer, citations, provider, specialist, sanitized usage, and terminal state. Never persist or expose hidden reasoning.
+8. Create a `ProposedChange` only for allowlisted operations. Apply it only after a later explicit decision.
 
-Production registers only real providers. xAI/Grok, OpenAI, Anthropic, and Google are Pydantic AI adapters; Ollama uses a bounded structured-output adapter and is the self-hosted default. A deterministic contract double exists only under `APP_ENV=test` and cannot satisfy production validation. Keys are environment-only and never returned by `/api/agent/providers`. The selected hosted provider receives career context; operators must document its data-processing terms.
+Cancel and terminal transitions lock the row. Retry creates a lineage-preserving child attempt. A
+worker restart returns stale pre-provider claims to the queue; an interrupted in-flight provider
+call fails with a sanitized interruption state instead of being duplicated silently.
 
-## Threat controls
+## Native skill path
 
-- Uploaded and captured content is untrusted data, never system instructions.
-- No arbitrary URL/tool access is available to the model.
-- JSON operations use an allowlist of target, path, and operation.
-- A failed evidence critic fails closed.
-- Runs record input digest, phase, provider, specialist, error class, attempt/parent lineage, cancellation request, and timestamps.
-- ARQ rehydrates the visible user message and confirmed evidence from PostgreSQL under the worker's tenant context; retry never edits the prior terminal run.
-- Optional Langfuse observations contain only a hashed subject, input digest, counts, provider/specialist labels, attempt and status. Prompts, evidence bodies, answers, account values and raw workspace IDs are prohibited.
+`scripts/career.ps1 chat "question"` and `scripts/career.sh chat "question"` authenticate through a
+hidden password prompt, create a durable run, poll it, and return visible messages/citations as JSON.
+The generic harness supports all other tenant-scoped API operations while accepting only relative
+`/api/...` paths and retaining cookie/CSRF state in memory.
 
-## Evaluation suites
+## Grok Voice
 
-Provider-independent evals must cover routing, citation resolution, unsupported claims, prompt injection in documents/jobs, multilingual input, refusal boundaries, proposed-operation allowlists, tenant isolation, provider outage, and retry/idempotency. Model quality gates must never replace deterministic security tests.
+The authenticated web app requests a five-minute xAI Realtime client secret from CareerTwin. The
+browser then streams microphone/audio directly to `wss://api.x.ai/v1/realtime` using the ephemeral
+credential. The long-lived `XAI_API_KEY` remains server-side; the VPS does not receive the audio
+stream or run an audio model. Voice can explain and converse but cannot bypass canonical-change
+approval.
+
+## Privacy and evaluation
+
+Optional Langfuse uses redacted metadata only: hashed run/subject IDs, input digest, counts,
+provider/specialist labels, attempt, and status. Prompts, evidence bodies, answers, emails, account
+values, credentials, and raw workspace IDs are prohibited.
+
+Evaluation covers routing, citation resolution, unsupported claims, prompt injection, multilingual
+input, refusal boundaries, operation allowlists, tenant isolation, provider outage, cancellation,
+retry, and interruption recovery. Model quality never replaces deterministic security tests.

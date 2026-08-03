@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "careertwin-app"
-version = "0.2.5"
+version = "0.3.0"
 description = "Evidence-first self-hostable career intelligence workbench"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,7 +12,6 @@ license = { text = "MIT" }
 dependencies = [
   "alembic==1.18.5",
   "argon2-cffi==25.1.0",
-  "arq==0.28.0",
   "cryptography==50.0.0",
   "email-validator==2.3.0",
   "fastapi==0.141.1",
@@ -31,7 +30,6 @@ dependencies = [
   "pypdf==6.14.2",
   "python-docx==1.2.0",
   "python-multipart==0.0.32",
-  "redis==5.3.1",
   "sqlalchemy==2.0.51",
   "structlog==25.5.0",
   "trafilatura==2.2.0",
@@ -39,7 +37,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ingestion = ["docling>=2.48,<3"]
 observability = [
   "opentelemetry-api>=1.36,<2",
   "opentelemetry-exporter-otlp>=1.36,<2",
@@ -60,6 +57,7 @@ dev = [
 
 [project.scripts]
 careertwin = "careertwin.cli:main"
+careertwin-local = "careertwin.harness:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["backend/careertwin"]
@@ -75,7 +73,7 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["backend", "docling_gateway", "tests", "evals"]
+src = ["backend", "tests", "evals"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "S", "UP", "B", "A", "C4", "DTZ", "PIE", "RUF"]

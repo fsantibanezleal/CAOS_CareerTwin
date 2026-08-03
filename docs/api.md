@@ -7,7 +7,7 @@ The authoritative machine-readable contract is `/api/openapi.json`; interactive 
 | Authentication | `/api/auth` | login, current user, logout, password change |
 | Administration | `/api/admin` | account metadata and lifecycle only |
 | Profile/evidence | `/api/profile` | canonical profile, skills, chronology, sources, decisions, graph, CareerTwin/JSON Resume exchange |
-| Opportunities | `/api/opportunities` | capture, edit, immutable revisions, requirements, target portfolios, landscape |
+| Opportunities | `/api/opportunities` | capture, edit, immutable revisions, requirements, target portfolios, landscape and typed knowledge graph |
 | Matching/readiness | `/api/matches` | immutable runs, named/global alignment, shared-gap matrix, editable recommendations |
 | Artifacts | `/api/artifacts` | evidence-grounded drafts, STAR accomplishments, immutable résumé variants |
 | Pipeline | `/api/pipeline` | application stages/history, contacts, tasks, calendar import/export, analytics |
@@ -15,7 +15,11 @@ The authoritative machine-readable contract is `/api/openapi.json`; interactive 
 | Agent | `/api/agent` | providers, prompt/schema manifest, chat, durable queue/poll/cancel/retry, redacted trace, conversations, proposed-change decisions |
 | Taxonomy | `/api/taxonomy` | local ESCO/O*NET counts, checksum provenance, and lexical/graph/hybrid search |
 | Workspace | `/api/workspace` | Today summary and portable export |
-| Operations | `/api/health/*`, `/metrics` | liveness, dependency readiness (database, Redis, model, ClamAV, Docling), Prometheus |
+| Operations | `/api/health/*`, `/metrics` | liveness, database/encryption/external-provider readiness, Prometheus |
+
+Repository automation uses `scripts/career.ps1`/`.sh`. The harness logs in through a hidden prompt,
+retains cookies and CSRF only in process memory, rejects absolute/non-API paths, and exposes friendly
+commands for both graphs, ingestion, matching, recommendations, GitHub, and durable chat.
 
 ## Browser contract
 

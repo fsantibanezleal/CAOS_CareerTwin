@@ -4,6 +4,45 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-03
+
+### Added
+
+- Native-first local lifecycle that creates repo-root `.venv`, installs the Python contract, verifies
+  Node 24/npm 11, installs the frontend lockfile into `frontend/node_modules`, migrates SQLite, and
+  starts API, database worker, and web without Docker.
+- Credential-safe `scripts/career.*` harness for profile/opportunity graphs, source capture, evidence
+  decisions, matching, recommendations, GitHub review, arbitrary bounded API calls, and durable chat.
+- Typed opportunity knowledge graph connecting roles, employers, shared requirements, industry,
+  seniority, location, work mode, and target portfolios.
+- Searchable network, adjacency-matrix, table, facet, and inspector lenses shared by professional and
+  opportunity graphs.
+- External xAI document understanding and Grok Realtime Voice with server-minted ephemeral browser
+  credentials; eight validated versioned repository skills.
+- AST-based Spanish coverage gate for literal UI translation keys.
+
+### Changed
+
+- Make the repository—not the hosted web app—the product boundary. Docker is optional deployment
+  packaging; SQLite is the native local profile and PostgreSQL the hosted multi-user profile.
+- Replace Redis/ARQ with durable database row claiming and conservative interruption recovery.
+- Replace local Ollama/Docling/embedding inference with explicitly configured managed xAI, OpenAI,
+  Anthropic, or Google APIs. Deterministic parsers remain the no-provider fallback.
+- Make xAI file processing transient with one-hour expiry safety and immediate deletion attempt.
+- Expand EN/ES coverage across the control room, profile, opportunities, matches, pipeline, admin,
+  connectors, agent states, graphs, and deterministic recommendations.
+
+### Removed
+
+- Ollama, Qwen, local embeddings, Docling/OCR gateway, Redis, ARQ, model images, model volumes, and
+  every production readiness dependency on local inference.
+
+### Security
+
+- Preserve secrets in ignored/runtime-only storage, keep GitHub and harness tokens memory-only,
+  retain fail-closed production malware scanning, and keep every model-derived write behind exact
+  evidence criticism plus explicit user approval.
+
 ## [0.2.5] - 2026-08-03
 
 ### Fixed

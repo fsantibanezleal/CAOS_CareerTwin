@@ -1,0 +1,5 @@
+Synthetic Candidate
+
+Built Python services for a documented production simulation.
+Led a five-person engineering exercise with recorded milestones.
+Completed a Bachelor of Engineering at Example University in 2020.

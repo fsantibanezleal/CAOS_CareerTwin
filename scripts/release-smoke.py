@@ -375,7 +375,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         )
 
         providers = _expect(seeker.get("/api/agent/providers"), 200).json()
-        provider = "ollama" if "ollama" in providers["providers"] else providers["default"]
+        provider = providers["default"]
+        if not provider:
+            raise RuntimeError("Release smoke requires one configured external model provider")
         queued = _expect(
             seeker.post(
                 "/api/agent/runs",

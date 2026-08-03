@@ -21,9 +21,8 @@ class ChangeOperation(BaseModel):
 class AgentDraft(BaseModel):
     """User-visible answer plus citations and optional uncommitted change proposal."""
 
-    # Ollama translates JSON Schema into a llama.cpp grammar, whose defensive
-    # repetition limit rejects ``char{1,20000}``. The runtime validator below
-    # preserves the boundary without emitting that provider-facing constraint.
+    # Keep a provider-independent runtime bound without coupling the public schema
+    # to one vendor's structured-output grammar.
     answer: str = Field(min_length=1)
     specialist: Literal[
         "profile",

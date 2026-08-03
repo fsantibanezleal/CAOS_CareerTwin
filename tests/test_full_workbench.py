@@ -215,6 +215,19 @@ def test_opportunity_match_recommendation_artifact_and_dashboard(client: TestCli
     landscape = client.get("/api/opportunities/visualization/landscape").json()
     assert landscape["denominator"] == 1
     assert landscape["skills"]["python"] == 1
+    graph_response = client.get("/api/opportunities/visualization/graph")
+    assert graph_response.status_code == 200, graph_response.text
+    graph = graph_response.json()["graph"]
+    assert {node["type"] for node in graph["nodes"]} >= {
+        "opportunity",
+        "employer",
+        "industry",
+        "seniority",
+        "location",
+        "work_mode",
+        "requirement",
+    }
+    assert any(edge["type"] == "requires_required" for edge in graph["edges"])
 
     assert client.get(f"/api/matches/{opportunity_id}/latest").status_code == 404
     assert (
@@ -292,7 +305,8 @@ def test_file_capture_chat_history_and_deletion(client: TestClient) -> None:
     assert captured.json()["source_kind"] == "file"
     providers = client.get("/api/agent/providers").json()
     assert "contract" in providers["providers"]
-    assert providers["local_private_provider"] is True
+    assert providers["mode"] == "external-only"
+    assert providers["configured"] is True
     assert (
         client.post(
             "/api/agent/chat",

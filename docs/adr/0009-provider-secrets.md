@@ -1,6 +1,6 @@
 # ADR 0009: Real provider registry with environment-only secrets
 
-- Status: Accepted
+- Status: Superseded by ADR 0026
 - Date: 2026-08-01
 
 ## Decision

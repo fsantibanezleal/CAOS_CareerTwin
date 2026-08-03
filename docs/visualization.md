@@ -8,6 +8,8 @@ Each view answers a user decision:
 - **Career river**: how did experience and education unfold over time?
 - **Evidence matrix**: which skills have level, confidence, and confirmed claims?
 - **Opportunity landscape**: what recurs within the user's saved set?
+- **Opportunity knowledge graph**: which roles share requirements, employers, industries, seniority,
+  locations, work modes, and explicit target scenarios?
 - **Match shape/bridge**: which requirement families align, which are unknown, and what evidence supports each status?
 - **Pipeline board/agenda/funnel**: what must happen next and what has happened in the user's own process?
 
@@ -15,7 +17,7 @@ Each view answers a user decision:
 
 CAOS Atalaya demonstrated useful principles: multiple genuinely different analytical lenses; stable/baked layouts; strength/degree encoding; theme versus mined-cluster color; searchable highlighting; accessible SVG/table alternatives; artifact decimation; and pausing force/WebGL loops when hidden. It also showed that “clean,” “glow,” and 3-D skins are not different analyses, and later added adjacency-matrix and arc views to reduce network occlusion.
 
-CareerTwin carries forward evidence-bearing edges, stable IDs, legends, alternative tables, bounded payloads, and question-specific views. It does not ship decorative 3-D: a single person's graph is smaller, sensitive, and frequently used on phones; depth/orbit adds interaction and accessibility cost without a new career question.
+CareerTwin carries forward evidence-bearing edges, stable IDs, legends, alternative tables, bounded payloads, and question-specific views. Both primary graphs now provide three genuinely different lenses: a hover-isolated/searchable node-link view, a degree-ranked adjacency matrix for dense relationships, and a complete table. The node inspector exposes exact metadata and typed neighboring edges. It does not ship decorative 3-D: a single person's graph is smaller, sensitive, and frequently used on phones; depth/orbit adds interaction and accessibility cost without a new career question.
 
 ## Engines evaluated
 
@@ -44,3 +46,5 @@ single-person graph. Those capability differences, not aesthetic preference, dri
 - Reduced-motion disables nonessential animation.
 - No chart implies precision beyond stored evidence.
 - Graph/layout data is a projection; editing occurs through domain forms and review gates.
+- The opportunity graph's universe is only saved user research. Shared requirement nodes indicate
+  recurrence inside that set, never labor-market prevalence.

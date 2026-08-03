@@ -50,6 +50,7 @@ class ClaimState(StrEnum):
 
 class SourceStatus(StrEnum):
     PENDING = "pending"
+    PROCESSING = "processing"
     QUARANTINED = "quarantined"
     READY = "ready"
     FAILED = "failed"
