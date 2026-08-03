@@ -81,7 +81,7 @@ Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md)
 plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
 tests/docs → pull request to `develop` → reviewed deployment.
 
-Version `0.4.0` implements the native-first, external-API-only repository architecture and consumes
+Version `0.4.1` implements the native-first, external-API-only repository architecture and consumes
 the public CAOS shared authenticated workbench frame. See
 [`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 

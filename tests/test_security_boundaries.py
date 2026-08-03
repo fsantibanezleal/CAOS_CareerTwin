@@ -156,3 +156,20 @@ def test_runtime_topology_contains_no_local_inference_or_document_model() -> Non
     assert all(term not in compose.casefold() for term in forbidden)
     assert not (repository_root / "docker" / "ollama" / "Dockerfile").exists()
     assert not (repository_root / "docker" / "docling" / "Dockerfile").exists()
+
+
+def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
+    """Keep the persistent cluster on glibc with immutable PostgreSQL and pgvector inputs."""
+    repository_root = Path(__file__).parents[1]
+    dockerfile = (repository_root / "docker" / "postgres" / "Dockerfile").read_text()
+    assert (
+        "postgres:17.10-bookworm@sha256:"
+        "4f736ae292687621d4dbe0d499ffd024a36bd2ee7d8ca6f2ccd4c800f047b394"
+        in dockerfile
+    )
+    assert "17.10-alpine" not in dockerfile
+    assert "PGVECTOR_COMMIT=778dacf20c07caf904557a88705142631818d8cb" in dockerfile
+    assert "PGVECTOR_SHA256=4c33cf053329784ba6d992d05c9588b93789e907a7511f20ff5a5a5b8a0703c1" in dockerfile
+    runtime_stage = dockerfile.split("FROM ${POSTGRES_IMAGE}", maxsplit=2)[-1]
+    assert "apt-get" not in runtime_stage
+    assert "build-essential" not in runtime_stage
