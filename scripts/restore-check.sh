@@ -7,7 +7,8 @@ case "$1" in /*|../*|*/../*) echo 'Restore-check input must stay inside the work
 [ -f "$1" ] || { echo 'Backup file does not exist.' >&2; exit 2; }
 CHECK_DB=careertwin_restore_check
 docker compose exec -T db dropdb --if-exists -U careertwin "$CHECK_DB"
-docker compose exec -T db createdb -U careertwin "$CHECK_DB"
+docker compose exec -T db createdb -U careertwin \
+  --template=template0 --locale-provider=builtin --builtin-locale=C.UTF-8 "$CHECK_DB"
 trap 'docker compose exec -T db dropdb --if-exists -U careertwin "$CHECK_DB"' EXIT
 docker compose exec -T db psql -v ON_ERROR_STOP=1 -U careertwin -d "$CHECK_DB" <"$1"
 docker compose exec -T db psql -U careertwin -d "$CHECK_DB" -c "SELECT count(*) AS schema_tables FROM information_schema.tables WHERE table_schema = 'public';"
