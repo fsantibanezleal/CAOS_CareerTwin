@@ -4,6 +4,27 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-03
+
+### Changed
+
+- Render the authenticated workbench through the exact public
+  `@fasl-work/caos-app-shell@0.5.0` `WorkbenchShell`, retaining CareerTwin's five seeker routes,
+  responsive navigation, command search, locale/theme persistence, account controls, career copilot,
+  architecture modal, security banner, and product-specific design tokens through typed slots.
+- Adopt the shared package's React Router 6/7/8 core contract without downgrading CareerTwin Router 8
+  or mixing incompatible DOM/core majors.
+
+### Added
+
+- ADR 0027 and a frontend integration test proving the real shared frame, active route, navigation and
+  main landmarks, product controls, overlays, and authenticated content.
+
+### Security
+
+- Pin the public shell package exactly, keep npm audit at zero findings, and preserve all account,
+  preference, chat, modal, and authorization state inside CareerTwin rather than the shared package.
+
 ## [0.3.1] - 2026-08-03
 
 ### Fixed

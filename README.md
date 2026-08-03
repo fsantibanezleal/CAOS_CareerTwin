@@ -75,12 +75,14 @@ CareerTwin never runs Ollama, Docling, an embedding server, or an audio model lo
 
 ## Documentation and governance
 
-Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md), and active
-[`ADR 0026`](docs/adr/0026-native-first-external-api-repository-product.md). The validated product
+Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md), active
+[`ADR 0026`](docs/adr/0026-native-first-external-api-repository-product.md), and shared-workbench
+[`ADR 0027`](docs/adr/0027-shared-authenticated-workbench-shell.md). The validated product
 plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
 tests/docs → pull request to `develop` → reviewed deployment.
 
-Version `0.3.1` implements the native-first, external-API-only repository architecture. See
+Version `0.4.0` implements the native-first, external-API-only repository architecture and consumes
+the public CAOS shared authenticated workbench frame. See
 [`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 
 ## License

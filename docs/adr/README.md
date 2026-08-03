@@ -30,3 +30,4 @@ Records are active from the release in which they were accepted unless supersede
 | [0024](0024-consent-bound-personal-connectors.md) | Consent-bound calendar, email, and browser connectors |
 | [0025](0025-hybrid-occupational-retrieval.md) | Retrieval history; local embeddings superseded by 0026 |
 | [0026](0026-native-first-external-api-repository-product.md) | Native-first repo product, database worker, external AI only |
+| [0027](0027-shared-authenticated-workbench-shell.md) | Shared authenticated frame with product-owned controls |

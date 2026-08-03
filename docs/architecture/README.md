@@ -2,7 +2,9 @@
 
 CareerTwin is a native-first modular monolith with deterministic domain services, typed graph
 projections, an external-only probabilistic lane, and a database-backed worker. The repository is
-the product; the CLI harness and web workbench are peer interfaces.
+the product; the CLI harness and web workbench are peer interfaces. Authenticated web views render
+through the registry-pinned `@fasl-work/caos-app-shell` `WorkbenchShell`; CareerTwin owns product state
+and controls while the package owns frame, route and landmark semantics.
 
 ## System view
 
@@ -136,5 +138,6 @@ server, model volume, or inference initializer.
 - `backend/careertwin/worker.py`: database claiming, source processing, agent execution, retention, and reminders.
 - `backend/careertwin/harness.py`: repository-skill automation surface.
 - `frontend/src/pages/`: human workflows.
+- `frontend/src/components/Shell.tsx`: CareerTwin controls slotted into the shared authenticated frame.
 - `frontend/src/components/Visualizations.tsx`: network/matrix/table and chart projections.
 - `.agents/skills/`: versioned local operating workflows.
