@@ -4,6 +4,15 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-08-03
+
+### Fixed
+
+- Create isolated restore-check databases from `template0` with PostgreSQL 17's built-in `C.UTF-8`
+  locale provider so recovery does not depend on host glibc/musl collation-version metadata.
+- Initialize fresh Compose database volumes with the same portable locale contract and document the
+  honest handling of warnings from legacy libc-initialized volumes.
+
 ## [0.2.3] - 2026-08-02
 
 ### Fixed

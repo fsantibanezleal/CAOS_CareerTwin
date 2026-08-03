@@ -12,7 +12,7 @@ docker compose cp $BackupPath "db:$ContainerBackup"
 Assert-NativeSuccess 'Restore-check backup copy'
 docker compose exec -T db dropdb --if-exists -U careertwin $CheckDatabase
 Assert-NativeSuccess 'Restore-check database cleanup'
-docker compose exec -T db createdb -U careertwin $CheckDatabase
+docker compose exec -T db createdb -U careertwin --template=template0 --locale-provider=builtin --builtin-locale=C.UTF-8 $CheckDatabase
 Assert-NativeSuccess 'Restore-check database creation'
 try {
   docker compose exec -T db psql -v ON_ERROR_STOP=1 -U careertwin -d $CheckDatabase --file=$ContainerBackup
