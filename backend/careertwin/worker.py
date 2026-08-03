@@ -1,14 +1,13 @@
-"""ARQ worker jobs for durable ingestion, retention and reminder pipelines."""
+"""Database-backed worker for durable ingestion, agents, retention and reminders."""
 
 from __future__ import annotations
 
 import asyncio
+import signal
+import time
 from datetime import timedelta
-from typing import Any, ClassVar, cast
+from typing import Any
 
-from arq import cron
-from arq.connections import RedisSettings
-from arq.typing import WorkerCoroutine
 from sqlalchemy import delete, select, text
 from sqlalchemy.orm import Session
 
@@ -207,24 +206,130 @@ async def due_reminder_sweep(_: dict[Any, Any], *args: Any, **kwargs: Any) -> di
 
 
 async def process_agent_run(_: dict[Any, Any], workspace_id: str, run_id: str) -> dict[str, object]:
-    """Execute one durable bounded run without blocking the ARQ event loop."""
+    """Execute one durable bounded run without blocking the worker event loop."""
     return await asyncio.to_thread(execute_agent_run, workspace_id, run_id)
 
 
-class WorkerSettings:
-    """ARQ discovery contract used by `arq careertwin.worker.WorkerSettings`."""
+def _claim_sources(limit: int) -> list[tuple[str, str]]:
+    """Atomically claim pending source rows; PostgreSQL workers use SKIP LOCKED."""
+    with SessionLocal.begin() as db:
+        statement = (
+            select(Source)
+            .where(Source.status == SourceStatus.PENDING)
+            .order_by(Source.created_at)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        sources = list(db.scalars(statement).all())
+        for source in sources:
+            source.status = SourceStatus.PROCESSING
+        return [(source.workspace_id, source.id) for source in sources]
 
-    functions: ClassVar[list[Any]] = [
-        process_source,
-        process_agent_run,
-        retention_sweep,
-        due_reminder_sweep,
-    ]
-    cron_jobs: ClassVar[list[Any]] = [
-        cron(cast(WorkerCoroutine, retention_sweep), hour=3, minute=15),
-        cron(cast(WorkerCoroutine, due_reminder_sweep), minute={0, 15, 30, 45}),
-    ]
-    redis_settings = RedisSettings.from_dsn(get_settings().redis_url)
-    max_jobs = get_settings().worker_max_jobs
-    job_timeout = 600
-    keep_result = 3600
+
+def _claim_agent_runs(limit: int) -> list[tuple[str, str]]:
+    """Atomically claim durable agent rows without an external broker."""
+    from careertwin.models import AgentRun
+
+    with SessionLocal.begin() as db:
+        statement = (
+            select(AgentRun)
+            .where(AgentRun.status.in_({"queued", "retrying"}))
+            .order_by(AgentRun.created_at)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        runs = list(db.scalars(statement).all())
+        for run in runs:
+            run.status = "claimed"
+            run.state = {**run.state, "phase": "claimed"}
+        return [(run.workspace_id, run.id) for run in runs]
+
+
+def recover_interrupted_work() -> dict[str, int]:
+    """Recover stale claims after an unclean worker stop without duplicating provider calls."""
+    from careertwin.models import AgentRun
+
+    cutoff = utcnow() - timedelta(minutes=10)
+    recovered_sources = 0
+    recovered_runs = 0
+    failed_runs = 0
+    with SessionLocal.begin() as db:
+        sources = list(
+            db.scalars(
+                select(Source).where(
+                    Source.status == SourceStatus.PROCESSING,
+                    Source.updated_at < cutoff,
+                )
+            ).all()
+        )
+        for source in sources:
+            source.status = SourceStatus.PENDING
+            recovered_sources += 1
+        runs = list(
+            db.scalars(
+                select(AgentRun).where(
+                    AgentRun.status.in_({"claimed", "running"}),
+                    AgentRun.updated_at < cutoff,
+                )
+            ).all()
+        )
+        for run in runs:
+            if run.status == "claimed":
+                run.status = "retrying" if run.parent_run_id else "queued"
+                run.state = {**run.state, "phase": run.status}
+                recovered_runs += 1
+            else:
+                run.status = "failed"
+                run.error_code = "WorkerInterrupted"
+                run.finished_at = utcnow()
+                run.state = {**run.state, "phase": "failed"}
+                failed_runs += 1
+    return {
+        "sources_requeued": recovered_sources,
+        "runs_requeued": recovered_runs,
+        "running_runs_failed_safely": failed_runs,
+    }
+
+
+async def run_worker() -> None:
+    """Poll canonical work state until SIGINT/SIGTERM, including scheduled maintenance."""
+    settings = get_settings()
+    stopping = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for event in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(event, stopping.set)
+        except (NotImplementedError, RuntimeError):
+            signal.signal(event, lambda *_: loop.call_soon_threadsafe(stopping.set))
+    recover_interrupted_work()
+    next_retention = time.monotonic()
+    next_reminders = time.monotonic()
+    while not stopping.is_set():
+        worked = False
+        for workspace_id, source_id in _claim_sources(settings.worker_batch_size):
+            worked = True
+            await process_source({}, workspace_id, source_id)
+        for workspace_id, run_id in _claim_agent_runs(settings.worker_batch_size):
+            worked = True
+            await process_agent_run({}, workspace_id, run_id)
+        now = time.monotonic()
+        if now >= next_retention:
+            await retention_sweep({})
+            next_retention = now + 24 * 60 * 60
+        if now >= next_reminders:
+            await due_reminder_sweep({})
+            next_reminders = now + 15 * 60
+        if not worked:
+            try:
+                await asyncio.wait_for(stopping.wait(), timeout=settings.worker_poll_seconds)
+            except TimeoutError:
+                pass
+
+
+def main() -> None:
+    """Run the complete native background system without Redis or a queue service."""
+    asyncio.run(run_worker())
+
+
+if __name__ == "__main__":
+    main()

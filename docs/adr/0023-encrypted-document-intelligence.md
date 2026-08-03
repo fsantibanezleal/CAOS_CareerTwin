@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for 0.2.0.
+Superseded by ADR 0026. Retained as the 0.2.0 historical decision.
 
 ## Decision
 

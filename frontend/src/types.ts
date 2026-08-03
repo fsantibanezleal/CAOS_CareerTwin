@@ -53,7 +53,7 @@ export type Source = {
   id: string
   kind: string
   label: string
-  status: 'pending' | 'ready' | 'failed' | 'quarantined'
+  status: 'pending' | 'processing' | 'ready' | 'failed' | 'quarantined'
   media_type?: string
   sha256?: string
   source_url?: string
@@ -206,6 +206,16 @@ export type ProfileGraphData = {
     confidence: number
     evidence: Array<{ id: string; statement: string; source_id?: string }>
   }>
+}
+
+export type OpportunityGraphData = {
+  graph: ProfileGraphData['graph']
+  summary: {
+    opportunities: number
+    requirements: number
+    target_sets: number
+  }
+  warning: string
 }
 
 export type Experience = {

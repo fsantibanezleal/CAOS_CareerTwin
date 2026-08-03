@@ -1,5 +1,7 @@
 # Pipeline contract
 
+Native reads use `scripts/career.ps1 get /api/pipeline/applications` (or `.sh`). Native mutations use `scripts/career.* request POST|PUT|PATCH|DELETE <path> --json-file <ignored-json-path>`; the harness manages session cookies and CSRF in memory.
+
 - Applications: `GET/POST /api/pipeline/applications`, `POST /api/pipeline/applications/{id}/stage`, and `GET /api/pipeline/applications/{id}/history`.
 - Contacts: `GET/POST /api/pipeline/contacts`, `PUT/DELETE /api/pipeline/contacts/{id}`.
 - Agenda: `GET/POST /api/pipeline/tasks` and `POST /api/pipeline/tasks/{id}/complete`.

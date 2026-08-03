@@ -7,8 +7,6 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-import httpx
-import redis
 import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,7 +88,8 @@ async def security_and_observability(
             "Cross-Origin-Opener-Policy": "same-origin",
             "Content-Security-Policy": (
                 "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
-                "script-src 'self'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; "
+                "script-src 'self'; connect-src 'self' wss://api.x.ai; font-src 'self'; "
+                "frame-ancestors 'none'; "
                 "base-uri 'self'; form-action 'self'"
             ),
         }
@@ -114,13 +113,6 @@ def readiness() -> JSONResponse:
         checks["database"] = "ok"
     except Exception as exc:
         checks["database"] = type(exc).__name__
-    try:
-        client = redis.Redis.from_url(
-            settings.redis_url, socket_timeout=1, socket_connect_timeout=1
-        )
-        checks["redis"] = "ok" if client.ping() else "unavailable"
-    except Exception as exc:
-        checks["redis"] = type(exc).__name__
     if settings.blob_encryption_key or settings.connector_encryption_key:
         try:
             if not settings.blob_encryption_key or not settings.connector_encryption_key:
@@ -136,18 +128,12 @@ def readiness() -> JSONResponse:
         except ValueError as exc:
             checks["encryption_keys"] = type(exc).__name__
     provider = provider_registry(settings).get(settings.llm_default_provider)
-    checks["model_provider"] = "ok" if provider and provider.ready() else "unavailable"
+    checks["model_provider"] = "ok" if provider and provider.ready() else "optional-unconfigured"
     if settings.clamav_host:
         checks["malware_scanner"] = (
             "ok" if clamav_ready(settings.clamav_host, settings.clamav_port) else "unavailable"
         )
-    if settings.docling_url:
-        try:
-            response = httpx.get(f"{settings.docling_url.rstrip('/')}/health", timeout=3)
-            checks["document_intelligence"] = "ok" if response.is_success else "unavailable"
-        except httpx.HTTPError as exc:
-            checks["document_intelligence"] = type(exc).__name__
-    healthy = all(value == "ok" for value in checks.values())
+    healthy = all(value in {"ok", "optional-unconfigured"} for value in checks.values())
     return JSONResponse(
         {"status": "ok" if healthy else "degraded", "version": __version__, "checks": checks},
         status_code=200 if healthy else 503,

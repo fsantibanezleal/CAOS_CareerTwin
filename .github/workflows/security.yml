@@ -27,7 +27,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - working-directory: frontend
-        run: npm ci
+        run: npm ci --no-audit --no-fund
       - working-directory: frontend
         run: npm audit --omit=dev --audit-level=high
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0

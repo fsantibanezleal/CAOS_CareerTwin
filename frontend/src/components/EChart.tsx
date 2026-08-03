@@ -1,5 +1,5 @@
 import { BarChart, RadarChart, ScatterChart } from 'echarts/charts'
-import { GridComponent, LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import type { EChartsCoreOption } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -13,10 +13,11 @@ echarts.use([
   TooltipComponent,
   LegendComponent,
   RadarComponent,
+  AriaComponent,
   CanvasRenderer,
 ])
 
-export function EChart({ option, className = '' }: { option: EChartsCoreOption; className?: string }) {
+export function EChart({ option, ariaLabel, className = '' }: { option: EChartsCoreOption; ariaLabel: string; className?: string }) {
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!container.current) return
@@ -32,5 +33,5 @@ export function EChart({ option, className = '' }: { option: EChartsCoreOption; 
       chart.dispose()
     }
   }, [option])
-  return <div ref={container} className={className} />
+  return <div ref={container} className={className} role="img" aria-label={ariaLabel} />
 }

@@ -11,14 +11,12 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-import httpx
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from careertwin.config import Settings
-from careertwin.models import TaxonomyConcept, TaxonomyEmbedding, TaxonomyImport, TaxonomyRelation
+from careertwin.models import TaxonomyConcept, TaxonomyImport, TaxonomyRelation
 from careertwin.services.normalization import label_similarity
-from careertwin.services.semantic import embed_texts, ollama_model_revision
 
 ESCO_RELEASE = "1.2.1"
 ONET_RELEASE = "30.3"
@@ -361,57 +359,6 @@ def import_onet(
     return {"concepts": concept_count, "relations": relation_count}
 
 
-def embed_taxonomy(
-    db: Session,
-    settings: Settings,
-    taxonomy: str,
-    release: str,
-    language: str,
-    limit: int | None = None,
-) -> dict[str, Any]:
-    """Build missing local semantic vectors for one immutable taxonomy snapshot."""
-    revision = ollama_model_revision(settings, settings.ollama_embedding_model)
-    statement = select(TaxonomyConcept).where(
-        TaxonomyConcept.taxonomy == taxonomy,
-        TaxonomyConcept.release == release,
-        TaxonomyConcept.language == language,
-    )
-    concepts = list(db.scalars(statement.order_by(TaxonomyConcept.uri)).all())
-    existing = set(
-        db.scalars(
-            select(TaxonomyEmbedding.concept_id).where(
-                TaxonomyEmbedding.model == settings.ollama_embedding_model,
-                TaxonomyEmbedding.model_revision == revision,
-            )
-        ).all()
-    )
-    pending = [concept for concept in concepts if concept.id not in existing]
-    if limit is not None:
-        pending = pending[:limit]
-    created = 0
-    for offset in range(0, len(pending), 32):
-        batch = pending[offset : offset + 32]
-        texts = [
-            f"{concept.concept_type}: {concept.preferred_label}. {concept.description}"[:8_000]
-            for concept in batch
-        ]
-        for concept, vector in zip(batch, embed_texts(settings, texts), strict=True):
-            db.add(
-                TaxonomyEmbedding(
-                    concept_id=concept.id,
-                    taxonomy=concept.taxonomy,
-                    release=concept.release,
-                    language=concept.language,
-                    model=settings.ollama_embedding_model,
-                    model_revision=revision,
-                    embedding=vector,
-                )
-            )
-            created += 1
-        db.flush()
-    return {"created": created, "revision": revision, "model": settings.ollama_embedding_model}
-
-
 def search_concepts(
     db: Session,
     query: str,
@@ -421,7 +368,13 @@ def search_concepts(
     settings: Settings | None = None,
     mode: str = "hybrid",
 ) -> list[dict[str, object]]:
-    """Hybrid lexical, taxonomy-graph and measured semantic concept retrieval."""
+    """Rank concepts deterministically by bilingual lexical similarity and graph degree.
+
+    The ``hybrid`` name remains a wire-compatible alias for ``lexical_graph``. CareerTwin does not
+    generate embeddings on the VPS; an external semantic adapter requires a separately benchmarked
+    ADR before it may influence canonical taxonomy ranking.
+    """
+    del settings
     pattern = f"%{query.strip()}%"
     statement = select(TaxonomyConcept).where(
         TaxonomyConcept.release == ESCO_RELEASE,
@@ -434,39 +387,6 @@ def search_concepts(
     if concept_type:
         statement = statement.where(TaxonomyConcept.concept_type == concept_type)
     candidates = list(db.scalars(statement.limit(max(200, limit * 10))).all())
-    semantic: dict[str, float] = {}
-    if (
-        settings
-        and mode == "hybrid"
-        and settings.semantic_matching_enabled
-        and db.bind is not None
-        and db.bind.dialect.name == "postgresql"
-    ):
-        try:
-            vector = embed_texts(settings, [query])[0]
-            distance = TaxonomyEmbedding.embedding.cosine_distance(vector).label("distance")
-            semantic_statement = (
-                select(TaxonomyConcept, distance)
-                .join(TaxonomyEmbedding, TaxonomyEmbedding.concept_id == TaxonomyConcept.id)
-                .where(
-                    TaxonomyConcept.taxonomy == "ESCO",
-                    TaxonomyConcept.release == ESCO_RELEASE,
-                    TaxonomyConcept.language == language,
-                    TaxonomyEmbedding.model == settings.ollama_embedding_model,
-                )
-                .order_by(distance)
-                .limit(max(100, limit * 5))
-            )
-            if concept_type:
-                semantic_statement = semantic_statement.where(
-                    TaxonomyConcept.concept_type == concept_type
-                )
-            for concept, value in db.execute(semantic_statement).all():
-                semantic[concept.id] = max(0.0, min(1.0, 1 - float(value)))
-                if all(item.id != concept.id for item in candidates):
-                    candidates.append(concept)
-        except (ValueError, httpx.HTTPError):
-            semantic = {}
     uris = [item.uri for item in candidates]
     degree: defaultdict[str, int] = defaultdict(int)
     if uris:
@@ -490,16 +410,11 @@ def search_concepts(
             + [label_similarity(query, label) for label in item.alternative_labels[:50]]
         )
         graph = min(1.0, degree[item.uri] / 20)
-        semantic_score = semantic.get(item.id, 0.0)
         if mode == "lexical":
             score = lexical
-        elif semantic:
-            score = 0.55 * lexical + 0.35 * semantic_score + 0.10 * graph
         else:
             score = 0.85 * lexical + 0.15 * graph
-        ranked.append(
-            (score, item, {"lexical": lexical, "semantic": semantic_score, "graph": graph})
-        )
+        ranked.append((score, item, {"lexical": lexical, "graph": graph}))
     ranked.sort(key=lambda row: (row[0], row[1].preferred_label), reverse=True)
     return [
         {

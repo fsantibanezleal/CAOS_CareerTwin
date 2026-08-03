@@ -2,37 +2,33 @@
 
 ## Acquire and import
 
-Download ESCO 1.2.1 CSV archives directly from the official ESCO portal. Its privacy/email acceptance
-step is intentionally human-operated. Fetch the current pinned O*NET archive with
-`scripts/fetch-onet.ps1` or `scripts/fetch-onet.sh`. Dataset archives are operator artifacts: keep
-them outside Git. The CLI records the source URL, SHA-256, release, language, counts, and import time
-in `taxonomy_imports`; `/api/taxonomy/status` exposes that provenance without private content.
+Download ESCO 1.2.1 CSV archives directly from the official portal; its acceptance step remains
+human-operated. Fetch the pinned O*NET archive with `scripts/fetch-onet.*`. Keep archives outside Git.
 
 ```powershell
-careertwin import-esco --archive D:\private\esco-en.zip --language en --replace --replace-relations
-careertwin import-esco --archive D:\private\esco-es.zip --language es --replace --replace-relations
-careertwin import-onet --archive D:\private\db_30_3_text.zip --release 30.3 --replace
-careertwin embed-taxonomy --taxonomy ESCO --release 1.2.1 --language en
-careertwin embed-taxonomy --taxonomy ESCO --release 1.2.1 --language es
+./.venv/Scripts/careertwin import-esco --archive D:\private\esco-en.zip --language en --replace --replace-relations
+./.venv/Scripts/careertwin import-esco --archive D:\private\esco-es.zip --language es --replace --replace-relations
+./.venv/Scripts/careertwin import-onet --archive D:\private\db_30_3_text.zip --release 30.3 --replace
 ```
 
-Use the equivalent paths inside the app container for Compose/VPS operation. Imports are idempotent,
-release-labelled, and preserve graph-edge provenance. O*NET is enrichment only; its attribution and
-redistribution terms remain the operator's responsibility.
+The CLI records source URL, SHA-256, release, language, counts, and import time. Imports are
+idempotent and graph-edge provenance is retained. O*NET is English/US-specific enrichment; operators
+remain responsible for attribution and redistribution terms.
 
-The exact official sources, measured O*NET digest, attribution, and release-change gate are in
-[`../research/taxonomy-provenance.md`](../research/taxonomy-provenance.md).
+## Retrieval and benchmark
 
-## Benchmark and acceptance
+CareerTwin provides lexical and lexical-plus-graph-degree retrieval. The legacy `hybrid` API name is
+a wire-compatible alias of `lexical_graph`; it does not start or call a local embedding model.
 
-Run `python benchmarks/taxonomy_retrieval.py` with the production database and private Ollama service.
-Keep the generated result in the release evidence, not as an invented static score. Acceptance needs:
+Run the pinned bilingual benchmark against the imported database:
 
-- all 20 pinned English/Spanish cases executed;
-- hybrid MRR and recall not below lexical baselines;
-- p95 latency within the benchmark threshold;
-- exact embedding model and installed digest recorded;
-- `/api/taxonomy/status` counts consistent with imported releases.
+```powershell
+./.venv/Scripts/python.exe benchmarks/taxonomy_retrieval.py --output data/private/taxonomy-benchmark.json --require-nondegradation
+```
 
-When semantic inference is unavailable, the API intentionally falls back to lexical plus graph search.
-That fallback is degraded retrieval, not a reason to fabricate embeddings or taxonomy links.
+Acceptance requires every case, lexical/graph MRR and recall, p95 latency, imported release/count
+consistency, and no graph-weighting degradation. A future external embedding adapter requires its own
+ADR and multilingual privacy/cost/retention/quality benchmark before it may influence ranking.
+
+See [`taxonomy-provenance.md`](../research/taxonomy-provenance.md) for official sources, checksums,
+attribution, and release-change gates.

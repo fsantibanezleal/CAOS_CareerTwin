@@ -1,51 +1,88 @@
 # CareerTwin
 
-CareerTwin is an evidence-first, self-hostable career intelligence workbench for one professional
-per account and many job opportunities. It turns resumes, documents, GitHub evidence and manually
-curated experience into an auditable professional graph, then compares that graph with normalized
-job requirements using deterministic, versioned scoring.
+CareerTwin is an evidence-first career-research system for one professional per account and many
+job opportunities. The product is this public repository: domain modules, graph projections,
+deterministic matching and recommendations, connectors, external-provider agents, native harness,
+versioned Codex skills, web workbench, tests, ADRs, and runbooks.
 
-The public repository contains code, schemas, evaluation cases, documentation and reusable Codex
-skills. Personal documents, provider keys, account records and deployment credentials never belong
-in Git.
+The repository turns resumes, documents, GitHub evidence, and curated experience into an auditable
+professional graph. It captures and versions job requirements, builds an opportunity knowledge
+graph, calculates reproducible evidence alignment, and organizes applications, contacts, meetings,
+deadlines, and candidate-controlled improvement work.
 
-Implementation follows the validated plan in
-[`CAOS_MANAGE/plans/career-twin`](https://github.com/fsantibanezleal/CAOS_MANAGE/tree/develop/plans/career-twin).
+Personal documents, provider keys, tokens, passwords, account records, databases, exports, and
+deployment credentials never belong in Git.
 
-## What is included
+## Core capabilities
 
-- One private seeker workspace per account, with superuser account administration but no cross-user content browser.
-- Encrypted CV, resume, document, private Docling/OCR, manual-profile, GitHub, URL, paste, browser-extension, and job-document ingestion with visible durable progress/retry.
-- Proposed/confirmed/rejected evidence with exact source locators and a rich professional graph.
-- Reviewed opportunity requirements, deterministic versioned matching, separate eligibility, evidence coverage, and uncertainty bounds.
-- Evidence-linked editable recommendations, STAR accomplishment bank, immutable tailored résumés, cover-letter/interview/follow-up artifacts, and a candidate-owned board, contact book, agenda, calendar, and process analytics.
-- Lossless CareerTwin profile/evidence portability, JSON Resume exchange, immutable opportunity snapshots, and explicit named target portfolios.
-- Bounded LangGraph/Pydantic AI routing with private Ollama as the production default and optional xAI/Grok, OpenAI, Anthropic, and Google adapters, plus durable queue/cancel/retry checkpoints and redacted local traces. Agents propose; deterministic services commit only after approval. A contract double exists only in isolated tests.
-- Pinned ESCO 1.2.1 and O*NET 30.3 importers, graph relations, local multilingual embeddings, hybrid retrieval, and an EN/ES non-degradation benchmark.
-- Consent-bound Google/Microsoft calendar and read-only recruiting-email synchronization plus a revocable, explicit-action Manifest V3 opportunity-capture extension.
-- React workbench with Sigma/Graphology, modular ECharts, React Flow architecture diagrams, dark/light themes, English/Spanish chrome, accessible fallbacks, and reduced-motion behavior.
-- Docker Compose, VPS-ready persistent services, local PowerShell/POSIX scripts, CI/security/load/accessibility gates, and seven validated Codex skills.
+- One isolated seeker workspace per account. A superuser manages account lifecycle but cannot browse another person's career content.
+- Encrypted document/source storage, native PDF/DOCX/text/HTML extraction, optional external xAI image/scanned-PDF understanding, exact locators, and proposed/confirmed/rejected evidence.
+- Professional graph connecting profile, sources, evidence, skills, experience, education, and accomplishments.
+- Opportunity graph connecting roles, employers, atomic requirements, industries, seniority, locations, work modes, and target portfolios.
+- Network, adjacency-matrix, table, timeline, evidence-matrix, landscape, match, pipeline, agenda, and process-analysis views with EN/ES UI coverage.
+- Public URL, file, paste/manual, browser-capture, GitHub, Google/Microsoft calendar, and read-only recruiting-email connector boundaries.
+- Deterministic versioned matching with separate eligibility, coverage, uncertainty, and evidence bridges; scores are never hiring probabilities.
+- Evidence-linked readiness plans, STAR accomplishment bank, immutable tailored career artifacts, and candidate-owned pipeline/calendar.
+- Typed xAI/Grok, OpenAI, Anthropic, and Google adapters. No local inference service or silent provider fallback. Grok Voice streams browser-to-xAI using a short-lived credential.
+- Database-backed source/agent worker with durable queue, poll, cancel, retry, and conservative interruption recovery—no Redis or ARQ.
+- Eight validated repository-local Codex skills and a credential-safe local API harness.
 
-## Quick start
+## Native quick start
 
-Prerequisites are Python 3.11+ and Node.js 24 LTS. The Node baseline avoids an upstream React Router security advisory and matches the container and CI runtime.
+Prerequisites: Python 3.11 or newer, Node.js 24 LTS, and npm 11. Docker is not required.
 
 ```powershell
 ./scripts/setup.ps1
 ./scripts/bootstrap-superuser.ps1 -Email you@example.com -DisplayName "Your Name"
 ./scripts/dev.ps1
+./scripts/career.ps1 doctor
 ```
 
-On Linux or macOS use the equivalent `.sh` scripts. The default `dev` path uses Docker Compose and serves `http://localhost:8000`; pass `-Code` on PowerShell or `--code` on POSIX for FastAPI/Vite source mode. See [local development](docs/runbooks/local-development.md).
+On Linux/macOS use the equivalent `.sh` scripts. Setup creates repo-root `.venv`, installs the
+Python dependency contract, runs `npm ci` into ignored `frontend/node_modules`, creates an ignored
+local environment, and migrates the ignored SQLite database. Native development starts:
 
-## Documentation
+- Web workbench: `http://127.0.0.1:5173`
+- API and OpenAPI: `http://127.0.0.1:8000` and `/api/docs`
+- Database-backed worker: a separate repo-local Python process
 
-Start at [`Entry_point.md`](Entry_point.md), then use the [documentation map](docs/README.md). OpenAPI is served at `/api/docs` on a running instance. Architecture, product semantics, research, privacy, threat model, agent contracts, visualization rationale, ADRs, and deployment/backup runbooks are all versioned with the code.
+Stop with `scripts/stop.ps1`/`.sh`. Optional Compose packaging is explicit:
+`scripts/dev.ps1 -Docker` or `scripts/dev.sh --docker`.
 
-## Status
+## Use the repository without the web UI
 
-`0.2.5`: complete self-hosted career-research workflows with real private model/document services, encrypted sources, hybrid taxonomies, career artifacts, consent-bound personal connectors, distroless-compatible backup operations, fail-fast AES-256 key validation, rate-aware production verification, portable PostgreSQL restore checks, and one canonical version across every release surface. See `CHANGELOG.md` for release evidence and GitHub issues for tracked changes.
+Repository skills call the same authenticated product modules through the local harness:
+
+```powershell
+./scripts/career.ps1 profile-graph
+./scripts/career.ps1 profile-upload --file .\private\resume.pdf
+./scripts/career.ps1 opportunity-graph
+./scripts/career.ps1 match <opportunity-id>
+./scripts/career.ps1 chat "Which evidence gaps matter for this target?" --provider xai
+```
+
+The harness prompts for the password without echo, keeps cookies/CSRF state only in memory, accepts
+only relative `/api/...` paths, and prompts separately for memory-only connector tokens.
+
+## External AI configuration
+
+The deterministic core, graphs, pipeline, matching, and basic document parsing work without an LLM.
+Chat and richer typed extraction require a managed provider key in ignored `.env` or deployment
+secret storage. Set `LLM_DEFAULT_PROVIDER` to `xai`, `openai`, `anthropic`, or `google` and provide
+the corresponding key. Grok Voice and image/scanned-PDF understanding require `XAI_API_KEY`.
+
+CareerTwin never runs Ollama, Docling, an embedding server, or an audio model locally or on the VPS.
+
+## Documentation and governance
+
+Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md), and active
+[`ADR 0026`](docs/adr/0026-native-first-external-api-repository-product.md). The validated product
+plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
+tests/docs → pull request to `develop` → reviewed deployment.
+
+Version `0.3.0` implements the native-first, external-API-only repository architecture. See
+[`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [`LICENSE`](LICENSE).

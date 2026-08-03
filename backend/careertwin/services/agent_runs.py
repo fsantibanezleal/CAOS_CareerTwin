@@ -123,7 +123,7 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
             run.status = "cancelled"
             run.finished_at = utcnow()
             return {"status": "cancelled"}
-        if run.status not in {"queued", "retrying"}:
+        if run.status not in {"queued", "retrying", "claimed"}:
             return {"status": run.status}
         context, _, evidence_count = _context(db, run)
         provider = provider_registry(settings).get(run.provider)
@@ -185,6 +185,7 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
             return {"status": "cancelled"}
         _, actor, evidence_count = _context(db, run)
         citations = [item.model_dump() for item in draft.citations]
+        usage = provider.usage()
         assistant = AgentMessage(
             workspace_id=workspace_id,
             conversation_id=run.conversation_id,
@@ -193,7 +194,7 @@ def execute_agent_run(workspace_id: str, run_id: str) -> dict[str, object]:
             specialist=draft.specialist,
             provider=run.provider,
             citations=citations,
-            usage={},
+            usage=usage,
         )
         db.add(assistant)
         db.flush()

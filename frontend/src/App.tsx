@@ -18,7 +18,7 @@ const TodayPage = lazy(() => import('./pages/TodayPage').then((module) => ({ def
 export default function App() {
   const client = useQueryClient()
   const session = useQuery({ queryKey: ['session'], queryFn: () => api<User>('/api/auth/me'), retry: false })
-  if (session.isPending) return <div className="boot-screen"><Loading label="Opening CareerTwin" /></div>
+  if (session.isPending) return <I18nProvider><div className="boot-screen"><Loading label="Opening CareerTwin" /></div></I18nProvider>
   if (session.error || !session.data) return <I18nProvider><Login onSuccess={(user) => client.setQueryData(['session'], user)} /></I18nProvider>
   const user = session.data
   return (
