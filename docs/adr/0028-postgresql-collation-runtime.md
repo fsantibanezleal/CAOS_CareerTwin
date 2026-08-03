@@ -20,7 +20,7 @@ rejects a transition between a known version and `NULL`.
 The hosted database image uses an immutable multi-platform Wolfi base digest plus exact PostgreSQL
 17.10 package versions. Its glibc runtime can resolve and compare the cluster's `en_US.utf8`
 collation version without reintroducing the high-severity findings in the Debian runtime variants.
-pgvector remains compiled from its exact commit and verified source checksum in a multi-stage build;
+pgvector 0.8.6 remains compiled from its exact commit and verified source checksum in a multi-stage build;
 the compiler and headers do not enter the runtime image. The PostgreSQL server, client, contrib, and
 OCI entrypoint packages are all version-pinned so the deployment contract remains on major 17.
 

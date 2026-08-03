@@ -2,8 +2,8 @@ ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:003627df3c1e1bba0c41
 
 FROM ${WOLFI_IMAGE} AS vector-builder
 
-ARG PGVECTOR_COMMIT=778dacf20c07caf904557a88705142631818d8cb
-ARG PGVECTOR_SHA256=4c33cf053329784ba6d992d05c9588b93789e907a7511f20ff5a5a5b8a0703c1
+ARG PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c
+ARG PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299
 
 RUN apk add --no-cache \
         build-base=1-r9 \
@@ -40,7 +40,7 @@ ENV LANG=en_US.UTF-8 \
     PG_VERSION=17.10
 
 LABEL org.opencontainers.image.title="CareerTwin PostgreSQL with pgvector" \
-      org.opencontainers.image.description="PostgreSQL 17.10 on Wolfi/glibc with pgvector 0.8.1 and verifiable collation provenance" \
+      org.opencontainers.image.description="PostgreSQL 17.10 on Wolfi/glibc with pgvector 0.8.6 and verifiable collation provenance" \
       org.opencontainers.image.source="https://github.com/fsantibanezleal/CAOS_CareerTwin"
 
 COPY --from=vector-builder /opt/pgvector-root/ /

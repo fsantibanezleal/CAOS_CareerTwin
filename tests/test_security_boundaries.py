@@ -175,8 +175,8 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     assert "glibc-locale-en=2.43-r11" in dockerfile
     assert "gosu=1.19-r13" in dockerfile
     assert "posix-libc-utils-bin=2.43-r11" in dockerfile
-    assert "PGVECTOR_COMMIT=778dacf20c07caf904557a88705142631818d8cb" in dockerfile
-    assert "PGVECTOR_SHA256=4c33cf053329784ba6d992d05c9588b93789e907a7511f20ff5a5a5b8a0703c1" in dockerfile
+    assert "PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c" in dockerfile
+    assert "PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299" in dockerfile
     runtime_stage = dockerfile.split("FROM ${WOLFI_IMAGE}", maxsplit=2)[-1]
     assert "apt-get" not in runtime_stage
     assert "build-essential" not in runtime_stage
