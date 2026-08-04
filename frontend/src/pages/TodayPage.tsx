@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, CalendarClock, CheckCircle2, CircleDashed, FileCheck2, Radar, Sparkles } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, CalendarClock, Check, CheckCircle2, CircleDashed, CircleUserRound, FileCheck2, Gauge, Radar, Sparkles } from 'lucide-react'
 import { Link } from 'react-router'
 import { api } from '../api'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel, Score, StatCard } from '../components/Primitives'
@@ -14,9 +14,20 @@ export function TodayPage() {
   if (query.error) return <ErrorState error={query.error} retry={() => query.refetch()} />
   const data = query.data
   const applicationTotal = Object.values(data.applications_by_stage).reduce((sum, value) => sum + value, 0)
+  const journey = [
+    { done: data.profile_completeness >= 0.25 || data.confirmed_evidence > 0, title: t('Build a trusted profile'), detail: t('Add your direction and confirm evidence.'), to: '/profile', icon: <CircleUserRound /> },
+    { done: data.active_opportunities > 0, title: t('Capture a target role'), detail: t('Keep its source and review every requirement.'), to: '/opportunities', icon: <BriefcaseBusiness /> },
+    { done: data.global_alignment !== undefined, title: t('Run an evidence match'), detail: t('Inspect eligibility, coverage, and uncertainty.'), to: '/matches', icon: <Gauge /> },
+    { done: applicationTotal > 0 || data.upcoming_tasks.length > 0, title: t('Plan the next move'), detail: t('Track an application, deadline, meeting, or task.'), to: '/pipeline', icon: <CalendarClock /> },
+  ]
+  const journeyComplete = journey.filter((step) => step.done).length
   return (
     <>
       <PageHeader eyebrow={t('Your career control room')} title={t('Today, with evidence in view.')} description={t('One place for profile coverage, opportunity signals, application momentum, and the next concrete action.')} actions={<a className="button secondary" href="/api/workspace/export"><FileCheck2 size={16} /> {t('Export my data')}</a>} />
+      <section className={`journey-card ${journeyComplete === journey.length ? 'complete' : ''}`} aria-labelledby="journey-title">
+        <header><div><span className="eyebrow"><Sparkles /> {t('Guided workflow')}</span><h2 id="journey-title">{t(journeyComplete === journey.length ? 'Your career system is connected.' : 'One clear path from evidence to action.')}</h2><p>{t(journeyComplete === journey.length ? 'Keep each signal current as your goals and opportunities change.' : 'Complete these milestones in order or jump directly to the step you need.')}</p></div><div className="journey-progress" aria-label={t('{done} of {total} milestones complete', { done: journeyComplete, total: journey.length })}><strong>{journeyComplete}/{journey.length}</strong><span><i style={{ width: `${journeyComplete / journey.length * 100}%` }} /></span></div></header>
+        <ol>{journey.map((step, index) => <li key={step.to} className={step.done ? 'done' : ''}><Link to={step.to}><span>{step.done ? <Check /> : step.icon}</span><small>{t('Step {number}', { number: index + 1 })}</small><b>{step.title}</b><p>{step.detail}</p><ArrowRight /></Link></li>)}</ol>
+      </section>
       <section className="stats-grid">
         <StatCard label={t('Profile completeness')} value={`${Math.round(data.profile_completeness * 100)}%`} detail={plural(data.confirmed_evidence, '{count} confirmed evidence claim', '{count} confirmed evidence claims')} tone="cyan" />
         <StatCard label={t('Portfolio alignment')} value={<Score value={data.global_alignment} />} detail={t('{count}% evidence coverage', { count: Math.round(data.global_alignment_coverage * 100) })} tone="violet" />
