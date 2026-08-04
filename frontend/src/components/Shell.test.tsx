@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { I18nProvider } from '../i18n'
@@ -18,7 +18,7 @@ const user: User = {
 }
 
 describe('shared authenticated workbench shell', () => {
-  it('preserves CareerTwin navigation, product controls, content landmark, and overlays', () => {
+  it('preserves CareerTwin navigation, product controls, content landmark, keyboard access, and overlays', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const { container } = render(
       <QueryClientProvider client={client}>
@@ -38,5 +38,13 @@ describe('shared authenticated workbench shell', () => {
     expect(screen.getByRole('button', { name: /Career copilot/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /System architecture/i })).toBeInTheDocument()
     expect(screen.getByText('Profile evidence')).toBeInTheDocument()
+    const account = screen.getByRole('button', { name: 'Account menu' })
+    expect(account).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(account)
+    expect(account).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(account).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
+    expect(container.querySelector('.chat-drawer')).toHaveClass('open')
   })
 })

@@ -19,7 +19,9 @@ deployment credentials never belong in Git.
 - Encrypted document/source storage, native PDF/DOCX/text/HTML extraction, optional external xAI image/scanned-PDF understanding, exact locators, and proposed/confirmed/rejected evidence.
 - Professional graph connecting profile, sources, evidence, skills, experience, education, and accomplishments.
 - Opportunity graph connecting roles, employers, atomic requirements, industries, seniority, locations, work modes, and target portfolios.
-- Network, adjacency-matrix, table, timeline, evidence-matrix, landscape, match, pipeline, agenda, and process-analysis views with EN/ES UI coverage.
+- Guided evidence-to-action workflow plus deterministic network, inspectable adjacency-matrix/table,
+  duration timeline, evidence-matrix, ranked landscape, gap-first match, pipeline, agenda, and
+  process-analysis views with EN/ES UI coverage, reduced motion, and accessible data fallbacks.
 - Public URL, file, paste/manual, browser-capture, GitHub, Google/Microsoft calendar, and read-only recruiting-email connector boundaries.
 - Deterministic versioned matching with separate eligibility, coverage, uncertainty, and evidence bridges; scores are never hiring probabilities.
 - Evidence-linked readiness plans, STAR accomplishment bank, immutable tailored career artifacts, and candidate-owned pipeline/calendar.
@@ -81,8 +83,9 @@ Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md)
 plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
 tests/docs → pull request to `develop` → reviewed deployment.
 
-Version `0.4.1` implements the native-first, external-API-only repository architecture and consumes
-the public CAOS shared authenticated workbench frame. See
+Version `0.5.0` adds the decision-grade guided experience and accessible dynamic-visualization
+contract on the native-first, external-API-only repository architecture and public CAOS shared
+authenticated workbench frame. See
 [`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 
 ## License
