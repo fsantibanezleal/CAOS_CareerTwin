@@ -32,3 +32,4 @@ Records are active from the release in which they were accepted unless supersede
 | [0026](0026-native-first-external-api-repository-product.md) | Native-first repo product, database worker, external AI only |
 | [0027](0027-shared-authenticated-workbench-shell.md) | Shared authenticated frame with product-owned controls |
 | [0028](0028-postgresql-collation-runtime.md) | Match the PostgreSQL runtime libc to persisted collation provenance |
+| [0029](0029-decision-grade-experience-contract.md) | Guided work, explainable dynamic views, and accessible analytical fallbacks |

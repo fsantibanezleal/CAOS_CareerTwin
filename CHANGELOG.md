@@ -4,6 +4,31 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-04
+
+### Added
+
+- Add an evidence-derived four-step dashboard journey from trusted profile through target role,
+  match review, and next action, with responsive progress and direct work-surface links.
+- Add deterministic bounded ForceAtlas2 relationship layouts, fit/reset and selected-neighborhood
+  controls, and a shared inspector across network, adjacency-matrix, and table graph lenses.
+- Add selectable ranked opportunity-landscape lenses, zoomable career-duration ranges, exact data
+  tables, and lowest-supported-first match category explanations.
+
+### Changed
+
+- Make ECharts theme-reactive, reduced-motion aware, container-responsive, and ARIA/decal described;
+  escape user-controlled career labels before building chart tooltips.
+- Raise graph matrix targets to 26 CSS pixels, improve visualization text/contrast, strengthen focus
+  indication and responsive layouts, and make the advertised `Ctrl/Command+K` shortcut functional.
+- Extend automated accessibility from login to the authenticated shell and run color-contrast checks
+  instead of disabling them.
+
+### Fixed
+
+- Correct corrupted Spanish conversation strings and provide complete Spanish copy for the new
+  guidance, graph, and analytical controls.
+
 ## [0.4.1] - 2026-08-03
 
 ### Fixed
