@@ -1,6 +1,7 @@
 import { Background, Controls, MarkerType, ReactFlow, type Edge, type Node } from '@xyflow/react'
 import { Database, Network, ShieldCheck, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useI18n } from '../i18n'
 
 const diagrams = {
   system: {
@@ -62,12 +63,13 @@ const diagrams = {
 type DiagramKey = keyof typeof diagrams
 
 export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useI18n()
   const [active, setActive] = useState<DiagramKey>('system')
   const graph = diagrams[active]
   const nodes = useMemo<Node[]>(() => graph.nodes.map(([id, label, x, y]) => ({
-    id: String(id), position: { x: Number(x), y: Number(y) }, data: { label },
+    id: String(id), position: { x: Number(x), y: Number(y) }, data: { label: t(String(label)) },
     className: `architecture-node node-${id}`, sourcePosition: undefined, targetPosition: undefined,
-  })), [graph])
+  })), [graph, t])
   const edges = useMemo<Edge[]>(() => graph.edges.map(([source, target], index) => ({
     id: `${source}-${target}-${index}`, source, target, animated: active === 'agent',
     markerEnd: { type: MarkerType.ArrowClosed },
@@ -77,18 +79,18 @@ export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section className="architecture-modal" role="dialog" aria-modal="true" aria-labelledby="architecture-title">
         <header>
-          <div><span className="eyebrow"><Network size={14} /> Inspectable by design</span><h2 id="architecture-title">CareerTwin architecture</h2><p>Six views of the public code, private data, deterministic decisions, and bounded agent layer.</p></div>
-          <button className="icon-button" onClick={onClose} aria-label="Close architecture"><X /></button>
+          <div><span className="eyebrow"><Network size={14} /> {t('Inspectable by design')}</span><h2 id="architecture-title">{t('CareerTwin architecture')}</h2><p>{t('Six views of the public code, private data, deterministic decisions, and bounded agent layer.')}</p></div>
+          <button className="icon-button" onClick={onClose} aria-label={t('Close architecture')}><X /></button>
         </header>
-        <nav className="architecture-tabs" aria-label="Architecture diagrams">
-          {(Object.keys(diagrams) as DiagramKey[]).map((key) => <button key={key} className={active === key ? 'active' : ''} onClick={() => setActive(key)}>{diagrams[key].label}</button>)}
+        <nav className="architecture-tabs" aria-label={t('Architecture diagrams')}>
+          {(Object.keys(diagrams) as DiagramKey[]).map((key) => <button key={key} className={active === key ? 'active' : ''} onClick={() => setActive(key)}>{t(diagrams[key].label)}</button>)}
         </nav>
-        <div className="architecture-canvas" aria-label={`${graph.label} architecture diagram`}>
+        <div className="architecture-canvas" aria-label={t('{name} architecture diagram', { name: t(graph.label) })}>
           <ReactFlow nodes={nodes} edges={edges} fitView minZoom={0.5} maxZoom={1.5} nodesDraggable={false} nodesConnectable={false} elementsSelectable>
             <Background gap={24} size={1} /><Controls showInteractive={false} />
           </ReactFlow>
         </div>
-        <footer><span><ShieldCheck /> Canonical changes require human approval</span><span><Database /> Tenant data stays outside Git</span><a href="/api/docs" target="_blank" rel="noreferrer">OpenAPI contract</a></footer>
+        <footer><span><ShieldCheck /> {t('Canonical changes require human approval')}</span><span><Database /> {t('Tenant data stays outside Git')}</span><a href="/api/docs" target="_blank" rel="noreferrer">{t('OpenAPI contract')}</a></footer>
       </section>
     </div>
   )
