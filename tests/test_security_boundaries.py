@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import socket
 from pathlib import Path
 
@@ -164,7 +165,7 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     dockerfile = (repository_root / "docker" / "postgres" / "Dockerfile").read_text()
     assert (
         "cgr.dev/chainguard/wolfi-base:latest@sha256:"
-        "003627df3c1e1bba0c4116afcddb314aca9594ee2328c7e876a8081a6c988b2e"
+        "0a8fd427de5882aed77471b0a432c3675eda6b6a0ae952b5d640b46da628cdbe"
         in dockerfile
     )
     assert "17.10-alpine" not in dockerfile
@@ -172,11 +173,32 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     assert "17.10-trixie" not in dockerfile
     assert "postgresql-17=17.10-r1" in dockerfile
     assert "postgresql-17-oci-entrypoint=17.10-r1" in dockerfile
-    assert "glibc-locale-en=2.43-r11" in dockerfile
-    assert "gosu=1.19-r13" in dockerfile
-    assert "posix-libc-utils-bin=2.43-r11" in dockerfile
+    assert "glibc-locale-en=2.43-r13" in dockerfile
+    assert "gosu=1.19-r14" in dockerfile
+    assert "posix-libc-utils-bin=2.43-r13" in dockerfile
     assert "PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c" in dockerfile
     assert "PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299" in dockerfile
     runtime_stage = dockerfile.split("FROM ${WOLFI_IMAGE}", maxsplit=2)[-1]
     assert "apt-get" not in runtime_stage
     assert "build-essential" not in runtime_stage
+
+
+def test_container_vex_is_exact_and_evidence_backed() -> None:
+    """Permit only the reviewed Wolfi backport while every other High finding remains fatal."""
+    repository_root = Path(__file__).parents[1]
+    vex_path = repository_root / "security" / "openvex.json"
+    vex = json.loads(vex_path.read_text(encoding="utf-8"))
+    statement = vex["statements"][0]
+
+    assert statement["vulnerability"]["name"] == "CVE-2026-54876"
+    assert statement["status"] == "fixed"
+    assert {product["@id"] for product in statement["products"]} == {
+        "pkg:apk/wolfi/libcrypto3@3.6.3-r4?arch=x86_64&distro=wolfi-20230201&upstream=openssl",
+        "pkg:apk/wolfi/libssl3@3.6.3-r4?arch=x86_64&distro=wolfi-20230201&upstream=openssl",
+    }
+    assert "155b5fe0f93365e6df1c56ee3606b121080c6c12" in statement["status_notes"]
+
+    workflow = (repository_root / ".github" / "workflows" / "container.yml").read_text()
+    assert "severity-cutoff: high" in workflow
+    assert "fail-build: true" in workflow
+    assert "vex: security/openvex.json" in workflow
