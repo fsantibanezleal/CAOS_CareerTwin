@@ -1,4 +1,4 @@
-ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:003627df3c1e1bba0c4116afcddb314aca9594ee2328c7e876a8081a6c988b2e
+ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:0a8fd427de5882aed77471b0a432c3675eda6b6a0ae952b5d640b46da628cdbe
 
 FROM ${WOLFI_IMAGE} AS vector-builder
 
@@ -23,9 +23,9 @@ RUN addgroup -S -g 70 postgres \
     && adduser -S -D -u 70 -G postgres -h /home/postgres -s /bin/sh postgres \
     && apk add --no-cache \
         ca-certificates-bundle \
-        glibc-locale-en=2.43-r11 \
-        gosu=1.19-r13 \
-        posix-libc-utils-bin=2.43-r11 \
+        glibc-locale-en=2.43-r13 \
+        gosu=1.19-r14 \
+        posix-libc-utils-bin=2.43-r13 \
         postgresql-17=17.10-r1 \
         postgresql-17-client=17.10-r1 \
         postgresql-17-contrib=17.10-r1 \
