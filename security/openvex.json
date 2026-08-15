@@ -1,0 +1,25 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://github.com/fsantibanezleal/CAOS_CareerTwin/security/openvex",
+  "author": "https://github.com/fsantibanezleal/CAOS_CareerTwin",
+  "role": "Document Creator",
+  "timestamp": "2026-08-15T17:31:41Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2026-54876"
+      },
+      "products": [
+        {
+          "@id": "pkg:apk/wolfi/libcrypto3@3.6.3-r4?arch=x86_64&distro=wolfi-20230201&upstream=openssl"
+        },
+        {
+          "@id": "pkg:apk/wolfi/libssl3@3.6.3-r4?arch=x86_64&distro=wolfi-20230201&upstream=openssl"
+        }
+      ],
+      "status": "fixed",
+      "status_notes": "Wolfi openssl 3.6.3-r4 (epoch 4) cherry-picks upstream OpenSSL commit 155b5fe0f93365e6df1c56ee3606b121080c6c12 for CVE-2026-54876. Evidence and retirement rules are recorded in docs/security/container-vulnerability-assessments.md."
+    }
+  ]
+}
