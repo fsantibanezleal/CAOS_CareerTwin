@@ -4,6 +4,19 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-15
+
+### Changed
+
+- Refresh the pinned Python and frontend dependency contracts and the GitHub Actions toolchain.
+- Rebuild the application and PostgreSQL containers from current immutable, vulnerability-scanned
+  base images while preserving the PostgreSQL 17.10, pgvector 0.8.6, and collation contracts.
+
+### Security
+
+- Remove the remaining known high-severity base-image findings without weakening the non-root
+  runtime, digest pinning, SBOM, secret scanning, or exact dependency gates.
+
 ## [0.5.0] - 2026-08-04
 
 ### Added
