@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-08-15
+
+### Fixed
+
+- Expose language and theme actions inside the account menu so phone-width users retain both
+  preference controls when the compact header hides their duplicate top-bar icons.
+
 ## [0.5.1] - 2026-08-15
 
 ### Changed

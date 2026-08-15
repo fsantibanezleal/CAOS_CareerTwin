@@ -83,10 +83,10 @@ Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md)
 plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
 tests/docs → pull request to `develop` → reviewed deployment.
 
-Version `0.5.1` carries the decision-grade guided experience and accessible dynamic-visualization
-contract on refreshed, vulnerability-scanned dependency and container foundations. The product
-remains native-first, external-API-only, and built on the public CAOS shared authenticated
-workbench frame. See
+Version `0.5.2` carries the decision-grade guided experience and accessible dynamic-visualization
+contract on refreshed, vulnerability-scanned dependency and container foundations. It also keeps
+language and theme controls available in the compact phone account menu. The product remains
+native-first, external-API-only, and built on the public CAOS shared authenticated workbench frame. See
 [`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 
 ## License
