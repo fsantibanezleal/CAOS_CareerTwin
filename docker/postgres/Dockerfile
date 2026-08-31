@@ -109,4 +109,4 @@ RUN test "$(postgres --version)" = "postgres (PostgreSQL) 17.11" \
     && ! command -v make
 
 ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
-CMD ["postgres"]
+CMD ["postgres", "-c", "listen_addresses=*"]

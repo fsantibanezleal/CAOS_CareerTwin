@@ -29,7 +29,8 @@ jobs:
             # pg_isready also succeeds against the temporary bootstrap server. Wait for the
             # entrypoint to finish that server's shutdown and hand PID 1 to the permanent one.
             if docker logs careertwin-postgres 2>&1 | grep -q "PostgreSQL init process complete; ready for start up." \
-              && docker exec careertwin-postgres pg_isready -U careertwin -d careertwin_test; then
+              && docker exec careertwin-postgres pg_isready -U careertwin -d careertwin_test \
+              && timeout 1 bash -c '</dev/tcp/127.0.0.1/5432'; then
               exit 0
             fi
             sleep 2
