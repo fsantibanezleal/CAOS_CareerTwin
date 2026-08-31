@@ -33,3 +33,4 @@ Records are active from the release in which they were accepted unless supersede
 | [0027](0027-shared-authenticated-workbench-shell.md) | Shared authenticated frame with product-owned controls |
 | [0028](0028-postgresql-collation-runtime.md) | Match the PostgreSQL runtime libc to persisted collation provenance |
 | [0029](0029-decision-grade-experience-contract.md) | Guided work, explainable dynamic views, and accessible analytical fallbacks |
+| [0030](0030-viewport-owned-workbench-scrolling.md) | Fixed document viewport with one workbench content scroll owner |
