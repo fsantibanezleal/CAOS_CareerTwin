@@ -5,7 +5,7 @@ import Graph from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { Focus, RotateCcw, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type { NodeHoverDrawingFunction } from 'sigma/rendering'
+import type { NodeHoverDrawingFunction, NodeLabelDrawingFunction } from 'sigma/rendering'
 import { useI18n } from '../i18n'
 import type { Landscape, MatchRun, OpportunityGraphData, ProfileGraphData } from '../types'
 import { EChart, type ChartTokens } from './EChart'
@@ -46,6 +46,17 @@ function useGraphTheme(): GraphThemeTokens {
     return () => observer.disconnect()
   }, [])
   return tokens
+}
+
+function graphNodeLabel(tokens: GraphThemeTokens): NodeLabelDrawingFunction {
+  return (context, data, settings) => {
+    if (typeof data.label !== 'string' || !data.label) return
+    const limit = 34
+    const label = data.label.length > limit ? `${data.label.slice(0, limit - 1).trimEnd()}â€¦` : data.label
+    context.fillStyle = tokens.label
+    context.font = `${settings.labelWeight} ${settings.labelSize}px ${settings.labelFont}`
+    context.fillText(label, data.x + data.size + 3, data.y + settings.labelSize / 3)
+  }
 }
 
 function graphNodeHover(tokens: GraphThemeTokens): NodeHoverDrawingFunction {
@@ -214,7 +225,7 @@ function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph'];
   const [resetSignal, setResetSignal] = useState(0)
   const types = useMemo(() => [...new Set(data.nodes.map((node) => node.type))].sort(), [data.nodes])
   const visibleNodes = useMemo(() => data.nodes.filter((node) => (!type || node.type === type) && (!query.trim() || node.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))), [data.nodes, query, type])
-  const sigmaSettings = useMemo(() => ({ renderEdgeLabels: false, labelDensity: 0.11, labelGridCellSize: 80, labelSize: 12, labelWeight: '600', labelColor: { color: graphTheme.label }, defaultEdgeColor: graphTheme.edge, defaultDrawNodeHover: graphNodeHover(graphTheme), allowInvalidContainer: true, enableEdgeEvents: true, zIndex: true }), [graphTheme])
+  const sigmaSettings = useMemo(() => ({ renderEdgeLabels: false, labelDensity: 0.08, labelGridCellSize: 120, labelRenderedSizeThreshold: 8, labelSize: 12, labelWeight: '600', labelColor: { color: graphTheme.label }, defaultEdgeColor: graphTheme.edge, defaultDrawNodeLabel: graphNodeLabel(graphTheme), defaultDrawNodeHover: graphNodeHover(graphTheme), allowInvalidContainer: true, enableEdgeEvents: true, zIndex: true }), [graphTheme])
   const activeSelectedId = selectedId && data.nodes.some((node) => node.id === selectedId) ? selectedId : undefined
   const inspector = <GraphInspector data={data} selectedId={activeSelectedId} variant={variant} onSelect={setSelectedId} onClose={() => { setSelectedId(undefined); setFocusSelection(false) }} />
   if (!data.nodes.length) return <EmptyState title={t(variant === 'profile' ? 'Your constellation is waiting' : 'Your opportunity network is waiting')} description={t(variant === 'profile' ? 'Confirm evidence and add skills to connect your professional story.' : 'Capture opportunities and review their requirements to reveal your search network.')} />

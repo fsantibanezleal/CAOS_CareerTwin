@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-08-31
+
+### Fixed
+
+- Prevent long evidence labels from colliding across dense Sigma clusters by reserving more label
+  space and bounding overview copy while preserving full text in hover, inspector and table paths.
+
 ## [0.5.7] - 2026-08-31
 
 ### Fixed
