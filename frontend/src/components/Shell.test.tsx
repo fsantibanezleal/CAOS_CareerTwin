@@ -51,6 +51,7 @@ describe('shared authenticated workbench shell', () => {
     expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content')
+    expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1')
     expect(screen.getByRole('button', { name: /Search or ask CareerTwin/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Career copilot/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /System architecture/i })).toBeInTheDocument()
