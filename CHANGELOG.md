@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-08-31
+
+### Fixed
+
+- Make Sigma network surfaces inherit the active workbench theme instead of showing the renderer's
+  default white background inside dark profile and opportunity views.
+
 ## [0.5.5] - 2026-08-31
 
 ### Fixed
