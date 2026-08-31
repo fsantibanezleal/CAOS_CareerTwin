@@ -5,6 +5,7 @@ import Graph from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { Focus, RotateCcw, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import type { NodeHoverDrawingFunction } from 'sigma/rendering'
 import { useI18n } from '../i18n'
 import type { Landscape, MatchRun, OpportunityGraphData, ProfileGraphData } from '../types'
 import { EChart, type ChartTokens } from './EChart'
@@ -15,6 +16,58 @@ const palette: Record<string, string> = {
   accomplishment: '#f5d76e', evidence: '#6be39a', source: '#84a5ff', requirement: '#ff7d91',
   opportunity: '#7c6cff', employer: '#84a5ff', industry: '#ed77d4', seniority: '#ffb45e',
   location: '#6be39a', work_mode: '#3ddbd9', target_set: '#f5d76e', unknown: '#8090a8',
+}
+
+type GraphThemeTokens = {
+  label: string
+  surface: string
+  line: string
+  edge: string
+  focusedEdge: string
+  dimmedNode: string
+}
+
+// Canvas renderers cannot consume CSS custom properties directly. Keep these values aligned with
+// the workbench tokens in styles.css, and observe the root theme so an open graph changes live.
+const graphThemes: Record<'dark' | 'light', GraphThemeTokens> = {
+  dark: { label: '#edf3fc', surface: '#0e1421', line: '#243149', edge: '#697991', focusedEdge: '#a9bce0', dimmedNode: '#293246' },
+  light: { label: '#152036', surface: '#ffffff', line: '#d7e0ec', edge: '#738198', focusedEdge: '#46566f', dimmedNode: '#c7d1df' },
+}
+
+function currentGraphTheme(): GraphThemeTokens {
+  return graphThemes[document.documentElement.dataset.theme === 'light' ? 'light' : 'dark']
+}
+
+function useGraphTheme(): GraphThemeTokens {
+  const [tokens, setTokens] = useState(currentGraphTheme)
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTokens(currentGraphTheme()))
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+  return tokens
+}
+
+function graphNodeHover(tokens: GraphThemeTokens): NodeHoverDrawingFunction {
+  return (context, data, settings) => {
+    if (typeof data.label !== 'string' || !data.label) return
+    context.save()
+    context.font = `${settings.labelWeight} ${settings.labelSize}px ${settings.labelFont}`
+    const left = data.x + data.size
+    const top = data.y - settings.labelSize / 2 - 4
+    const width = context.measureText(data.label).width + 10
+    const height = settings.labelSize + 8
+    context.beginPath()
+    context.roundRect(left, top, width, height, 6)
+    context.fillStyle = tokens.surface
+    context.fill()
+    context.strokeStyle = tokens.line
+    context.lineWidth = 1
+    context.stroke()
+    context.fillStyle = tokens.label
+    context.fillText(data.label, data.x + data.size + 3, data.y + settings.labelSize / 3)
+    context.restore()
+  }
 }
 
 type GraphNode = ProfileGraphData['graph']['nodes'][number]
@@ -33,7 +86,7 @@ function stablePosition(id: string) {
   return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius }
 }
 
-function RelationshipGraphLoader({ data }: { data: ProfileGraphData['graph'] }) {
+function RelationshipGraphLoader({ data, edgeColor }: { data: ProfileGraphData['graph']; edgeColor: string }) {
   const loadGraph = useLoadGraph()
   useEffect(() => {
     const graph = new Graph({ multi: true, type: 'undirected' })
@@ -53,7 +106,7 @@ function RelationshipGraphLoader({ data }: { data: ProfileGraphData['graph'] }) 
     data.edges.forEach((edge, index) => {
       if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
         graph.addEdgeWithKey(edge.id || `edge-${index}`, edge.source, edge.target, {
-          color: '#536079', size: Math.max(0.8, Number(edge['weight'] ?? 1) * 1.5), relation: String(edge['type'] ?? 'related'), record: edge,
+          color: edgeColor, size: Math.max(0.8, Number(edge['weight'] ?? 1) * 1.5), relation: String(edge['type'] ?? 'related'), record: edge,
         })
       }
     })
@@ -77,11 +130,11 @@ function RelationshipGraphLoader({ data }: { data: ProfileGraphData['graph'] }) 
       graph.setNodeAttribute(id, 'size', attributes.nodeType === 'profile' ? 19 : attributes.nodeType === 'opportunity' || attributes.nodeType === 'target_set' ? 10 + Math.sqrt(Math.max(1, degree)) * 3 : 6 + Math.sqrt(Math.max(1, degree)) * 3 + Number(attributes.record?.strength ?? 0) * 4)
     })
     loadGraph(graph)
-  }, [data, loadGraph])
+  }, [data, edgeColor, loadGraph])
   return null
 }
 
-function RelationshipGraphController({ query, type, selected, focusSelection, resetSignal, onSelect }: { query: string; type: string; selected?: string; focusSelection: boolean; resetSignal: number; onSelect: (id?: string) => void }) {
+function RelationshipGraphController({ query, type, selected, focusSelection, resetSignal, theme, onSelect }: { query: string; type: string; selected?: string; focusSelection: boolean; resetSignal: number; theme: GraphThemeTokens; onSelect: (id?: string) => void }) {
   const sigma = useSigma()
   const registerEvents = useRegisterEvents()
   const setSettings = useSetSettings()
@@ -103,7 +156,7 @@ function RelationshipGraphController({ query, type, selected, focusSelection, re
         const matchesType = !type || attributes.nodeType === type
         const matchesQuery = !normalized || String(attributes.label ?? '').toLocaleLowerCase().includes(normalized)
         if (!matchesType || !matchesQuery || (neighbors && !neighbors.has(node))) {
-          result.color = '#293246'
+          result.color = theme.dimmedNode
           result.label = ''
         }
         if (node === hovered || node === selected) {
@@ -118,14 +171,14 @@ function RelationshipGraphController({ query, type, selected, focusSelection, re
         if (contextNode && !graph.extremities(edge).includes(contextNode)) {
           result.hidden = true
         } else if (contextNode) {
-          result.color = '#8da4cc'
+          result.color = theme.focusedEdge
           result.size = Number(attributes.size ?? 1) * 1.8
         }
         return result
       },
     })
     sigma.refresh()
-  }, [focusSelection, hovered, query, selected, setSettings, sigma, type])
+  }, [focusSelection, hovered, query, selected, setSettings, sigma, theme, type])
   useEffect(() => {
     void sigma.getCamera().animatedReset({ duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 })
   }, [resetSignal, sigma])
@@ -152,6 +205,7 @@ function GraphInspector({ data, selectedId, variant, onSelect, onClose }: { data
 
 function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph']; variant: 'profile' | 'opportunity' }) {
   const { t } = useI18n()
+  const graphTheme = useGraphTheme()
   const [lens, setLens] = useState<'network' | 'matrix' | 'table'>('network')
   const [query, setQuery] = useState('')
   const [type, setType] = useState('')
@@ -160,6 +214,7 @@ function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph'];
   const [resetSignal, setResetSignal] = useState(0)
   const types = useMemo(() => [...new Set(data.nodes.map((node) => node.type))].sort(), [data.nodes])
   const visibleNodes = useMemo(() => data.nodes.filter((node) => (!type || node.type === type) && (!query.trim() || node.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))), [data.nodes, query, type])
+  const sigmaSettings = useMemo(() => ({ renderEdgeLabels: false, labelDensity: 0.11, labelGridCellSize: 80, labelSize: 12, labelWeight: '600', labelColor: { color: graphTheme.label }, defaultEdgeColor: graphTheme.edge, defaultDrawNodeHover: graphNodeHover(graphTheme), allowInvalidContainer: true, enableEdgeEvents: true, zIndex: true }), [graphTheme])
   const activeSelectedId = selectedId && data.nodes.some((node) => node.id === selectedId) ? selectedId : undefined
   const inspector = <GraphInspector data={data} selectedId={activeSelectedId} variant={variant} onSelect={setSelectedId} onClose={() => { setSelectedId(undefined); setFocusSelection(false) }} />
   if (!data.nodes.length) return <EmptyState title={t(variant === 'profile' ? 'Your constellation is waiting' : 'Your opportunity network is waiting')} description={t(variant === 'profile' ? 'Confirm evidence and add skills to connect your professional story.' : 'Capture opportunities and review their requirements to reveal your search network.')} />
@@ -171,7 +226,7 @@ function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph'];
       ) : lens === 'matrix' ? <div className="graph-alt-layout"><GraphMatrix nodes={visibleNodes} edges={data.edges} onSelect={setSelectedId} />{inspector}</div> : (
         <div className="graph-workbench">
         <div className="sigma-stage" role="img" aria-label={t(variant === 'profile' ? 'Interactive professional evidence network' : 'Interactive opportunity knowledge network')}>
-          <SigmaContainer settings={{ renderEdgeLabels: false, labelDensity: 0.11, labelGridCellSize: 80, allowInvalidContainer: true, enableEdgeEvents: true, zIndex: true }}><RelationshipGraphLoader data={data} /><RelationshipGraphController query={query} type={type} selected={activeSelectedId} focusSelection={focusSelection} resetSignal={resetSignal} onSelect={setSelectedId} /></SigmaContainer>
+          <SigmaContainer settings={sigmaSettings}><RelationshipGraphLoader data={data} edgeColor={graphTheme.edge} /><RelationshipGraphController query={query} type={type} selected={activeSelectedId} focusSelection={focusSelection} resetSignal={resetSignal} theme={graphTheme} onSelect={setSelectedId} /></SigmaContainer>
           <div className="graph-camera-controls"><button className="icon-button" onClick={() => setResetSignal((value) => value + 1)} aria-label={t('Fit graph to view')} title={t('Fit graph to view')}><RotateCcw /></button><button className={`icon-button ${focusSelection ? 'active' : ''}`} disabled={!activeSelectedId} aria-pressed={focusSelection} onClick={() => setFocusSelection((value) => !value)} aria-label={t('Focus selected neighborhood')} title={t('Focus selected neighborhood')}><Focus /></button></div>
           <div className="graph-legend">{types.map((item) => <button key={item} className={type === item ? 'active' : ''} aria-pressed={type === item} onClick={() => setType(type === item ? '' : item)}><i style={{ background: palette[item] ?? palette.unknown }} />{t(item)}</button>)}</div>
         </div>
