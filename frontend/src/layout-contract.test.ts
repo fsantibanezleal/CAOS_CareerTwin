@@ -22,6 +22,10 @@ describe('viewport ownership contract', () => {
     expect(stylesheet).toMatch(/\.login-page \{[^}]*height: 100dvh[^}]*overflow-y: auto/s)
   })
 
+  it('keeps Sigma canvases inside the active workbench theme', () => {
+    expect(stylesheet).toMatch(/\.sigma-stage \.react-sigma \{[^}]*background: transparent/s)
+  })
+
   it('reveals the skip link only when a keyboard user focuses it', () => {
     expect(stylesheet).toMatch(/\.skip-link \{[^}]*position: fixed[^}]*translateY\(calc\(-100% - 24px\)\)/s)
     expect(stylesheet).toMatch(/\.skip-link:focus \{[^}]*translateY\(0\)/s)
