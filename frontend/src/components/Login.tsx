@@ -16,7 +16,7 @@ export function Login({ onSuccess }: { onSuccess: (user: User) => void }) {
   })
   const submit = (event: FormEvent) => { event.preventDefault(); mutation.mutate() }
   return (
-    <main id="main-content" className="login-page">
+    <main id="main-content" className="login-page" tabIndex={-1}>
       <section className="login-story" aria-labelledby="login-title">
         <div className="brand-lockup"><span className="brand-mark"><Orbit /></span><span>CareerTwin</span></div>
         <div className="login-copy">
