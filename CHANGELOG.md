@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-08-31
+
+### Fixed
+
+- Remount the locale provider at the anonymous-to-authenticated account boundary so the saved
+  account language immediately replaces browser-detected anonymous copy after sign-in.
+
 ## [0.5.4] - 2026-08-31
 
 ### Fixed
