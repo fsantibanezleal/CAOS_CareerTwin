@@ -4,6 +4,16 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep the browser document exactly viewport-sized and assign long authenticated routes to one
+  internal workbench scroller, including safe mobile bottom-navigation clearance.
+
+### Security
+
+- Build PostgreSQL 17.11 and pgvector 0.8.6 from verified upstream sources on a pinned minimal Wolfi
+  runtime, with fresh-cluster network readiness and collation-upgrade rehearsal gates.
+
 ## [0.5.2] - 2026-08-15
 
 ### Fixed
