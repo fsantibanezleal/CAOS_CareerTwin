@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-08-31
+
+### Fixed
+
+- Make every skip-link destination programmatically focusable so activating the keyboard-only
+  control transfers focus to the main landmark on boot, login, and authenticated workbench views.
+
 ## [0.5.3] - 2026-08-30
 
 ### Changed
