@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.9] - 2026-08-31
+
+### Fixed
+
+- Encode the graph-label ellipsis independently of source-file encoding and apply a tighter compact
+  label budget plus collision grid, keeping mobile constellations legible without hiding exact text
+  from hover, inspector, or table views.
+
 ## [0.5.8] - 2026-08-31
 
 ### Fixed
