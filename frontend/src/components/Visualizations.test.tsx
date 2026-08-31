@@ -41,7 +41,7 @@ describe('decision-grade visual fallbacks', () => {
       defaultEdgeColor: '#697991',
       labelDensity: 0.05,
       labelGridCellSize: 150,
-      labelRenderedSizeThreshold: 9,
+      labelRenderedSizeThreshold: 11,
       defaultDrawNodeLabel: expect.any(Function),
       defaultDrawNodeHover: expect.any(Function),
     }))
