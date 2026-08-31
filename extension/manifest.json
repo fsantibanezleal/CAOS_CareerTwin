@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "CareerTwin Opportunity Capture",
   "description": "Capture the job page you are viewing into your private CareerTwin workspace.",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "minimum_chrome_version": "114",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://careertwin.ml.fasl-work.com/*", "http://localhost:8000/*"],
