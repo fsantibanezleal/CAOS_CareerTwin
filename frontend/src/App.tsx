@@ -23,11 +23,11 @@ function AccessibleSurface({ children }: { children: ReactNode }) {
 export default function App() {
   const client = useQueryClient()
   const session = useQuery({ queryKey: ['session'], queryFn: () => api<User>('/api/auth/me'), retry: false })
-  if (session.isPending) return <I18nProvider><AccessibleSurface><main id="main-content" className="boot-screen" tabIndex={-1}><Loading label="Opening CareerTwin" /></main></AccessibleSurface></I18nProvider>
-  if (session.error || !session.data) return <I18nProvider><AccessibleSurface><Login onSuccess={(user) => client.setQueryData(['session'], user)} /></AccessibleSurface></I18nProvider>
+  if (session.isPending) return <I18nProvider key="anonymous"><AccessibleSurface><main id="main-content" className="boot-screen" tabIndex={-1}><Loading label="Opening CareerTwin" /></main></AccessibleSurface></I18nProvider>
+  if (session.error || !session.data) return <I18nProvider key="anonymous"><AccessibleSurface><Login onSuccess={(user) => client.setQueryData(['session'], user)} /></AccessibleSurface></I18nProvider>
   const user = session.data
   return (
-    <I18nProvider initial={user.locale}>
+    <I18nProvider key={`account-${user.id}`} initial={user.locale}>
       <AccessibleSurface>
         <Shell user={user} onLogout={() => client.setQueryData(['session'], undefined)}>
           <Suspense fallback={<Loading label="Opening this workspace view" />}><Routes>
