@@ -4,6 +4,26 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-08-30
+
+### Changed
+
+- Refresh the pinned Node 24 builder, public shared workbench, React-query and graph packages,
+  Python runtime libraries, and immutable GitHub Actions toolchain through reviewed dependency PRs.
+
+### Fixed
+
+- Keep the browser document exactly viewport-sized and assign long authenticated routes to one
+  internal workbench scroller, including safe mobile bottom-navigation clearance.
+- Replace the always-visible static skip link with a localized keyboard-only control backed by a real
+  main landmark on boot, login, and authenticated surfaces.
+- Pin the transitive Nano ID development dependency to its advisory-fixed release.
+
+### Security
+
+- Build PostgreSQL 17.11 and pgvector 0.8.6 from verified upstream sources on a pinned minimal Wolfi
+  runtime, with fresh-cluster network readiness and collation-upgrade rehearsal gates.
+
 ## [0.5.2] - 2026-08-15
 
 ### Fixed
