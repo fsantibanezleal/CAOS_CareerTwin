@@ -14,10 +14,16 @@ describe('viewport ownership contract', () => {
   it('moves mobile navigation clearance into the owned content scroller', () => {
     expect(stylesheet).toMatch(/@media \(max-width: 900px\)[^{]*\{[\s\S]*?\.app-shell \{[^}]*padding-bottom: 0/s)
     expect(stylesheet).toMatch(/\.content \{[^}]*padding:[^;}]*calc\(106px \+ env\(safe-area-inset-bottom\)\)/s)
+    expect(stylesheet).toMatch(/@media \(max-width: 620px\)[^{]*\{[\s\S]*?\.content \{[^}]*calc\(101px \+ env\(safe-area-inset-bottom\)\)/s)
   })
 
   it('keeps login and boot overflow inside their viewport surfaces', () => {
     expect(stylesheet).toMatch(/\.boot-screen \{[^}]*height: 100dvh[^}]*overflow-y: auto/s)
     expect(stylesheet).toMatch(/\.login-page \{[^}]*height: 100dvh[^}]*overflow-y: auto/s)
+  })
+
+  it('reveals the skip link only when a keyboard user focuses it', () => {
+    expect(stylesheet).toMatch(/\.skip-link \{[^}]*position: fixed[^}]*translateY\(calc\(-100% - 24px\)\)/s)
+    expect(stylesheet).toMatch(/\.skip-link:focus \{[^}]*translateY\(0\)/s)
   })
 })
