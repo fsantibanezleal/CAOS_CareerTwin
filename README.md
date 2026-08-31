@@ -83,12 +83,13 @@ Read [`Entry_point.md`](Entry_point.md), the [documentation map](docs/README.md)
 plan is maintained in the CAOS management repository. Changes follow issue → focused branch →
 tests/docs → pull request to `develop` → reviewed deployment.
 
-Version `0.5.5` carries the decision-grade guided experience and accessible dynamic-visualization
+Version `0.5.6` carries the decision-grade guided experience and accessible dynamic-visualization
 contract on refreshed, vulnerability-scanned dependency and container foundations. It keeps the
 browser document fixed to the viewport, gives long routes one predictable internal scroller, protects
 mobile content from bottom-navigation overlap, and provides a localized keyboard skip link whose
 target receives keyboard focus across boot, login, and authenticated surfaces. The saved account
-language also takes control immediately when an anonymous session becomes authenticated. The
+language also takes control immediately when an anonymous session becomes authenticated, while
+Sigma network surfaces retain the active light or dark workbench theme. The
 product remains native-first, external-API-only, and built on the public CAOS shared authenticated workbench frame. See
 [`CHANGELOG.md`](CHANGELOG.md) for release evidence.
 
