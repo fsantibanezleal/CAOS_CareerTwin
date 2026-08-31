@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.10] - 2026-08-31
+
+### Fixed
+
+- Prioritize decision-significant graph nodes for always-visible labels so small neighboring nodes
+  cannot collide with opportunity titles; all node text remains available through hover, inspector,
+  search, matrix, and table views.
+
 ## [0.5.9] - 2026-08-31
 
 ### Fixed
