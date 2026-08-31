@@ -187,6 +187,13 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     assert "build-essential" not in runtime_stage
 
 
+def test_ci_waits_for_the_permanent_postgres_server() -> None:
+    """Do not mistake PostgreSQL's temporary bootstrap server for the durable test service."""
+    workflow = (Path(__file__).parents[1] / ".github" / "workflows" / "ci.yml").read_text()
+    assert "PostgreSQL init process complete; ready for start up." in workflow
+    assert "docker exec careertwin-postgres pg_isready" in workflow
+
+
 def test_container_vex_fails_closed_without_active_exemptions() -> None:
     """Keep the scanner gate fatal when the current images require no reviewed exception."""
     repository_root = Path(__file__).parents[1]

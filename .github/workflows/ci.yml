@@ -26,7 +26,10 @@ jobs:
             --env POSTGRES_PASSWORD=test-only-password \
             --publish 5432:5432 careertwin-db:test
           for attempt in $(seq 1 30); do
-            if docker exec careertwin-postgres pg_isready -U careertwin -d careertwin_test; then
+            # pg_isready also succeeds against the temporary bootstrap server. Wait for the
+            # entrypoint to finish that server's shutdown and hand PID 1 to the permanent one.
+            if docker logs careertwin-postgres 2>&1 | grep -q "PostgreSQL init process complete; ready for start up." \
+              && docker exec careertwin-postgres pg_isready -U careertwin -d careertwin_test; then
               exit 0
             fi
             sleep 2
