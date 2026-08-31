@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-08-31
+
+### Fixed
+
+- Make Sigma node labels, relationship lines, filtering states, and hover labels readable in both
+  workbench themes, including live canvas updates when the seeker changes theme.
+
 ## [0.5.6] - 2026-08-31
 
 ### Fixed

@@ -1,18 +1,27 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { I18nProvider } from '../i18n'
 import type { Landscape, MatchRun, ProfileGraphData } from '../types'
-import { CareerRiver, MatchWaterfall, OpportunityLandscape } from './Visualizations'
+import { CareerRiver, MatchWaterfall, OpportunityLandscape, ProfileConstellation } from './Visualizations'
+
+const captureSigmaSettings = vi.hoisted(() => vi.fn())
 
 vi.mock('./EChart', () => ({
   EChart: ({ ariaLabel }: { ariaLabel: string }) => <div role="img" aria-label={ariaLabel} />,
 }))
 vi.mock('@react-sigma/core', () => ({
-  SigmaContainer: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SigmaContainer: ({ children, settings }: { children: React.ReactNode; settings: Record<string, unknown> }) => {
+    captureSigmaSettings(settings)
+    return <>{children}</>
+  },
   useLoadGraph: () => vi.fn(),
   useRegisterEvents: () => vi.fn(),
   useSetSettings: () => vi.fn(),
-  useSigma: () => ({ getGraph: vi.fn(), getCamera: vi.fn(), refresh: vi.fn() }),
+  useSigma: () => ({
+    getGraph: () => ({ neighbors: vi.fn(() => []), extremities: vi.fn(() => []) }),
+    getCamera: () => ({ animatedReset: vi.fn() }),
+    refresh: vi.fn(),
+  }),
 }))
 
 function renderEnglish(node: React.ReactNode) {
@@ -20,6 +29,27 @@ function renderEnglish(node: React.ReactNode) {
 }
 
 describe('decision-grade visual fallbacks', () => {
+  it('keeps Sigma labels, edges, and hover rendering readable across themes', async () => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })))
+    document.documentElement.dataset.theme = 'dark'
+    renderEnglish(<ProfileConstellation data={{
+      nodes: [{ id: 'profile-1', label: 'Profile', type: 'profile' }, { id: 'skill-1', label: 'Python', type: 'skill' }],
+      edges: [{ id: 'edge-1', source: 'profile-1', target: 'skill-1', type: 'has_skill' }],
+    }} />)
+    expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
+      labelColor: { color: '#edf3fc' },
+      defaultEdgeColor: '#697991',
+      defaultDrawNodeHover: expect.any(Function),
+    }))
+
+    document.documentElement.dataset.theme = 'light'
+    await waitFor(() => expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
+      labelColor: { color: '#152036' },
+      defaultEdgeColor: '#738198',
+      defaultDrawNodeHover: expect.any(Function),
+    })))
+  })
+
   it('represents career history as dated ranges with a readable table', () => {
     const rows: ProfileGraphData['river'] = [
       { id: 'experience-1', kind: 'experience', title: 'Lead Engineer', organization: 'Example Systems', start: '2021-01-01', end: '2024-06-30' },
