@@ -1,0 +1,74 @@
+name: Quality
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: test
+      APP_SECRET_KEY: test-secret-that-is-long-and-never-production
+      APP_CSRF_SECRET: test-csrf-that-is-long-and-never-production
+      DATABASE_URL: postgresql+psycopg://careertwin:test-only-password@localhost:5432/careertwin_test
+      LLM_DEFAULT_PROVIDER: contract
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and start hardened PostgreSQL
+        run: |
+          docker build --file docker/postgres/Dockerfile --tag careertwin-db:test .
+          docker run --detach --name careertwin-postgres \
+            --env POSTGRES_DB=careertwin_test \
+            --env POSTGRES_USER=careertwin \
+            --env POSTGRES_PASSWORD=test-only-password \
+            --publish 5432:5432 careertwin-db:test
+          for attempt in $(seq 1 30); do
+            if docker exec careertwin-postgres pg_isready -U careertwin -d careertwin_test; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs careertwin-postgres
+          exit 1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.6'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m ruff check backend tests evals scripts/representative-load.py benchmarks/taxonomy_retrieval.py
+      - run: python -m mypy backend evals
+      - run: python -m alembic upgrade head
+      - name: Verify PostgreSQL collation and extension provenance
+        run: |
+          database_contract="$(docker exec careertwin-postgres \
+            psql -U careertwin -d careertwin_test -Atc \
+            "SELECT (datcollversion IS NOT NULL AND datcollversion = pg_database_collation_actual_version(oid))::text || '|' || (SELECT extversion FROM pg_extension WHERE extname = 'vector') FROM pg_database WHERE datname = current_database();")"
+          test "$database_contract" = "true|0.8.6"
+      - run: python -m pytest --cov --cov-report=term-missing
+      - run: python evals/agent_contract.py
+      - run: python scripts/representative-load.py
+      - run: python -m pip check
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.18.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error

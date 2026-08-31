@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Job Search Pipeline"
+  short_description: "Coordinate applications, contacts, and calendar"
+  default_prompt: "Use $manage-job-search-pipeline to organize my applications, people, meetings, deadlines, and next actions."

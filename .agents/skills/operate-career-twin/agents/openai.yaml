@@ -1,0 +1,4 @@
+interface:
+  display_name: "Operate CareerTwin"
+  short_description: "Run and maintain a private CareerTwin instance"
+  default_prompt: "Use $operate-career-twin to set up, verify, back up, restore, or deploy this CareerTwin instance."

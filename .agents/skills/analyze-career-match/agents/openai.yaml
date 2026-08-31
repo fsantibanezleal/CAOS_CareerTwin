@@ -1,0 +1,4 @@
+interface:
+  display_name: "Analyze Career Match"
+  short_description: "Explain deterministic opportunity alignment"
+  default_prompt: "Use $analyze-career-match to calculate and explain evidence alignment for a saved opportunity."

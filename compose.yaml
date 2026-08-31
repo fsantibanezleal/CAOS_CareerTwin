@@ -1,0 +1,87 @@
+name: careertwin
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+psycopg://careertwin:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the ignored .env}@db:5432/careertwin
+  BLOB_ROOT: /var/lib/careertwin/blobs
+  CLAMAV_HOST: clamav
+  LLM_DEFAULT_PROVIDER: ${LLM_DEFAULT_PROVIDER:-xai}
+  XAI_API_KEY: ${XAI_API_KEY:-}
+  XAI_MODEL: ${XAI_MODEL:-grok-4.5}
+  XAI_VOICE_MODEL: ${XAI_VOICE_MODEL:-grok-voice-latest}
+  XAI_VOICE: ${XAI_VOICE:-eve}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+  SECURE_COOKIES: ${SECURE_COOKIES:-false}
+x-app-image: &app-image
+  image: careertwin-app:${CAREERTWIN_IMAGE_TAG:-local}
+  build: .
+services:
+  db:
+    image: careertwin-db:${CAREERTWIN_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
+    environment:
+      POSTGRES_DB: careertwin
+      POSTGRES_USER: careertwin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the ignored .env}
+      POSTGRES_INITDB_ARGS: "--locale-provider=builtin --builtin-locale=C.UTF-8"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careertwin -d careertwin"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - careertwin_db:/var/lib/postgresql/data
+    mem_limit: 640m
+    restart: unless-stopped
+  clamav:
+    image: clamav/clamav:1.4@sha256:6b7c8e09559250f25b0184516b0a2ae805136e57485260e16c780c9fd6e6aba9
+    volumes:
+      - careertwin_clamav:/var/lib/clamav
+    mem_limit: 1280m
+    restart: unless-stopped
+  migrate:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db: { condition: service_healthy }
+    mem_limit: 512m
+    restart: "no"
+  app:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      db: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:${CAREERTWIN_BIND_PORT:-8000}:8000"
+    volumes:
+      - careertwin_blobs:/var/lib/careertwin/blobs
+    mem_limit: 640m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  worker:
+    <<: *app-image
+    env_file: .env
+    environment: *app-environment
+    command: ["python", "-m", "careertwin.worker"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      clamav: { condition: service_healthy }
+    volumes:
+      - careertwin_blobs:/var/lib/careertwin/blobs
+    mem_limit: 896m
+    restart: unless-stopped
+volumes:
+  careertwin_db:
+  careertwin_clamav:
+  careertwin_blobs:

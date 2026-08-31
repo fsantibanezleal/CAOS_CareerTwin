@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use Career Copilot"
+  short_description: "Run evidence-grounded external agent conversations"
+  default_prompt: "Use $use-career-copilot to ask CareerTwin an evidence-grounded career question."
