@@ -50,6 +50,7 @@ export const spanishMessages: Record<string, string> = {
   'Change it before adding private documents.': 'Cámbiala antes de agregar documentos privados.',
   'Opening CareerTwin': 'Abriendo CareerTwin',
   'Opening this workspace view': 'Abriendo esta vista del espacio de trabajo',
+  'Skip to main content': 'Ir al contenido principal',
 
   'Your professional evidence, connected': 'Tu evidencia profesional, conectada',
   'See your career as a living system.': 'Observa tu carrera como un sistema vivo.',
