@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import axe from 'axe-core'
 import { expect, it } from 'vitest'
 import { Login } from './components/Login'
@@ -15,6 +15,7 @@ it('has no automatically detectable serious or critical login violations', async
       <I18nProvider initial="en"><Login onSuccess={() => undefined} /></I18nProvider>
     </QueryClientProvider>,
   )
+  expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1')
   const result = await axe.run(container)
   const blocking = result.violations.filter((violation) => ['critical', 'serious'].includes(violation.impact ?? ''))
   expect(blocking, blocking.map((violation) => `${violation.id}: ${violation.help}`).join('\n')).toEqual([])

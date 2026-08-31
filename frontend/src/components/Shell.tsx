@@ -21,6 +21,10 @@ export function Shell({ user, onLogout, children }: { user: User; onLogout: () =
   const client = useQueryClient()
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('ct-theme', theme) }, [theme])
   useEffect(() => {
+    const main = document.getElementById('main-content')
+    if (main) main.tabIndex = -1
+  }, [])
+  useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
         event.preventDefault()
