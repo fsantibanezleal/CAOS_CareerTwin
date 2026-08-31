@@ -39,18 +39,23 @@ describe('decision-grade visual fallbacks', () => {
     expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
       labelColor: { color: '#edf3fc' },
       defaultEdgeColor: '#697991',
-      labelDensity: 0.08,
-      labelGridCellSize: 120,
-      labelRenderedSizeThreshold: 8,
+      labelDensity: 0.05,
+      labelGridCellSize: 150,
+      labelRenderedSizeThreshold: 9,
       defaultDrawNodeLabel: expect.any(Function),
       defaultDrawNodeHover: expect.any(Function),
     }))
     const darkSettings = captureSigmaSettings.mock.lastCall?.[0] as { defaultDrawNodeLabel: (context: Record<string, unknown>, data: Record<string, unknown>, settings: Record<string, unknown>) => void }
     const fillText = vi.fn()
-    darkSettings.defaultDrawNodeLabel({ fillText }, {
+    darkSettings.defaultDrawNodeLabel({ fillText, canvas: { clientWidth: 800 } }, {
       label: 'Built interactive evidence graphs for complex research decisions.', x: 10, y: 20, size: 8,
     }, { labelWeight: '600', labelSize: 12, labelFont: 'Inter' })
-    expect(fillText).toHaveBeenCalledWith('Built interactive evidence graphsâ€¦', 21, 24)
+    expect(fillText).toHaveBeenCalledWith('Built interactive evidence gr\u2026', 21, 24)
+    const compactFillText = vi.fn()
+    darkSettings.defaultDrawNodeLabel({ fillText: compactFillText, canvas: { clientWidth: 390 } }, {
+      label: 'Built interactive evidence graphs for complex research decisions.', x: 10, y: 20, size: 8,
+    }, { labelWeight: '600', labelSize: 12, labelFont: 'Inter' })
+    expect(compactFillText).toHaveBeenCalledWith('Built interactive\u2026', 21, 24)
 
     document.documentElement.dataset.theme = 'light'
     await waitFor(() => expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
