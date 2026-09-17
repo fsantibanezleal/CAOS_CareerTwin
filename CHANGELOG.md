@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-17
+
+### Fixed
+
+- styles.css hard-coded a font stack on :root, overriding --font-ui, so the serif display face never
+  applied anywhere.
+
 ## [0.8.0] - 2026-09-17
 
 ### Changed
