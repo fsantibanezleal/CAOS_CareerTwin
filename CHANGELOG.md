@@ -4,6 +4,18 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-17
+
+### Changed
+
+- New visual direction: paper and ink instead of navy and neon. Warm #f7f5f2 canvas with ink-black
+  text, light by default, Source Serif 4 for display, one restrained ink-blue accent replacing neon
+  teal plus violet, tighter radii and a paper-weight shadow. The dark theme is warm charcoal, never
+  navy, authored independently.
+- Verbatim job postings replace the three-sentence summaries previously stored: 16,035 characters
+  across the four cases, against 1,623 before. The salary benchmarks, fit assessments and case
+  readmes are filed as sources, roughly 70,000 characters of research now reachable in the app.
+
 ## [0.7.1] - 2026-09-17
 
 ### Fixed
