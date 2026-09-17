@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Network, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api, json } from '../api'
-import { CareerRiver, EvidenceMatrix, ProfileConstellation } from '../components/Visualizations'
+import { CareerTimeline } from '../components/CareerTimeline'
+import { EvidenceMatrix } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel } from '../components/Primitives'
 import { useI18n } from '../i18n'
 import type { Accomplishment, Artifact, Claim, Education, Experience, Opportunity, Profile, ProfileGraphData, ResumeVariant, Skill, Source } from '../types'
@@ -239,15 +240,14 @@ export function ProfilePage() {
   const error = profile.error || skills.error || claims.error || graph.error || experiences.error || education.error
   if (error) return <ErrorState error={error} />
   const pending = claims.data.filter((claim) => claim.state === 'proposed').length
-  const tabs: Array<[ProfileTab, string, React.ReactNode]> = [['overview', t('Overview'), <CircleUserRound />], ['evidence', `${t('Evidence')}${pending ? ` (${pending})` : ''}`, <BookOpenCheck />], ['graph', t('Constellation'), <Network />], ['river', t('Career river'), <Sparkles />], ['github', 'GitHub', <GitBranch />], ['artifacts', t('Artifacts'), <FileStack />]]
+  const tabs: Array<[ProfileTab, string, React.ReactNode]> = [['overview', t('Overview'), <CircleUserRound />], ['evidence', `${t('Evidence')}${pending ? ` (${pending})` : ''}`, <BookOpenCheck />], ['river', t('Career river'), <Sparkles />], ['github', 'GitHub', <GitBranch />], ['artifacts', t('Artifacts'), <FileStack />]]
   return (
     <>
       <PageHeader eyebrow={t('Your professional twin')} title={profile.data.headline || t('Build a profile that can show its work.')} description={t('Curate your story, trace claims to their sources, and inspect capability without confusing missing evidence for weakness.')} />
       <nav className="section-tabs" aria-label={t('Profile views')}>{tabs.map(([key, label, icon]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{icon}{label}</button>)}</nav>
       {tab === 'overview' && <div className="profile-layout"><Panel title={t('Identity and direction')} subtitle={t('User-curated canonical fields')}><ProfileEditor profile={profile.data} /></Panel><SkillsPanel skills={skills.data} claims={claims.data} /><TimelineEditors experiences={experiences.data} education={education.data} /><ProfilePortability /></div>}
       {tab === 'evidence' && <EvidenceInbox claims={claims.data} />}
-      {tab === 'graph' && <Panel title={t('Professional constellation')} subtitle={t('Every edge is inspectable; confirmed evidence anchors capability')}><ProfileConstellation data={graph.data.graph} /></Panel>}
-      {tab === 'river' && <div className="profile-layout"><Panel title={t('Career river')} subtitle={t('Experience and education unfolding across time')}><CareerRiver rows={graph.data.river} /></Panel><Panel title={t('Evidence matrix')} subtitle={t('Capability level and source coverage side by side')}><EvidenceMatrix rows={graph.data.matrix} /></Panel></div>}
+      {tab === 'river' && <div className="profile-layout"><Panel title={t('Career timeline')} subtitle={t('Every role named, scaled by its real dates. Select a row for its achievements.')}><CareerTimeline experiences={experiences.data ?? []} education={education.data ?? []} /></Panel><Panel title={t('Evidence matrix')} subtitle={t('Capability level and source coverage side by side')}><EvidenceMatrix rows={graph.data.matrix} /></Panel></div>}
       {tab === 'github' && <GithubImporter />}
       {tab === 'artifacts' && <ArtifactStudio claims={claims.data} />}
     </>
