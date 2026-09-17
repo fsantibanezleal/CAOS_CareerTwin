@@ -1,0 +1,97 @@
+/* CareerTwin design tokens.
+   Adopted 2026-09-17. See docs/design/design-system.md for the research and rationale.
+
+   Before this file the stylesheet tokenised colour only; every size was hand-picked,
+   and 82 type rules sat between 8px and 11px. Type now runs on a 16px base with a
+   Major Third ratio, line heights sit on a 4pt baseline, and spacing runs on the 8pt
+   grid so the vertical rhythm of text aligns with the spatial rhythm of layout. */
+
+:root {
+  /* Type: base 16px, Major Third 1.25, line heights on the 4pt baseline. */
+  --text-2xs: 12px;   --leading-2xs: 16px;
+  --text-xs: 13px;    --leading-xs: 20px;
+  --text-sm: 14px;    --leading-sm: 20px;
+  --text-base: 16px;  --leading-base: 24px;
+  --text-lg: 20px;    --leading-lg: 28px;
+  --text-xl: 25px;    --leading-xl: 32px;
+  --text-2xl: 31px;   --leading-2xl: 40px;
+  --text-3xl: 39px;   --leading-3xl: 48px;
+
+  --weight-regular: 400;
+  --weight-medium: 550;
+  --weight-semibold: 650;
+  --weight-bold: 750;
+
+  /* Spacing: 8pt grid with a 4pt half step. Arbitrary values are rejected to the nearest token. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Semantic colour. Components reference purpose, never a raw hue, so a theme
+     change never edits a component. Dark values below; light overrides follow. */
+  --accent: #4fe3e1;
+  --accent-contrast: #04191a;
+  --positive: #7ceaa8;
+  --warning: #ffc078;
+  --critical: #ff8fa1;
+  --info: #9db4ff;
+
+  /* Status ramp for requirement coverage, ordered worst to best. */
+  --status-missing: #ff8fa1;
+  --status-conflict: #ff9f6e;
+  --status-partial: #ffc078;
+  --status-unknown: #8494ad;
+  --status-met: #7ceaa8;
+
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent);
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --ease: cubic-bezier(.2, .7, .3, 1);
+}
+
+:root[data-theme="light"] {
+  /* A hue that passes 4.5:1 on a dark canvas can fall below 3:1 on white, so the
+     light theme is authored independently rather than inverted. */
+  --accent: #00787d;
+  --accent-contrast: #ffffff;
+  --positive: #1d7f4c;
+  --warning: #8a5300;
+  --critical: #bc2b44;
+  --info: #3350b8;
+
+  --status-missing: #bc2b44;
+  --status-conflict: #a34410;
+  --status-partial: #8a5300;
+  --status-unknown: #5b6a80;
+  --status-met: #1d7f4c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-base: 0ms; }
+}
+
+/* Body default. Nothing essential renders below --text-sm; --text-2xs is meta only. */
+body {
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+}
+
+/* Focus visibility is a first-class requirement: the most common dark-mode
+   accessibility failure is an invisible focus indicator, not body contrast. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
