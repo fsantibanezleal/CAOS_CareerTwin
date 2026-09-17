@@ -4,6 +4,15 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-09-17
+
+### Fixed
+
+- Self-host Source Serif 4 and Inter. The Google Fonts stylesheet was refused in production by the
+  Content-Security-Policy (font-src self), so neither family loaded and the serif display face did not
+  render. Both are SIL OFL 1.1; the 14 latin woff2 files are now served from the application origin
+  and the CSP is unchanged.
+
 ## [0.8.1] - 2026-09-17
 
 ### Fixed
