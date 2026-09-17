@@ -1,0 +1,58 @@
+/* Compensation band. Tokens only; see docs/design/design-system.md. */
+
+.sb {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--surface-2);
+}
+
+.sb header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.sb h4 { margin: 0; font-size: var(--text-base); line-height: var(--leading-base); font-weight: var(--weight-semibold); }
+
+.sb-confidence {
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-bold); text-transform: uppercase;
+  color: var(--accent-contrast); background: var(--status-unknown);
+}
+.sb-confidence.researched { background: var(--status-met); }
+
+/* Three marks, not one number: floor, central range and target ask are separate
+   decisions, and a single figure invites anchoring on it. */
+.sb-scale {
+  position: relative;
+  height: var(--space-6);
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+}
+.sb-range { position: absolute; top: 0; bottom: 0; border-radius: var(--radius-sm); }
+.sb-range.central { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.sb-range.ask { background: var(--accent); }
+.sb-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--critical); }
+.sb-mark.floor::after {
+  content: ''; position: absolute; left: -3px; top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--critical);
+}
+
+.sb-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
+.sb-figures div { display: grid; gap: var(--space-1); }
+.sb-figures dt { color: var(--faint); font-size: var(--text-xs); line-height: var(--leading-xs); text-transform: uppercase; letter-spacing: .04em; }
+.sb-figures dd { margin: 0; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+.sb-figures .emphasis dd { color: var(--accent); font-size: var(--text-base); line-height: var(--leading-base); font-weight: var(--weight-bold); }
+
+.sb-basis { margin: 0; color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.sb-note {
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  margin: 0; color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-base);
+}
+.sb-note svg { width: 16px; height: 16px; flex: none; color: var(--faint); margin-top: 2px; }
+.sb-source { margin: 0; color: var(--faint); font-size: var(--text-xs); line-height: var(--leading-xs); }
+
+@media (max-width: 720px) {
+  .sb-figures { grid-template-columns: minmax(0, 1fr); }
+}
