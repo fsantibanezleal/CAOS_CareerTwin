@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: "Inter Tight", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   font-synthesis: none;
   /* Tabular figures keep number columns from wobbling; cv11 gives a single-storey
      "a" and a straight "l" so 1/l/I stay distinguishable in dense tables. */
