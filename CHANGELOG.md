@@ -4,6 +4,22 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.12] - 2026-09-17
+
+### Fixed
+
+- Bump every version declaration together. v0.5.11 shipped an image whose
+  `careertwin.__version__` still read 0.5.10, so `/api/health/ready` reported the wrong version for
+  the running release. `backend/careertwin/__init__.py`, `frontend/package-lock.json` and
+  `extension/manifest.json` were missed by that bump.
+
+### Added
+
+- `tests/test_version_consistency.py` asserts that VERSION, the Python package, pyproject, both
+  frontend manifests and the extension manifest all agree, that VERSION is bare semver, and that the
+  changelog documents the current version. A partial bump now fails the test suite instead of
+  reaching production.
+
 ## [0.5.11] - 2026-09-17
 
 ### Changed
