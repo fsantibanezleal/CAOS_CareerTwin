@@ -1,4 +1,4 @@
-ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:e624c5d5e42382ce7165ddafcbbf8e6769a24cbd02ea6114b880b05ae5ba2a8d
+ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:1d95114038f76513a9ace6fca107d5582b08c65981f81f61cb56bf7fd2ef216d
 
 FROM ${WOLFI_IMAGE} AS postgres-builder
 
