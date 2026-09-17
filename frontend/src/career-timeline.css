@@ -1,0 +1,105 @@
+/* Career timeline. Every value references a design token. See docs/design/design-system.md. */
+
+.ct { display: grid; gap: var(--space-4); }
+
+.ct-lens { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.ct-lens button {
+  min-height: 36px;
+  border: 1px solid var(--line); border-radius: var(--radius-full);
+  padding: 0 var(--space-4);
+  background: var(--surface-2); color: var(--muted); cursor: pointer;
+  font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-medium);
+  transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.ct-lens button.active { background: var(--surface-3); color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.ct-span { margin-left: auto; color: var(--faint); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+
+/* Axis sits above the rows and shares their horizontal scale. */
+.ct-axis {
+  position: relative; height: var(--space-5);
+  margin-left: clamp(180px, 26%, 320px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.ct-axis span {
+  position: absolute; transform: translateX(-50%);
+  color: var(--faint); font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-rows { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+
+.ct-row { border-radius: var(--radius-md); }
+.ct-row.open { background: var(--surface-2); }
+
+.ct-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: clamp(180px, 26%, 320px) minmax(0, 1fr) var(--space-7);
+  align-items: center; gap: var(--space-3);
+  border: 0; border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: none; color: inherit; cursor: pointer; text-align: left;
+  transition: background var(--motion-fast) var(--ease);
+}
+.ct-head:hover { background: var(--surface-2); }
+
+.ct-meta { display: grid; gap: 2px; min-width: 0; }
+.ct-meta b {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-semibold);
+}
+.ct-meta small {
+  display: flex; align-items: center; gap: var(--space-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+.ct-meta small svg { width: 13px; height: 13px; flex: none; }
+
+/* The bar is the data. It carries its own dates so the row is readable without a tooltip. */
+.ct-track { position: relative; height: var(--space-6); }
+.ct-track i {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  height: var(--space-5);
+  display: flex; align-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  transition: filter var(--motion-fast) var(--ease);
+}
+.ct-track i em {
+  font-style: normal; white-space: nowrap;
+  color: var(--accent-contrast);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-bold); font-variant-numeric: tabular-nums;
+}
+.ct-head:hover .ct-track i { filter: brightness(1.15); }
+
+.ct-row.experience .ct-track i { background: linear-gradient(90deg, var(--accent), var(--info)); }
+.ct-row.education .ct-track i { background: linear-gradient(90deg, var(--info), var(--status-partial)); }
+.ct-track i.current { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+.ct-count {
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1);
+  color: var(--faint); font-size: var(--text-sm); font-variant-numeric: tabular-nums;
+}
+.ct-count svg { width: 16px; height: 16px; transition: transform var(--motion-fast) var(--ease); }
+.ct-row.open .ct-count svg { transform: rotate(180deg); }
+
+.ct-detail {
+  padding: 0 var(--space-3) var(--space-4) clamp(180px, 26%, 320px);
+}
+.ct-detail p {
+  margin: 0 0 var(--space-2);
+  color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-base);
+}
+.ct-detail ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-2); }
+.ct-detail li { color: var(--text); font-size: var(--text-sm); line-height: var(--leading-base); }
+
+.ct-empty { padding: var(--space-6); color: var(--muted); text-align: center; font-size: var(--text-base); }
+
+@media (max-width: 900px) {
+  .ct-axis { margin-left: 0; }
+  .ct-head { grid-template-columns: minmax(0, 1fr) var(--space-6); }
+  .ct-track { grid-column: 1 / -1; }
+  .ct-detail { padding-left: var(--space-3); }
+}

@@ -6,6 +6,7 @@ import App from './App'
 import './tokens.css'
 import './styles.css'
 import './coverage-workbench.css'
+import './career-timeline.css'
 import '@react-sigma/core/lib/style.css'
 import '@xyflow/react/dist/style.css'
 
