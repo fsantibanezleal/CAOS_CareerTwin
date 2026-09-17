@@ -4,6 +4,20 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-17
+
+### Fixed
+
+- Repair `frontend/package-lock.json`, which a string-replace version bump had corrupted: `decimal.js`
+  was rewritten to a 10.6.1 tarball that was never published and `@fasl-work/caos-app-shell` to a
+  version whose integrity hash no longer matched, so `npm ci` 404d inside the image build and v0.6.1
+  could not deploy. Version fields are now edited as JSON.
+
+### Added
+
+- `tests/test_lockfile_integrity.py`: only the two root keys may carry the project version,
+  package.json and the lock must agree, and every resolved tarball URL must match its declared version.
+
 ## [0.6.1] - 2026-09-17
 
 ### Removed
