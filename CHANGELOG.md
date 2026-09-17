@@ -4,6 +4,23 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-17
+
+### Changed
+
+- Redesign the live stylesheet rather than adding tokens beside it. New font stack with tabular
+  figures, a lifted-slate canvas replacing near-black navy, one accent instead of two competing
+  saturated hues, contrast raised so every text tier clears AA, and 193 pixel rules migrated onto the
+  type scale with nothing rendering below 13px.
+- EChart emits selection events, merges option updates so zoom and legend state survive a refresh,
+  enables zoom on request, and exposes the canvas as figure or application instead of role=img.
+
+### Added
+
+- Compensation band on the match detail: floor, central range and target ask drawn as three marks,
+  with basis, research date, note and source. Opportunity.compensation existed on the model and was
+  rendered nowhere.
+
 ## [0.6.3] - 2026-09-17
 
 ### Fixed
