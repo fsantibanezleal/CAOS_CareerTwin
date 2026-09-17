@@ -4,6 +4,21 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-17
+
+### Removed
+
+- Force-directed constellation and the two-lane career river. Verified in a browser: the constellation
+  drew 109 nodes and 198 links as an unreadable hairball with labels truncated mid-word, and the river
+  drew two flat lanes with no label on any bar, collapsing eleven roles into one rectangle.
+
+### Added
+
+- Career timeline where every bar names its role, organisation and dates, sorted most recent first,
+  expandable to achievements, filterable by experience or education.
+- Competitive research in docs/design/competitive-and-visualization-research.md. No comparable tool
+  ships a force-directed network; the category competes on actionable per-requirement gap analysis.
+
 ## [0.6.0] - 2026-09-17
 
 ### Added
