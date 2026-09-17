@@ -1,13 +1,25 @@
-/* CareerTwin design tokens.
-   Adopted 2026-09-17. See docs/design/design-system.md for the research and rationale.
+/* CareerTwin visual direction. Rewritten 2026-09-17.
+   See docs/design/design-system.md.
 
-   Before this file the stylesheet tokenised colour only; every size was hand-picked,
-   and 82 type rules sat between 8px and 11px. Type now runs on a 16px base with a
-   Major Third ratio, line heights sit on a 4pt baseline, and spacing runs on the 8pt
-   grid so the vertical rhythm of text aligns with the spatial rhythm of layout. */
+   The previous direction was a near-black navy canvas with a neon teal and a
+   saturated violet: the default "developer dashboard" look. Shifting those hues a
+   few percent, which is what the last pass did, changes nothing a person can see.
+
+   This is a different direction, not an adjustment. CareerTwin is an evidence
+   document a senior candidate reads before a negotiation, so it is built like an
+   editorial report: a warm paper canvas, ink-black text, one restrained ink-blue
+   accent, and a serif for display so headings carry authority instead of glow.
+   Light is the default; the dark theme is a warm charcoal, never navy. */
 
 :root {
-  /* Type: base 16px, Major Third 1.25, line heights on the 4pt baseline. */
+  color-scheme: light;
+
+  /* Type. Display is a serif for authority; the UI stays on a grotesque for
+     density. Base 16px, Major Third 1.25, line heights on the 4pt baseline. */
+  --font-display: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
   --text-2xs: 12px;   --leading-2xs: 16px;
   --text-xs: 13px;    --leading-xs: 20px;
   --text-sm: 14px;    --leading-sm: 20px;
@@ -18,77 +30,121 @@
   --text-3xl: 39px;   --leading-3xl: 48px;
 
   --weight-regular: 400;
-  --weight-medium: 550;
-  --weight-semibold: 650;
-  --weight-bold: 750;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 
-  /* Spacing: 8pt grid with a 4pt half step. Arbitrary values are rejected to the nearest token. */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-full: 999px;
 
-  /* Semantic colour. Components reference purpose, never a raw hue, so a theme
-     change never edits a component. Dark values below; light overrides follow. */
-  --accent: #4fe3e1;
-  --accent-contrast: #04191a;
-  --positive: #7ceaa8;
-  --warning: #ffc078;
-  --critical: #ff8fa1;
-  --info: #9db4ff;
+  /* Paper, not screen. A warm off-white with ink-black text reads as a document
+     rather than a console, and it is what this product actually is. */
+  --bg: #f7f5f2;
+  --surface: #ffffff;
+  --surface-2: #f2efea;
+  --surface-3: #e8e3dc;
+  --line: #d6cfc4;
+  --line-soft: #e7e2d9;
 
-  /* Status ramp for requirement coverage, ordered worst to best. */
-  --status-missing: #ff8fa1;
-  --status-conflict: #ff9f6e;
-  --status-partial: #ffc078;
-  --status-unknown: #8494ad;
-  --status-met: #7ceaa8;
+  --text: #16130f;
+  --muted: #55504a;
+  --faint: #6f6962;
 
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent);
+  /* One accent: a deep ink blue. Restrained, high contrast on paper, and nothing
+     like the neon it replaces. */
+  --cyan: #1d4ed8;
+  --cyan-soft: rgba(29, 78, 216, .08);
+  --violet: #6d28d9;
+  --violet-soft: rgba(109, 40, 217, .07);
+  --amber: #a16207;
+  --green: #15803d;
+  --red: #b91c1c;
+
+  --accent: var(--cyan);
+  --accent-contrast: #ffffff;
+  --positive: var(--green);
+  --warning: var(--amber);
+  --critical: var(--red);
+  --info: var(--violet);
+
+  --status-missing: #b91c1c;
+  --status-conflict: #b45309;
+  --status-partial: #a16207;
+  --status-unknown: #78716c;
+  --status-met: #15803d;
+
+  --shadow: 0 1px 2px rgba(22, 19, 15, .06), 0 8px 24px rgba(22, 19, 15, .06);
+  --radius: var(--radius-lg);
+
+  --focus-ring: 0 0 0 3px rgba(29, 78, 216, .28);
   --motion-fast: 120ms;
   --motion-base: 180ms;
   --ease: cubic-bezier(.2, .7, .3, 1);
 }
 
-:root[data-theme="light"] {
-  /* A hue that passes 4.5:1 on a dark canvas can fall below 3:1 on white, so the
-     light theme is authored independently rather than inverted. */
-  --accent: #00787d;
-  --accent-contrast: #ffffff;
-  --positive: #1d7f4c;
-  --warning: #8a5300;
-  --critical: #bc2b44;
-  --info: #3350b8;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-  --status-missing: #bc2b44;
-  --status-conflict: #a34410;
-  --status-partial: #8a5300;
-  --status-unknown: #5b6a80;
-  --status-met: #1d7f4c;
+  /* Warm charcoal, never navy, so the dark theme reads as the same product at
+     night rather than a different one. Authored independently: the light accent
+     at #1d4ed8 sits near 2.1:1 on charcoal and is unusable there. */
+  --bg: #16130f;
+  --surface: #1e1a16;
+  --surface-2: #26211c;
+  --surface-3: #322b24;
+  --line: #443b32;
+  --line-soft: #2e2822;
+
+  --text: #f4f0ea;
+  --muted: #bdb4a8;
+  --faint: #938a7e;
+
+  --cyan: #93b4ff;
+  --cyan-soft: rgba(147, 180, 255, .12);
+  --violet: #c4a7f5;
+  --violet-soft: rgba(196, 167, 245, .12);
+  --amber: #e3b341;
+  --green: #7ee2a8;
+  --red: #ff9492;
+
+  --accent: var(--cyan);
+  --accent-contrast: #16130f;
+  --status-missing: #ff9492;
+  --status-conflict: #e8a06a;
+  --status-partial: #e3b341;
+  --status-unknown: #9c938a;
+  --status-met: #7ee2a8;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .34);
+  --focus-ring: 0 0 0 3px rgba(147, 180, 255, .32);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root { --motion-fast: 0ms; --motion-base: 0ms; }
 }
 
-/* Body default. Nothing essential renders below --text-sm; --text-2xs is meta only. */
 body {
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   line-height: var(--leading-base);
 }
 
-/* Focus visibility is a first-class requirement: the most common dark-mode
-   accessibility failure is an invisible focus indicator, not body contrast. */
+/* Headings carry the serif. This is the single most visible difference between a
+   report and a dashboard, and it is why the display face exists. */
+h1, h2, .page-header h1, .login-copy h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -.01em;
+}
+
+/* Focus visibility is a first-class requirement: the most common theming failure
+   is an invisible focus indicator, not body contrast. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
