@@ -1,5 +1,13 @@
+/* Palette and type scale live in tokens.css, which is the only file allowed to define
+   them. This file previously redeclared the whole palette in its own :root block and is
+   imported after tokens.css, so at equal specificity it won and the redesign never
+   rendered: the canvas stayed slate-navy and the accent stayed neon teal, while
+   --font-display, which this file did not redeclare, came through and made headings
+   serif. A theme that half-applies is harder to debug than one that does not apply at
+   all, so nothing here may declare a colour token again. Guarded by
+   frontend/src/theme.test.ts. */
+
 :root {
-  color-scheme: dark;
   font-family: var(--font-ui);
   font-synthesis: none;
   /* Tabular figures keep number columns from wobbling; cv11 gives a single-storey
@@ -8,56 +16,6 @@
   font-feature-settings: "cv11", "ss01", "calt";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  /* Canvas: a lifted slate rather than near-black. A very dark ground forces every
-     accent to over-saturate to stay visible, which is what made the old palette shout. */
-  --bg: #0d1117;
-  --surface: #151b23;
-  --surface-2: #1c232d;
-  --surface-3: #252d39;
-  --line: #333d4b;
-  --line-soft: #262e3a;
-
-  /* Text. --text 15.3:1, --muted 7.1:1, --faint 4.6:1 on --surface, so even the
-     quietest tier clears WCAG AA for body copy. The old --faint sat at 3.2:1. */
-  --text: #e8edf4;
-  --muted: #a3b0c2;
-  --faint: #7d8b9e;
-
-  /* One accent. Everything else is status-only, at reduced saturation so no two
-     hues compete for attention at full strength. */
-  --cyan: #4fd6c4;
-  --cyan-soft: rgba(79, 214, 196, .13);
-  --violet: #8b93f8;
-  --violet-soft: rgba(139, 147, 248, .13);
-  --amber: #e8b464;
-  --green: #6fcf97;
-  --red: #ef7a85;
-
-  --shadow: 0 20px 56px rgba(0, 0, 0, .42);
-  --radius: var(--radius-lg);
-}
-
-:root[data-theme="light"] {
-  color-scheme: light;
-  /* Authored independently, not inverted: the dark accent at #4fd6c4 sits near
-     1.7:1 on white and is unusable, so the light theme takes its own darker hues. */
-  --bg: #f6f8fa;
-  --surface: #ffffff;
-  --surface-2: #f2f5f9;
-  --surface-3: #e6ecf3;
-  --line: #ccd6e0;
-  --line-soft: #e1e8f0;
-  --text: #111a26;
-  --muted: #4d5a६b;
-  --faint: #667487;
-  --cyan: #0f7a70;
-  --cyan-soft: rgba(15, 122, 112, .1);
-  --violet: #4f56c4;
-  --violet-soft: rgba(79, 86, 196, .1);
-  --amber: #8a5a10;
-  --green: #1b7a4a;
-  --red: #c03a48;
-  --shadow: 0 16px 48px rgba(17, 26, 38, .1);
 }
 
 * { box-sizing: border-box; }

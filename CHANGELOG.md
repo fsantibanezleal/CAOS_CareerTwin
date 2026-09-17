@@ -8,6 +8,15 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ### Fixed
 
+- Apply the visual redesign, which shipped three releases ago and never rendered. `tokens.css`
+  defined the warm paper canvas and the single ink-blue accent, but `styles.css` still declared the
+  entire previous palette in its own `:root` block and is imported after it. At equal specificity
+  the later file wins, so the deployed app kept its slate-navy canvas and neon teal accent. The one
+  token `styles.css` did not redeclare, `--font-display`, came through, which is why headings turned
+  serif while nothing else moved. `tokens.css` is now the only file permitted to declare a palette
+  token, guarded by `frontend/src/theme.test.ts`.
+- Remove `--muted: #4d5a४b` from the light palette. The hex contained a Devanagari digit, so the
+  browser discarded the declaration and the token was never set.
 - Resolve requirements against evidence with containment instead of token Jaccard similarity.
   Jaccard divides by the union of both token sets, so a short requirement label compared against a
   full profile record scored lower the richer that record was. "Engineering degree" peaked at 0.091
