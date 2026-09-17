@@ -4,6 +4,40 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-17
+
+### Fixed
+
+- Resolve requirements against evidence with containment instead of token Jaccard similarity.
+  Jaccard divides by the union of both token sets, so a short requirement label compared against a
+  full profile record scored lower the richer that record was. "Engineering degree" peaked at 0.091
+  against a genuine B.Sc. in Electronics Engineering and a Ph.D. in Electrical Engineering, under a
+  0.40 threshold, and the workbench reported it unresolved. Every requirement expressed as a phrase
+  rather than a single term was affected the same way, which is why coverage read as thin evidence
+  rather than as a broken metric. Matching policy moves to `match-v1.1.0`.
+- Treat abbreviated credentials as words. `normalize_label` keeps periods so that `node.js` and
+  `.net` survive, which left `b.sc.` and `ph.d.` matching nothing.
+- Drop filler terms before comparing. "experience in leadership" and "experience in cooking" shared
+  half their tokens before a single meaningful term was compared.
+- Search wider evidence when a requirement's category does not resolve it. Categories are assigned
+  heuristically at extraction and are frequently wrong; a degree filed as a skill was searched only
+  against the skill list and reported as a gap while the education record sat in the same workspace.
+- Repin the PostgreSQL base-image guard, which still asserted package revisions superseded by the
+  OpenSSL advisory updates, and record the release in README so the packaging contract holds.
+
+### Changed
+
+- Replace the opportunity editor with a brief. The screen opened on a textarea of raw unrendered
+  markdown followed by one editable row per requirement, each with an importance dropdown, a
+  category dropdown, a text input and a weight spinner: forty-eight form controls for twelve
+  requirements, and no statement anywhere about fit. The brief leads with coverage, requirements
+  met, gaps and eligibility, shows the compensation band, and presents requirements as a filterable
+  status grid that is sized to its container rather than a list that grows the page. Selecting one
+  shows the evidence that answers it. The editor keeps every capability it had, behind Edit.
+- Name the evidence in an assessment. "Resolved against confirmed profile evidence" became
+  "Evidenced by B.Sc. in Electronics Engineering, Universidad de Concepcion".
+
+
 ## [0.8.2] - 2026-09-17
 
 ### Fixed

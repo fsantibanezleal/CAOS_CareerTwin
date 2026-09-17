@@ -780,6 +780,21 @@ export const spanishMessages: Record<string, string> = {
   'Requirement category breakdown': 'Desglose por categoría de requisito',
   'Priority gap': 'Brecha prioritaria',
   '{coverage}% coverage · {requirements} requirements': '{coverage}% de cobertura · {requirements} requisitos',
+  'Opportunity brief': 'Resumen de la oportunidad',
+  'Requirement coverage': 'Cobertura de requisitos',
+  'Requirements met': 'Requisitos cumplidos',
+  'Gaps': 'Brechas',
+  'Posting': 'Aviso',
+  'Back to brief': 'Volver al resumen',
+  'All': 'Todos',
+  'Importance': 'Importancia',
+  'eligible': 'elegible',
+  'No requirements captured for this role yet.': 'Todavia no hay requisitos capturados para este cargo.',
+  'Nothing in this status.': 'No hay nada en este estado.',
+  'No compensation band researched for this role yet.': 'Todavia no hay banda salarial investigada para este cargo.',
+  'This requirement has not been evaluated in a match run yet.': 'Este requisito aun no se evalua en una corrida de coincidencia.',
+  'Select a requirement to see what answers it.': 'Selecciona un requisito para ver que lo respalda.',
+  'Requirements against your evidence': 'Requisitos frente a tu evidencia',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {
