@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, CircleHelp, CircleOff, FileText, Pencil, ShieldQuestion, X } from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactElement } from 'react'
+import { useMemo, useState, type ReactElement } from 'react'
 import { useI18n } from '../i18n'
 import type { MatchRun, Opportunity } from '../types'
 import { SalaryBand, type Compensation } from './SalaryBand'
@@ -119,12 +119,6 @@ export function OpportunityBrief({
   const [filter, setFilter] = useState<Status | 'all'>('all')
   const [selected, setSelected] = useState<string>()
   const [posting, setPosting] = useState(false)
-
-  // A different role is a different judgement; carrying the old selection across is wrong.
-  useEffect(() => {
-    setSelected(undefined)
-    setFilter('all')
-  }, [opportunity.id])
 
   const rows = useMemo(() => {
     const byLabel = new Map<string, MatchRun['assessments'][number]>()

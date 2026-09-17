@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Network, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
+import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api, json } from '../api'
 import { CareerTimeline } from '../components/CareerTimeline'
