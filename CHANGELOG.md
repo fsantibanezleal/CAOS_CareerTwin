@@ -25,6 +25,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 - Repin the PostgreSQL base-image guard, which still asserted package revisions superseded by the
   OpenSSL advisory updates, and record the release in README so the packaging contract holds.
 
+### Added
+
+- `careertwin rematch` recomputes every opportunity's alignment under the current matching
+  policy. Runs are immutable and keyed by policy version and input digest, so a policy fix does
+  not reinterpret stored runs: it needs new ones, and without this a deployed fix stays invisible
+  until each opportunity is re-run by hand from the interface.
+
 ### Changed
 
 - Replace the opportunity editor with a brief. The screen opened on a textarea of raw unrendered

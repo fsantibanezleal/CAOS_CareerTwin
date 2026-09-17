@@ -12,7 +12,20 @@ from sqlalchemy import func, select, text
 
 from careertwin.config import get_settings
 from careertwin.database import SessionLocal
-from careertwin.models import TaxonomyConcept, TaxonomyRelation, User
+from careertwin.models import (
+    ClaimState,
+    Education,
+    EvidenceClaim,
+    Experience,
+    MatchRun,
+    Opportunity,
+    ProfessionalProfile,
+    Skill,
+    TaxonomyConcept,
+    TaxonomyRelation,
+    User,
+)
+from careertwin.services.matching import POLICY_VERSION, calculate_match
 from careertwin.services.blob import configured_blob_store
 from careertwin.services.security import create_user
 from careertwin.services.taxonomy import (
@@ -158,6 +171,95 @@ def doctor(_: argparse.Namespace) -> None:
     print("database: ok")
 
 
+
+def rematch(args: argparse.Namespace) -> None:
+    """Recompute every opportunity's alignment under the current matching policy.
+
+    Match runs are immutable and keyed by policy version and input digest, so a change
+    to the matching policy does not reinterpret stored runs: it needs new ones. Without
+    this, a deployed policy fix is invisible until each opportunity happens to be
+    re-run by hand from the interface.
+    """
+    from sqlalchemy.orm import selectinload
+
+    with SessionLocal() as db:
+        opportunities = list(
+            db.scalars(
+                select(Opportunity).options(selectinload(Opportunity.requirements))
+            ).all()
+        )
+        if not opportunities:
+            print("no opportunities to match")
+            return
+
+        created = 0
+        for opportunity in opportunities:
+            workspace_id = opportunity.workspace_id
+            profile = db.scalar(
+                select(ProfessionalProfile).where(
+                    ProfessionalProfile.workspace_id == workspace_id
+                )
+            )
+            if not profile:
+                print(f"skip {opportunity.title}: workspace has no profile")
+                continue
+            skills = list(
+                db.scalars(
+                    select(Skill)
+                    .options(selectinload(Skill.evidence))
+                    .where(Skill.workspace_id == workspace_id)
+                ).all()
+            )
+            experiences = list(
+                db.scalars(select(Experience).where(Experience.workspace_id == workspace_id)).all()
+            )
+            education = list(
+                db.scalars(select(Education).where(Education.workspace_id == workspace_id)).all()
+            )
+            claims = list(
+                db.scalars(
+                    select(EvidenceClaim).where(
+                        EvidenceClaim.workspace_id == workspace_id,
+                        EvidenceClaim.state == ClaimState.CONFIRMED,
+                    )
+                ).all()
+            )
+            calculation = calculate_match(
+                profile, skills, experiences, education, claims, opportunity
+            )
+            existing = db.scalar(
+                select(MatchRun).where(
+                    MatchRun.workspace_id == workspace_id,
+                    MatchRun.opportunity_id == opportunity.id,
+                    MatchRun.policy_version == POLICY_VERSION,
+                    MatchRun.input_digest == calculation.input_digest,
+                )
+            )
+            met = sum(1 for item in calculation.assessments if item["status"] == "met")
+            total = len(calculation.assessments)
+            if existing:
+                print(
+                    f"unchanged {opportunity.title}: coverage {calculation.coverage:.3f}, "
+                    f"{met}/{total} met"
+                )
+                continue
+            db.add(
+                MatchRun(
+                    workspace_id=workspace_id,
+                    opportunity_id=opportunity.id,
+                    policy_version=POLICY_VERSION,
+                    **calculation.__dict__,
+                )
+            )
+            created += 1
+            print(
+                f"matched {opportunity.title}: coverage {calculation.coverage:.3f}, "
+                f"{met}/{total} met, eligibility {calculation.eligibility}"
+            )
+        db.commit()
+    print(f"{created} new run(s) under policy {POLICY_VERSION}")
+
+
 def parser() -> argparse.ArgumentParser:
     """Build the CLI command tree."""
     root = argparse.ArgumentParser(prog="careertwin")
@@ -183,6 +285,10 @@ def parser() -> argparse.ArgumentParser:
         "encrypt-blobs", help="Encrypt legacy document blobs in place"
     )
     blob_migration.set_defaults(handler=encrypt_blobs)
+    rerun = commands.add_parser(
+        "rematch", help="Recompute alignment for every opportunity under the current policy"
+    )
+    rerun.set_defaults(handler=rematch)
     health = commands.add_parser("doctor", help="Verify local dependencies")
     health.set_defaults(handler=doctor)
     return root
