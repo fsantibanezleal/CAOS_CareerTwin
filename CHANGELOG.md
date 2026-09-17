@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-17
+
+### Fixed
+
+- Topbar clipped the account name at the viewport edge on every page. It carried a fixed 69px height
+  sized for the old 9-11px type and could not contain the new scale; it now grows with its contents.
+- Brand subtitle wrapped to two lines after moving from 9px to 13px.
+
 ## [0.7.0] - 2026-09-17
 
 ### Changed
