@@ -148,14 +148,23 @@ export function CareerTimeline({
                 </span>
                 <span className="ct-track">
                   <i
-                    className={row.current ? 'current' : ''}
+                    className={`${row.current ? 'current' : ''}${width < 9 ? ' narrow' : ''}`}
                     style={{ left: `${left}%`, width: `${width}%` }}
                     title={`${formatYear(row.start)} – ${row.current ? t('present') : formatYear(row.end)}`}
                   >
-                    <em>
-                      {formatYear(row.start)}&ndash;{row.current ? t('now') : formatYear(row.end)}
-                    </em>
+                    {/* A label wider than its bar renders as clipped nonsense ("20", "2"),
+                        so a short span puts its dates beside the bar instead of inside it. */}
+                    {width >= 9 ? (
+                      <em>
+                        {formatYear(row.start)}&ndash;{row.current ? t('now') : formatYear(row.end)}
+                      </em>
+                    ) : null}
                   </i>
+                  {width < 9 ? (
+                    <span className="ct-outside" style={{ left: `calc(${left + width}% + var(--space-2))` }}>
+                      {formatYear(row.start)}&ndash;{row.current ? t('now') : formatYear(row.end)}
+                    </span>
+                  ) : null}
                 </span>
                 {row.detail.length > 0 ? (
                   <span className="ct-count">
