@@ -4,6 +4,23 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-09-17
+
+### Changed
+
+- Refresh the Chainguard python and Wolfi base image digests and re-pin all 22 moved apk packages in
+  the database image, including the OpenSSL rebuild from 3.6.4-r0 to 3.6.4-r7. The database Dockerfile
+  pins exact package versions alongside the base digest, so a base refresh without a matching re-pin
+  fails the build with "unable to select packages".
+- Hold the accepted Python runtime line and ranged optional dependency majors in Dependabot, so
+  upper-bound widening that is not classified as a semantic major cannot land unreviewed.
+
+### Security
+
+- Document CVE-2026-85091 in zlib as an open, unsuppressed finding. The installed
+  1.3.2.1_rc20260601-r0 has no published fix in Wolfi and the Chainguard digest is already newest, so
+  the repository policy forbids a VEX statement and openvex.json stays empty.
+
 ## [0.5.10] - 2026-08-31
 
 ### Fixed
