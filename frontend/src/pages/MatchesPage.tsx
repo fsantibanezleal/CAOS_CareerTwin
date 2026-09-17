@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowRight, CheckCircle2, CircleHelp, CircleOff, Compass
 import { useMemo, useState } from 'react'
 import { api, json } from '../api'
 import { CoverageWorkbench } from '../components/CoverageWorkbench'
+import { SalaryBand } from '../components/SalaryBand'
 import { MatchWaterfall } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel, Score } from '../components/Primitives'
 import { useI18n } from '../i18n'
@@ -75,6 +76,7 @@ function MatchDetail({ run, opportunity }: { run: MatchRun; opportunity: Opportu
     <div className="match-detail">
       <div className="match-hero"><div><span className="eyebrow"><Target /> {t('Match run {version}', { version: run.policy_version })}</span><h2>{opportunity.title}</h2><p>{opportunity.employer || t('Employer not specified')}</p></div><div className="hero-score"><Score value={run.score} /><small>{t('Evidence alignment')}</small></div><div className={`eligibility eligibility-${run.eligibility}`}><span>{t('Eligibility')}</span><b>{t(run.eligibility)}</b></div></div>
       <div className="match-facts"><div><b>{Math.round(run.coverage * 100)}%</b><span>{t('evidence coverage')}</span></div><div><b>{Math.round(run.lower_bound * 100)}–{Math.round(run.upper_bound * 100)}%</b><span>{t('uncertainty interval')}</span></div><div><b>{run.assessments.length}</b><span>{t('atomic requirements')}</span></div><div><b>{formatDate(run.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>{t('immutable snapshot')}</span></div></div>
+      <SalaryBand compensation={opportunity.compensation as never} />
       <Panel title={t('Alignment shape')} subtitle={t('Known signals and uncertainty by requirement family')}><MatchWaterfall run={run} /></Panel>
       <Panel title={t('Evidence bridge')} subtitle={t('Every status traces requirements to current canonical evidence')}>
         <div className="assessment-list">{run.assessments.map((item) => <article key={item.requirement_id} className={`assessment ${item.status}`}><span className="assessment-icon">{statusIcon[item.status as keyof typeof statusIcon] ?? <CircleHelp />}</span><div><span className="status-badge">{t(item.importance)}</span><h3>{item.label}</h3><p>{localizedExplanation(t, item.explanation)}</p>{item.evidence_ids.length > 0 && <small>{plural(item.evidence_ids.length, '{count} confirmed evidence link', '{count} confirmed evidence links')}</small>}</div><strong>{item.score === null || item.score === undefined ? t('Unknown') : `${Math.round(item.score * 100)}%`}</strong></article>)}</div>
