@@ -4,6 +4,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-09-17
+
+### Fixed
+
+- Career timeline: a bar narrower than its own date label rendered as clipped nonsense, showing "20"
+  for a nine-month role and "2" for a five-month one. Spans under 9 percent of the timeline now place
+  their dates beside the bar.
+
 ## [0.6.2] - 2026-09-17
 
 ### Fixed
