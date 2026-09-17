@@ -1,4 +1,4 @@
-ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:e624c5d5e42382ce7165ddafcbbf8e6769a24cbd02ea6114b880b05ae5ba2a8d
+ARG WOLFI_IMAGE=cgr.dev/chainguard/wolfi-base:latest@sha256:1d95114038f76513a9ace6fca107d5582b08c65981f81f61cb56bf7fd2ef216d
 
 FROM ${WOLFI_IMAGE} AS postgres-builder
 
@@ -9,21 +9,21 @@ ARG PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62e
 
 RUN apk add --no-cache \
         build-base=1-r9 \
-        bison=3.8.2-r62 \
-        bzip2-dev=1.0.8-r23 \
-        ca-certificates-bundle=20260611-r0 \
-        flex=2.6.4-r11 \
+        bison=3.8.2-r63 \
+        bzip2-dev=1.0.8-r24 \
+        ca-certificates-bundle=20260611-r1 \
+        flex=2.6.4-r12 \
         icu-dev=78.3-r3 \
         libedit-dev=3.1-r19 \
-        libxml2-dev=2.15.3-r3 \
+        libxml2-dev=2.15.4-r0 \
         libxslt-dev=1.1.45-r4 \
         lz4-dev=1.10.0-r10 \
-        openssl-dev=3.6.4-r0 \
-        perl=5.44.0-r0 \
+        openssl-dev=3.6.4-r7 \
+        perl=5.44.0-r1 \
         postgresql-17-oci-entrypoint=17.10-r1 \
-        util-linux-dev=2.42.2-r4 \
-        zlib-dev=1.3.2-r5 \
-        zstd-dev=1.5.7-r8
+        util-linux-dev=2.42.3-r3 \
+        zlib-dev=1.3.2.1_rc20260601-r0 \
+        zstd-dev=1.5.7-r10
 ADD --checksum=sha256:${POSTGRES_SHA256} \
     https://ftp.postgresql.org/pub/source/v${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.tar.bz2 \
     /tmp/postgresql.tar.bz2
@@ -64,22 +64,22 @@ FROM ${WOLFI_IMAGE}
 RUN addgroup -S -g 70 postgres \
     && adduser -S -D -u 70 -G postgres -h /home/postgres -s /bin/sh postgres \
     && apk add --no-cache \
-        bash=5.3-r12 \
-        ca-certificates-bundle=20260611-r0 \
-        glibc-2.44-locale-en=2.44-r1 \
-        gosu=1.19-r16 \
-        libcrypto3=3.6.4-r0 \
+        bash=5.3-r13 \
+        ca-certificates-bundle=20260611-r1 \
+        glibc-2.44-locale-en=2.44-r6 \
+        gosu=1.19-r17 \
+        libcrypto3=3.6.4-r7 \
         libedit=3.1-r19 \
         libicu78=78.3-r3 \
         liblz4-1=1.10.0-r10 \
-        libssl3=3.6.4-r0 \
-        libuuid=2.42.2-r4 \
-        libxml2-16=2.15.3-r3 \
+        libssl3=3.6.4-r7 \
+        libuuid=2.42.3-r3 \
+        libxml2-16=2.15.4-r0 \
         libxslt=1.1.45-r4 \
-        libzstd1=1.5.7-r8 \
-        posix-libc-utils-bin-2.44=2.44-r1 \
-        tzdata=2026c-r0 \
-        zlib=1.3.2-r5 \
+        libzstd1=1.5.7-r10 \
+        posix-libc-utils-bin-2.44=2.44-r6 \
+        tzdata=2026d-r0 \
+        zlib=1.3.2.1_rc20260601-r0 \
     && mkdir -p /var/lib/postgres/initdb /var/lib/postgresql/data /var/run/postgresql \
     && chown -R postgres:postgres /var/lib/postgres /var/lib/postgresql /var/run/postgresql
 
