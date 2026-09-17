@@ -4,6 +4,29 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-17
+
+### Added
+
+- Design system in `src/tokens.css`, researched and documented in
+  `docs/design/design-system.md`: type on a 16px base with a Major Third 1.25 ratio and 4pt baseline
+  line heights, spacing on the 8pt grid, radius and elevation steps, semantic colour tokens, and
+  independently authored dark and light palettes. Adds a visible focus ring to every interactive
+  element, the most common dark-mode accessibility failure being an invisible focus indicator.
+- Coverage workbench: requirement rows against opportunity columns with sticky header and first
+  column, ranked bars sorted high to low, full-text search, status and importance filters, three sort
+  modes and an evidence detail panel opened from any cell.
+
+### Changed
+
+- Raise 185 type rules off an 8px floor; nothing essential now renders below 14px.
+- Contain the visualisation stages in the viewport instead of scrolling the shell.
+
+### Removed
+
+- Force-directed network and adjacency matrix as primary surfaces. Node position in a force layout
+  carries no meaning, so both signalled "knowledge graph" while answering no question a candidate asks.
+
 ## [0.5.12] - 2026-09-17
 
 ### Fixed
