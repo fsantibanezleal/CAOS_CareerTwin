@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, CheckCircle2, CircleHelp, CircleOff, Compass, Gauge, Lightbulb, ListTodo, Play, Save, ShieldQuestion, Target, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { api, json } from '../api'
+import { CoverageWorkbench } from '../components/CoverageWorkbench'
 import { MatchWaterfall } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, PageHeader, Panel, Score } from '../components/Primitives'
 import { useI18n } from '../i18n'
@@ -103,6 +104,12 @@ export function MatchesPage() {
     <>
       <PageHeader eyebrow={t('Evidence alignment')} title={t('Compare requirements without pretending to predict hiring.')} description={t('A deterministic, versioned score with separate eligibility, explicit evidence coverage, and a visible uncertainty interval.')} />
       <TargetPortfolioPanel />
+      <Panel
+        title={t('Coverage across every target')}
+        subtitle={t('Requirements against roles. Sorted worst gap first; select any cell for its evidence.')}
+      >
+        <CoverageWorkbench runs={matches.data ?? []} opportunities={opportunities.data ?? []} />
+      </Panel>
       <div className="match-layout">
         <aside className="match-index"><div className="match-index-head"><h2>{t('Saved roles')}</h2><span>{opportunities.data.length}</span></div>{opportunities.data.length ? opportunities.data.map((opportunity) => { const value = latest.get(opportunity.id); return <article key={opportunity.id} className={selectedId === opportunity.id ? 'selected' : ''}><button onClick={() => setSelectedId(opportunity.id)}><span className="company-mark"><Target /></span><div><b>{opportunity.title}</b><small>{opportunity.employer || t('Employer unknown')}</small></div>{value ? <Score value={value.score} /> : <span className="unscored">{t('Not run')}</span>}</button><footer>{value ? <><span>{t('{count}% covered', { count: Math.round(value.coverage * 100) })}</span><span className={`eligibility-${value.eligibility}`}>{t(value.eligibility)}</span></> : <span>{t('Add or confirm evidence first')}</span>}<button className="text-button" onClick={() => run.mutate(opportunity.id)}><Play /> {t(value ? 'Re-run' : 'Run')}</button></footer></article> }) : <EmptyState title={t('No roles to compare')} description={t('Capture opportunities before running evidence alignment.')} />}</aside>
         <section>{run.error && <ErrorState error={run.error} />}{selectedRun && selectedOpportunity ? <MatchDetail run={selectedRun} opportunity={selectedOpportunity} /> : <div className="match-empty"><div className="radar-illustration"><Gauge /><i /><i /><i /></div><h2>{t('Select a role and run matching')}</h2><p>{t('The engine will separate hard eligibility from weighted fit, cite current evidence, and preserve unknowns instead of silently treating them as failure.')}</p><div className="principle-grid"><span><ShieldQuestion /><b>{t('Unknown ≠ weak')}</b><small>{t('Missing evidence widens uncertainty.')}</small></span><span><TrendingUp /><b>{t('Versioned policy')}</b><small>{t('Same inputs produce the same result.')}</small></span><span><Target /><b>{t('No hiring prediction')}</b><small>{t('Alignment supports your decision.')}</small></span></div></div>}</section>
