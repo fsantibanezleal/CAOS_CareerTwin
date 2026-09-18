@@ -140,6 +140,9 @@ for (const viewport of phase('opportunities')) {
       if (r.barClipped.length) problems.push(`bar control cut off: ${r.barClipped.join(' | ')}`)
       if (r.titleClipped.length) problems.push(`role title cut off in list: ${r.titleClipped.join(' | ')}`)
       if (r.salaryWraps) problems.push('salary strip wraps')
+      // ADR-0071 section 8: the instrument holds at least half the screen. At 1280x800 the brief
+      // held 47% until the navigation rail collapsed (#188).
+      if (r.briefShare < 50) problems.push(`brief is ${r.briefShare}% of the screen, under the 50% floor`)
       const want = expected[r.role]
       if (want) {
         if (instant !== want) problems.push(`verdict on first paint "${instant}" instead of ${want}`)
