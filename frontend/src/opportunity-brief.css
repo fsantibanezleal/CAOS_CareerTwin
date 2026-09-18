@@ -449,3 +449,23 @@
   .opp-row { min-width: 220px; }
   .ob-head { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* What answers a requirement, in words (issue #189), in both requirement details. */
+.ev-list { display: grid; gap: var(--space-1); margin-top: var(--space-2); }
+.ev-list h5 {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ev-list ul { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.ev-list li {
+  border-left: 3px solid var(--positive);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-2);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+}
+.ev-note { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); }

@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowRight, CheckCircle2, CircleHelp, CircleOff, Compass
 import { useMemo, useState } from 'react'
 import { api, json } from '../api'
 import { CoverageWorkbench } from '../components/CoverageWorkbench'
+import { useClaims } from '../useClaims'
 import { SalaryBand } from '../components/SalaryBand'
 import { MatchWaterfall } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, Panel, Score } from '../components/Primitives'
@@ -97,6 +98,8 @@ export function MatchesPage() {
   const [portfoliosOpen, setPortfoliosOpen] = useState(false)
   const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities') })
   const matches = useQuery({ queryKey: ['matches'], queryFn: () => api<MatchRun[]>('/api/matches') })
+  // Warmed on mount: a requirement detail then opens with its evidence loaded.
+  useClaims()
   const targetSets = useQuery({ queryKey: ['target-sets'], queryFn: () => api<TargetSet[]>('/api/opportunities/target-sets') })
   const runAll = useMutation({
     // Sequential on purpose: each run is an immutable record, and the server computes them
