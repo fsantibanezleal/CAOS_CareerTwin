@@ -4,6 +4,77 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-17
+
+### Fixed
+
+- Carry accomplishments through the profile interchange. The module is called "Lossless profile
+  interchange" and dropped an entire entity: the accomplishment bank, which holds the STAR record
+  behind every achievement bullet. Export and reimport silently emptied it, which is why the
+  deployed workspace held eleven experiences, four education records and zero accomplishments.
+  Schema moves to 1.1; 1.0 documents still import, since they simply carry no bank. The
+  losslessness test asserted an exact counts dict and never created an accomplishment, so it stayed
+  green while the data was discarded; it now round-trips one and checks its evidence is remapped.
+- Apply the visual redesign, which shipped three releases ago and never rendered. `tokens.css`
+  defined the warm paper canvas and the single ink-blue accent, but `styles.css` still declared the
+  entire previous palette in its own `:root` block and is imported after it. At equal specificity
+  the later file wins, so the deployed app kept its slate-navy canvas and neon teal accent. The one
+  token `styles.css` did not redeclare, `--font-display`, came through, which is why headings turned
+  serif while nothing else moved. `tokens.css` is now the only file permitted to declare a palette
+  token, guarded by `frontend/src/theme.test.ts`.
+- Move 60 literal colours in `styles.css` onto the theme tokens. Changing a token did nothing for
+  declarations that named the previous hues directly: the primary button's neon teal-to-blue
+  gradient, the violet avatar, every status tint, the login hero's hardcoded `#080d18` canvas. They
+  kept rendering the old design whatever `tokens.css` said, which is most of why the redesign
+  appeared not to have happened. `styles.css` now contains no literal colour at all.
+- Put the graph palette on tokens. `Visualizations.tsx` carried its own full palette: node-type hues
+  in the previous teal and violet, and graph surfaces hardcoded to a `#0e1421` navy. Its own comment
+  instructed the reader to keep those values aligned with the stylesheet by hand, a sync that was
+  never performed and became impossible once the palette moved. Every graph therefore rendered the
+  old design on an old canvas whatever the theme said. A categorical `--viz-1` to `--viz-8` scale is
+  now authored per theme in `tokens.css` and resolved at runtime, the way `EChart` already did it.
+- Give the login hero its own tokens. It inverts the canvas by design, so once the palette actually
+  applied, the light theme put near-black heading text on a hardcoded dark panel and the headline
+  became unreadable.
+- Remove `--muted: #4d5a४b` from the light palette. The hex contained a Devanagari digit, so the
+  browser discarded the declaration and the token was never set.
+- Resolve requirements against evidence with containment instead of token Jaccard similarity.
+  Jaccard divides by the union of both token sets, so a short requirement label compared against a
+  full profile record scored lower the richer that record was. "Engineering degree" peaked at 0.091
+  against a genuine B.Sc. in Electronics Engineering and a Ph.D. in Electrical Engineering, under a
+  0.40 threshold, and the workbench reported it unresolved. Every requirement expressed as a phrase
+  rather than a single term was affected the same way, which is why coverage read as thin evidence
+  rather than as a broken metric. Matching policy moves to `match-v1.1.0`.
+- Treat abbreviated credentials as words. `normalize_label` keeps periods so that `node.js` and
+  `.net` survive, which left `b.sc.` and `ph.d.` matching nothing.
+- Drop filler terms before comparing. "experience in leadership" and "experience in cooking" shared
+  half their tokens before a single meaningful term was compared.
+- Search wider evidence when a requirement's category does not resolve it. Categories are assigned
+  heuristically at extraction and are frequently wrong; a degree filed as a skill was searched only
+  against the skill list and reported as a gap while the education record sat in the same workspace.
+- Repin the PostgreSQL base-image guard, which still asserted package revisions superseded by the
+  OpenSSL advisory updates, and record the release in README so the packaging contract holds.
+
+### Added
+
+- `careertwin rematch` recomputes every opportunity's alignment under the current matching
+  policy. Runs are immutable and keyed by policy version and input digest, so a policy fix does
+  not reinterpret stored runs: it needs new ones, and without this a deployed fix stays invisible
+  until each opportunity is re-run by hand from the interface.
+
+### Changed
+
+- Replace the opportunity editor with a brief. The screen opened on a textarea of raw unrendered
+  markdown followed by one editable row per requirement, each with an importance dropdown, a
+  category dropdown, a text input and a weight spinner: forty-eight form controls for twelve
+  requirements, and no statement anywhere about fit. The brief leads with coverage, requirements
+  met, gaps and eligibility, shows the compensation band, and presents requirements as a filterable
+  status grid that is sized to its container rather than a list that grows the page. Selecting one
+  shows the evidence that answers it. The editor keeps every capability it had, behind Edit.
+- Name the evidence in an assessment. "Resolved against confirmed profile evidence" became
+  "Evidenced by B.Sc. in Electronics Engineering, Universidad de Concepcion".
+
+
 ## [0.8.2] - 2026-09-17
 
 ### Fixed

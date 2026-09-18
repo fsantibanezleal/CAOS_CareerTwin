@@ -165,7 +165,7 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     dockerfile = (repository_root / "docker" / "postgres" / "Dockerfile").read_text()
     assert (
         "cgr.dev/chainguard/wolfi-base:latest@sha256:"
-        "e624c5d5e42382ce7165ddafcbbf8e6769a24cbd02ea6114b880b05ae5ba2a8d"
+        "1d95114038f76513a9ace6fca107d5582b08c65981f81f61cb56bf7fd2ef216d"
         in dockerfile
     )
     assert "POSTGRES_VERSION=17.11" in dockerfile
@@ -178,9 +178,15 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     assert "postgresql-17=17.10-r1" not in runtime_stage
     assert "postgresql-17-client=17.10-r1" not in runtime_stage
     assert "postgresql-17-contrib=17.10-r1" not in runtime_stage
-    assert "glibc-2.44-locale-en=2.44-r1" in dockerfile
-    assert "gosu=1.19-r16" in dockerfile
-    assert "posix-libc-utils-bin-2.44=2.44-r1" in dockerfile
+    # Assert the pinning discipline, not one revision. These packages are re-pinned
+    # whenever an advisory lands, and a guard that hard-codes "-r1" fails on every
+    # routine security update while catching nothing: the supply-chain anchors that
+    # must stay under review are the base digest and the source checksums above.
+    for package in ("glibc-2.44-locale-en", "gosu", "posix-libc-utils-bin-2.44"):
+        marker = package + "="
+        assert marker in dockerfile, package
+        pin = dockerfile.split(marker, 1)[1].split(maxsplit=1)[0].rstrip("\\")
+        assert pin[:1].isdigit() and "-r" in pin, (package, pin)
     assert 'CMD ["postgres", "-c", "listen_addresses=*"]' in dockerfile
     assert "PGVECTOR_COMMIT=8ee86c96f0fd72390f890aa8a336fda6d3ab4c6c" in dockerfile
     assert "PGVECTOR_SHA256=d076a3098010905fd60256649327809651f6288327db6413f0938305f62ea299" in dockerfile

@@ -11,11 +11,28 @@ import type { Landscape, MatchRun, OpportunityGraphData, ProfileGraphData } from
 import { EChart, type ChartTokens } from './EChart'
 import { EmptyState } from './Primitives'
 
-const palette: Record<string, string> = {
-  profile: '#7c6cff', skill: '#3ddbd9', experience: '#ffb45e', education: '#ed77d4',
-  accomplishment: '#f5d76e', evidence: '#6be39a', source: '#84a5ff', requirement: '#ff7d91',
-  opportunity: '#7c6cff', employer: '#84a5ff', industry: '#ed77d4', seniority: '#ffb45e',
-  location: '#6be39a', work_mode: '#3ddbd9', target_set: '#f5d76e', unknown: '#8090a8',
+/** Resolve a design token to the string a canvas renderer can use. */
+function token(name: string, fallback = '#808080'): string {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value || fallback
+}
+
+/** Node-type hues, drawn from the categorical scale in tokens.css so they follow the theme. */
+function nodePalette(): Record<string, string> {
+  const indigo = token('--viz-1')
+  const teal = token('--viz-2')
+  const orange = token('--viz-3')
+  const magenta = token('--viz-4')
+  const yellow = token('--viz-5')
+  const green = token('--viz-6')
+  const blue = token('--viz-7')
+  const red = token('--viz-8')
+  return {
+    profile: indigo, skill: teal, experience: orange, education: magenta,
+    accomplishment: yellow, evidence: green, source: blue, requirement: red,
+    opportunity: indigo, employer: blue, industry: magenta, seniority: orange,
+    location: green, work_mode: teal, target_set: yellow, unknown: token('--faint'),
+  }
 }
 
 type GraphThemeTokens = {
@@ -27,15 +44,19 @@ type GraphThemeTokens = {
   dimmedNode: string
 }
 
-// Canvas renderers cannot consume CSS custom properties directly. Keep these values aligned with
-// the workbench tokens in styles.css, and observe the root theme so an open graph changes live.
-const graphThemes: Record<'dark' | 'light', GraphThemeTokens> = {
-  dark: { label: '#edf3fc', surface: '#0e1421', line: '#243149', edge: '#697991', focusedEdge: '#a9bce0', dimmedNode: '#293246' },
-  light: { label: '#152036', surface: '#ffffff', line: '#d7e0ec', edge: '#738198', focusedEdge: '#46566f', dimmedNode: '#c7d1df' },
-}
-
+// Canvas renderers cannot consume CSS custom properties directly, so the tokens are
+// resolved to strings here. They are READ rather than duplicated: the previous literals
+// carried an instruction to keep them aligned with the stylesheet by hand, which is a
+// sync that was never performed and left every graph on a navy canvas in the old hues.
 function currentGraphTheme(): GraphThemeTokens {
-  return graphThemes[document.documentElement.dataset.theme === 'light' ? 'light' : 'dark']
+  return {
+    label: token('--text'),
+    surface: token('--surface'),
+    line: token('--line'),
+    edge: token('--faint'),
+    focusedEdge: token('--accent'),
+    dimmedNode: token('--surface-3'),
+  }
 }
 
 function useGraphTheme(): GraphThemeTokens {
@@ -111,7 +132,7 @@ function RelationshipGraphLoader({ data, edgeColor }: { data: ProfileGraphData['
         y: position.y,
         fixed: node.type === 'profile',
         size: node.type === 'profile' ? 18 : node.type === 'opportunity' || node.type === 'target_set' ? 11 : 7 + Number(node['strength'] ?? 0) * 7,
-        color: palette[node.type] ?? palette.unknown,
+        color: nodePalette()[node.type] ?? nodePalette().unknown,
       })
     })
     data.edges.forEach((edge, index) => {
@@ -203,7 +224,7 @@ function GraphMatrix({ nodes, edges, onSelect }: { nodes: GraphNode[]; edges: Gr
     return degree(right.id) - degree(left.id) || left.label.localeCompare(right.label)
   }).slice(0, 28), [edges, nodes])
   const edgeMap = useMemo(() => new Map(edges.flatMap((edge) => [[`${edge.source}|${edge.target}`, edge], [`${edge.target}|${edge.source}`, edge]])), [edges])
-  return <div className="graph-matrix-shell" role="region" aria-label={t('Degree-ranked adjacency matrix')}><p>{t('Showing the {count} most connected visible entities. Select a row or cell to inspect it.', { count: ranked.length })}</p><div className="graph-matrix" style={{ gridTemplateColumns: `minmax(170px, 1fr) repeat(${ranked.length}, 26px)` }}><span />{ranked.map((node) => <button key={`head-${node.id}`} className="matrix-node-head" title={node.label} aria-label={t('Inspect {label}', { label: node.label })} onClick={() => onSelect(node.id)}><i style={{ background: palette[node.type] ?? palette.unknown }} /></button>)}{ranked.map((row) => <div className="matrix-line" key={row.id} style={{ gridColumn: `1 / span ${ranked.length + 1}`, gridTemplateColumns: `minmax(170px, 1fr) repeat(${ranked.length}, 26px)` }}><button className="matrix-label" onClick={() => onSelect(row.id)}>{row.label}</button>{ranked.map((column) => { const edge = edgeMap.get(`${row.id}|${column.id}`); const label = edge ? `${row.label} — ${String(edge['type'] ?? 'related')} — ${column.label}` : `${row.label} / ${column.label}`; return <button key={column.id} className={`matrix-cell ${edge ? 'linked' : ''}`} style={edge ? { background: palette[row.type] ?? palette.unknown, opacity: 0.35 + Number(edge['weight'] ?? 0.5) * 0.5 } : undefined} title={label} aria-label={label} onClick={() => onSelect(edge ? row.id : column.id)} /> })}</div>)}</div></div>
+  return <div className="graph-matrix-shell" role="region" aria-label={t('Degree-ranked adjacency matrix')}><p>{t('Showing the {count} most connected visible entities. Select a row or cell to inspect it.', { count: ranked.length })}</p><div className="graph-matrix" style={{ gridTemplateColumns: `minmax(170px, 1fr) repeat(${ranked.length}, 26px)` }}><span />{ranked.map((node) => <button key={`head-${node.id}`} className="matrix-node-head" title={node.label} aria-label={t('Inspect {label}', { label: node.label })} onClick={() => onSelect(node.id)}><i style={{ background: nodePalette()[node.type] ?? nodePalette().unknown }} /></button>)}{ranked.map((row) => <div className="matrix-line" key={row.id} style={{ gridColumn: `1 / span ${ranked.length + 1}`, gridTemplateColumns: `minmax(170px, 1fr) repeat(${ranked.length}, 26px)` }}><button className="matrix-label" onClick={() => onSelect(row.id)}>{row.label}</button>{ranked.map((column) => { const edge = edgeMap.get(`${row.id}|${column.id}`); const label = edge ? `${row.label} — ${String(edge['type'] ?? 'related')} — ${column.label}` : `${row.label} / ${column.label}`; return <button key={column.id} className={`matrix-cell ${edge ? 'linked' : ''}`} style={edge ? { background: nodePalette()[row.type] ?? nodePalette().unknown, opacity: 0.35 + Number(edge['weight'] ?? 0.5) * 0.5 } : undefined} title={label} aria-label={label} onClick={() => onSelect(edge ? row.id : column.id)} /> })}</div>)}</div></div>
 }
 
 function GraphInspector({ data, selectedId, variant, onSelect, onClose }: { data: ProfileGraphData['graph']; selectedId?: string; variant: 'profile' | 'opportunity'; onSelect: (id: string) => void; onClose: () => void }) {
@@ -211,7 +232,7 @@ function GraphInspector({ data, selectedId, variant, onSelect, onClose }: { data
   const selected = data.nodes.find((node) => node.id === selectedId)
   const selectedEdges = selected ? data.edges.filter((edge) => edge.source === selected.id || edge.target === selected.id) : []
   const other = (edge: GraphEdge) => data.nodes.find((node) => node.id === (edge.source === selectedId ? edge.target : edge.source))
-  return <aside className={`graph-inspector ${selected ? 'open' : ''}`} aria-live="polite">{selected ? <><header><div><span><i style={{ background: palette[selected.type] ?? palette.unknown }} />{t(selected.type)}</span><h3>{selected.label}</h3></div><button className="icon-button" onClick={onClose} aria-label={t('Close graph inspector')}><X /></button></header><div className="inspector-metrics">{selected['strength'] !== undefined && <span><b>{Math.round(Number(selected['strength']) * 100)}%</b>{t('Strength')}</span>}{selected['confidence'] !== undefined && <span><b>{Math.round(Number(selected['confidence']) * 100)}%</b>{t('Confidence')}</span>}<span><b>{selectedEdges.length}</b>{t('Connections')}</span></div><dl>{Object.entries(selected).filter(([key, value]) => !['id', 'label', 'type', 'strength', 'confidence'].includes(key) && value !== undefined && value !== null && value !== '').map(([key, value]) => <div key={key}><dt>{t(key.replaceAll('_', ' '))}</dt><dd>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</dd></div>)}</dl><section><h4>{t('Typed relationships')}</h4>{selectedEdges.length ? selectedEdges.map((edge) => { const neighbor = other(edge); return <button key={edge.id} onClick={() => neighbor && onSelect(neighbor.id)}><span>{t(String(edge['type'] ?? 'related'))}</span><b>{neighbor?.label}</b></button> }) : <p>{t('No typed relationships for this entity.')}</p>}</section></> : <div className="inspector-empty"><h3>{t(variant === 'profile' ? 'Inspect an evidence path' : 'Inspect a search relationship')}</h3><p>{t(variant === 'profile' ? 'Select a node to see its exact metadata and typed relationships. Hover to isolate its neighborhood.' : 'Select a node to inspect how roles, requirements, employers, and search scenarios connect.')}</p></div>}</aside>
+  return <aside className={`graph-inspector ${selected ? 'open' : ''}`} aria-live="polite">{selected ? <><header><div><span><i style={{ background: nodePalette()[selected.type] ?? nodePalette().unknown }} />{t(selected.type)}</span><h3>{selected.label}</h3></div><button className="icon-button" onClick={onClose} aria-label={t('Close graph inspector')}><X /></button></header><div className="inspector-metrics">{selected['strength'] !== undefined && <span><b>{Math.round(Number(selected['strength']) * 100)}%</b>{t('Strength')}</span>}{selected['confidence'] !== undefined && <span><b>{Math.round(Number(selected['confidence']) * 100)}%</b>{t('Confidence')}</span>}<span><b>{selectedEdges.length}</b>{t('Connections')}</span></div><dl>{Object.entries(selected).filter(([key, value]) => !['id', 'label', 'type', 'strength', 'confidence'].includes(key) && value !== undefined && value !== null && value !== '').map(([key, value]) => <div key={key}><dt>{t(key.replaceAll('_', ' '))}</dt><dd>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</dd></div>)}</dl><section><h4>{t('Typed relationships')}</h4>{selectedEdges.length ? selectedEdges.map((edge) => { const neighbor = other(edge); return <button key={edge.id} onClick={() => neighbor && onSelect(neighbor.id)}><span>{t(String(edge['type'] ?? 'related'))}</span><b>{neighbor?.label}</b></button> }) : <p>{t('No typed relationships for this entity.')}</p>}</section></> : <div className="inspector-empty"><h3>{t(variant === 'profile' ? 'Inspect an evidence path' : 'Inspect a search relationship')}</h3><p>{t(variant === 'profile' ? 'Select a node to see its exact metadata and typed relationships. Hover to isolate its neighborhood.' : 'Select a node to inspect how roles, requirements, employers, and search scenarios connect.')}</p></div>}</aside>
 }
 
 function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph']; variant: 'profile' | 'opportunity' }) {
@@ -239,7 +260,7 @@ function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph'];
         <div className="sigma-stage" role="img" aria-label={t(variant === 'profile' ? 'Interactive professional evidence network' : 'Interactive opportunity knowledge network')}>
           <SigmaContainer settings={sigmaSettings}><RelationshipGraphLoader data={data} edgeColor={graphTheme.edge} /><RelationshipGraphController query={query} type={type} selected={activeSelectedId} focusSelection={focusSelection} resetSignal={resetSignal} theme={graphTheme} onSelect={setSelectedId} /></SigmaContainer>
           <div className="graph-camera-controls"><button className="icon-button" onClick={() => setResetSignal((value) => value + 1)} aria-label={t('Fit graph to view')} title={t('Fit graph to view')}><RotateCcw /></button><button className={`icon-button ${focusSelection ? 'active' : ''}`} disabled={!activeSelectedId} aria-pressed={focusSelection} onClick={() => setFocusSelection((value) => !value)} aria-label={t('Focus selected neighborhood')} title={t('Focus selected neighborhood')}><Focus /></button></div>
-          <div className="graph-legend">{types.map((item) => <button key={item} className={type === item ? 'active' : ''} aria-pressed={type === item} onClick={() => setType(type === item ? '' : item)}><i style={{ background: palette[item] ?? palette.unknown }} />{t(item)}</button>)}</div>
+          <div className="graph-legend">{types.map((item) => <button key={item} className={type === item ? 'active' : ''} aria-pressed={type === item} onClick={() => setType(type === item ? '' : item)}><i style={{ background: nodePalette()[item] ?? nodePalette().unknown }} />{t(item)}</button>)}</div>
         </div>
         {inspector}
         </div>
@@ -271,7 +292,7 @@ export function CareerRiver({ rows }: { rows: ProfileGraphData['river'] }) {
     return [{
       name: row.title,
       value: [lanes.indexOf(row.kind), start, Math.max(start + 86400000, end), row.title, row.kind, String(row['organization'] ?? '')],
-      itemStyle: { color: palette[row.kind] ?? palette.unknown },
+      itemStyle: { color: nodePalette()[row.kind] ?? nodePalette().unknown },
     }]
   })
   const renderRange = (params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI) => {
