@@ -1,6 +1,4 @@
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core'
-import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts'
-import { graphic } from 'echarts/core'
 import Graph from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { Focus, RotateCcw, Search, X } from 'lucide-react'
@@ -104,10 +102,6 @@ function graphNodeHover(tokens: GraphThemeTokens): NodeHoverDrawingFunction {
 
 type GraphNode = ProfileGraphData['graph']['nodes'][number]
 type GraphEdge = ProfileGraphData['graph']['edges'][number]
-
-function escapeHtml(value: unknown) {
-  return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character] ?? character)
-}
 
 function stablePosition(id: string) {
   let hash = 2166136261
@@ -269,57 +263,8 @@ function RelationshipAtlas({ data, variant }: { data: ProfileGraphData['graph'];
   )
 }
 
-export function ProfileConstellation({ data }: { data: ProfileGraphData['graph'] }) {
-  return <RelationshipAtlas data={data} variant="profile" />
-}
-
 export function OpportunityNetwork({ data }: { data: OpportunityGraphData['graph'] }) {
   return <RelationshipAtlas data={data} variant="opportunity" />
-}
-
-export function CareerRiver({ rows }: { rows: ProfileGraphData['river'] }) {
-  const { formatDate, t } = useI18n()
-  const lanes = ['experience', 'education']
-  const [now] = useState(() => Date.now())
-  const parseTime = (value: unknown) => {
-    const parsed = new Date(String(value ?? '')).getTime()
-    return Number.isFinite(parsed) ? parsed : undefined
-  }
-  const dated = rows.flatMap((row) => {
-    const start = parseTime(row['start'])
-    if (start === undefined) return []
-    const end = parseTime(row['end']) ?? now
-    return [{
-      name: row.title,
-      value: [lanes.indexOf(row.kind), start, Math.max(start + 86400000, end), row.title, row.kind, String(row['organization'] ?? '')],
-      itemStyle: { color: nodePalette()[row.kind] ?? nodePalette().unknown },
-    }]
-  })
-  const renderRange = (params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI) => {
-    const lane = Number(api.value(0))
-    const [startX = 0, startY = 0] = api.coord([Number(api.value(1)), lane])
-    const [endX = 0] = api.coord([Number(api.value(2)), lane])
-    const laneSize = api.size?.([0, 1])
-    const laneHeight = Array.isArray(laneSize) ? laneSize[1] ?? 28 : laneSize ?? 28
-    const height = Math.max(16, Math.min(32, Math.abs(laneHeight) * 0.42))
-    const coord = params.coordSys as unknown as { x: number; y: number; width: number; height: number }
-    const shape = graphic.clipRectByRect({
-      x: startX,
-      y: startY - height / 2,
-      width: Math.max(6, endX - startX),
-      height,
-    }, { x: coord.x, y: coord.y, width: coord.width, height: coord.height })
-    return shape ? { type: 'rect', shape: { ...shape, r: 8 }, style: api.style() } : undefined
-  }
-  if (!rows.length) return <EmptyState title={t('No career timeline yet')} description={t('Add experience and education to reveal the arc of your career.')} />
-  return <div className="visual-stack"><EChart className="echart river-chart" ariaLabel={t('Career duration timeline chart')} option={(tokens) => ({
-    tooltip: { trigger: 'item', backgroundColor: tokens.surface, borderColor: tokens.line, textStyle: { color: tokens.text }, formatter: (value: { data: { value: Array<string | number> } }) => `<b>${escapeHtml(value.data.value[3])}</b><br/>${formatDate(new Date(Number(value.data.value[1])))} – ${Number(value.data.value[2]) >= now - 86400000 ? t('present') : formatDate(new Date(Number(value.data.value[2])))}` },
-    grid: { left: 108, right: 28, top: 24, bottom: 68 },
-    dataZoom: [{ type: 'inside', filterMode: 'none' }, { type: 'slider', bottom: 14, height: 22, borderColor: tokens.line, textStyle: { color: tokens.muted } }],
-    xAxis: { type: 'time', axisLabel: { color: tokens.muted }, axisLine: { lineStyle: { color: tokens.line } }, splitLine: { lineStyle: { color: tokens.line } } },
-    yAxis: { type: 'category', data: [t('Experience'), t('Education')], axisLabel: { color: tokens.text }, axisLine: { show: false } },
-    series: [{ type: 'custom', renderItem: renderRange, data: dated, encode: { x: [1, 2], y: 0 }, emphasis: { focus: 'series' } }],
-  })} /><details className="chart-data"><summary>{t('Read career timeline as a table')}</summary><div className="table-scroll"><table><thead><tr><th>{t('Type')}</th><th>{t('Role or credential')}</th><th>{t('Organization')}</th><th>{t('Start')}</th><th>{t('End')}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{t(row.kind)}</td><td>{row.title}</td><td>{String(row['organization'] ?? t('Not recorded'))}</td><td>{String(row['start'] ?? t('Unknown'))}</td><td>{String(row['end'] ?? t('present'))}</td></tr>)}</tbody></table></div></details></div>
 }
 
 export function OpportunityLandscape({ data }: { data: Landscape }) {
