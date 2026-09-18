@@ -122,12 +122,15 @@ export function OpportunitiesPage() {
   if (opportunities.isPending || landscape.isPending || graph.isPending) return <Loading label={t('Organizing your opportunity research')} />
   if (opportunities.error || landscape.error || graph.error) return <ErrorState error={opportunities.error || landscape.error || graph.error} />
   return (
-    <>
+    <div className="page-contained">
       <PageHeader eyebrow={t('Opportunity research')} title={t('Collect signals. Keep the source. Decide what matters.')} description={t('Capture individual roles from public pages or documents, review the structure, and understand patterns only within your saved research.')} actions={<button className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>} />
-      <TargetSetManager opportunities={opportunities.data} />
+      <details className="page-drawer">
+        <summary><FolderKanban /> {t('Target portfolios')}</summary>
+        <TargetSetManager opportunities={opportunities.data} />
+      </details>
       <div className="list-toolbar"><label className="search-field"><Search /><input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Research cards')}</button><button className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Knowledge graph')}</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button></div></div>
       {view === 'landscape' ? <Panel title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel> : view === 'network' ? <Panel title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{t(item.status)}</span></header><h2>{item.title}</h2><p>{item.employer || t('Employer not specified')}</p><div className="opportunity-meta"><span><MapPin />{item.location || t(item.remote_mode)}</span><span><BriefcaseBusiness />{item.seniority || t('Seniority unknown')}</span>{item.deadline_at && <span><CalendarClock />{formatDate(item.deadline_at)}</span>}</div><footer><span>{plural(item.requirements.length, '{count} structured requirement', '{count} structured requirements')}</span><ArrowUpRight /></footer></button>) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}</section>{selected ? <OpportunityDetail key={selected.id} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>{t('Select a research card')}</h3><p>{t('Review its extracted content and atomic requirements here.')}</p></aside>}</div>}
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
-    </>
+    </div>
   )
 }

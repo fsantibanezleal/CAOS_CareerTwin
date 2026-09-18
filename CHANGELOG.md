@@ -4,6 +4,22 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-09-17
+
+### Fixed
+
+- Size the opportunity page to the viewport. It stacked a tall hero, an always-expanded portfolio
+  composer, a toolbar and the working area, overflowing the viewport by 678px before a single
+  requirement had been read. Measured in a browser at 1600x950. The header and toolbar are now
+  intrinsic, the working area takes the remainder, and the only scrollable regions are the card list
+  and the requirement grid.
+
+### Changed
+
+- Move the target-portfolio composer into a drawer, closed by default. It is a secondary tool and
+  was occupying a third of the working surface on every visit.
+
+
 ## [0.9.0] - 2026-09-17
 
 ### Fixed
