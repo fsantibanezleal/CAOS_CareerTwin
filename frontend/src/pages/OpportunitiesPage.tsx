@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowUpRight, BriefcaseBusiness, Building2, CalendarClock, Check, FileUp, FolderKanban, Globe2, History, LayoutGrid, Link2, List, MapPin, Network, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, BriefcaseBusiness, Building2, CalendarClock, Check, FileUp, FolderKanban, Globe2, History, LayoutGrid, Link2, List, MapPin, Network, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { api, json } from '../api'
 import { OpportunityLandscape, OpportunityNetwork } from '../components/Visualizations'
 import { EmptyState, ErrorState, ExternalLink, Loading, PageHeader, Panel } from '../components/Primitives'
+import { OpportunityBrief } from '../components/OpportunityBrief'
 import { useI18n } from '../i18n'
-import type { Landscape, Opportunity, OpportunityGraphData, OpportunitySnapshot, Requirement, TargetSet } from '../types'
+import type { Landscape, MatchRun, Opportunity, OpportunityGraphData, OpportunitySnapshot, Requirement, TargetSet } from '../types'
 
 type CaptureMode = 'manual' | 'paste' | 'url' | 'file'
 
@@ -46,7 +47,7 @@ function CaptureDialog({ open, onClose }: { open: boolean; onClose: () => void }
   )
 }
 
-function RequirementEditor({ opportunity }: { opportunity: Opportunity }) {
+function RequirementEditor({ opportunity, onDone }: { opportunity: Opportunity; onDone: () => void }) {
   const { plural, t, formatDate } = useI18n()
   const client = useQueryClient()
   const history = useQuery({ queryKey: ['opportunity-history', opportunity.id], queryFn: () => api<OpportunitySnapshot[]>(`/api/opportunities/${opportunity.id}/history`) })
@@ -57,7 +58,7 @@ function RequirementEditor({ opportunity }: { opportunity: Opportunity }) {
   const addRequirement = () => setDraft((current) => ({ ...current, requirements: [...current.requirements, { id: `new-${crypto.randomUUID()}`, category: 'skill', label: '', normalized_name: '', importance: 'required', weight: 1, source_locator: {} }] }))
   const requirement = (id: string, key: keyof Requirement, value: unknown) => setDraft((current) => ({ ...current, requirements: current.requirements.map((item) => item.id === id ? { ...item, [key]: value } : item) }))
   return (
-    <Panel title={t('Opportunity intelligence')} subtitle={t('Version {version} · extraction is editable, never silently canonical', { version: opportunity.version })} actions={draft.source_url && <ExternalLink href={draft.source_url}>{t('Source')}</ExternalLink>}>
+    <Panel title={t('Opportunity intelligence')} subtitle={t('Version {version} · extraction is editable, never silently canonical', { version: opportunity.version })} actions={<>{draft.source_url && <ExternalLink href={draft.source_url}>{t('Source')}</ExternalLink>}<button type="button" className="button ghost" onClick={onDone}><ArrowLeft /> {t('Back to brief')}</button></>}>
       <form className="opportunity-editor" onSubmit={(event) => { event.preventDefault(); update.mutate() }}><div className="form-grid two"><label>{t('Role title')}<input value={draft.title} onChange={(event) => field('title', event.target.value)} /></label><label>{t('Employer')}<input value={draft.employer} onChange={(event) => field('employer', event.target.value)} /></label></div><label>{t('Posting text')}<textarea rows={8} value={draft.description} onChange={(event) => field('description', event.target.value)} /></label><div className="form-grid four"><label>{t('Industry')}<input value={draft.industry} onChange={(event) => field('industry', event.target.value)} /></label><label>{t('Area')}<input value={draft.area} onChange={(event) => field('area', event.target.value)} /></label><label>{t('Seniority')}<input value={draft.seniority} onChange={(event) => field('seniority', event.target.value)} /></label><label>{t('Work mode')}<select value={draft.remote_mode} onChange={(event) => field('remote_mode', event.target.value)}>{['unspecified', 'remote', 'hybrid', 'onsite'].map((value) => <option key={value} value={value}>{t(value)}</option>)}</select></label></div>
         <div className="requirement-header"><div><h3>{t('Atomic requirements')}</h3><p>{t('Eligibility is evaluated separately from weighted alignment.')}</p></div><div><button type="button" className="button ghost" onClick={() => propose.mutate()}><Sparkles /> {t('Re-extract')}</button><button type="button" className="button secondary" onClick={addRequirement}><Plus /> {t('Add')}</button></div></div>
         <div className="requirements-list">{draft.requirements.map((item) => <div key={item.id}><select value={item.importance} onChange={(event) => requirement(item.id, 'importance', event.target.value)}>{['eligibility', 'required', 'preferred'].map((value) => <option key={value} value={value}>{t(value)}</option>)}</select><select value={item.category} onChange={(event) => requirement(item.id, 'category', event.target.value)}>{['skill', 'experience', 'education', 'location', 'authorization', 'language'].map((value) => <option key={value} value={value}>{t(value)}</option>)}</select><input value={item.label} onChange={(event) => requirement(item.id, 'label', event.target.value)} placeholder={t('Requirement')} /><label>{t('Weight')}<input type="number" min="0" max="10" step="0.25" value={item.weight} onChange={(event) => requirement(item.id, 'weight', Number(event.target.value))} /></label><button type="button" className="icon-button" aria-label={t('Delete requirement')} onClick={() => setDraft((current) => ({ ...current, requirements: current.requirements.filter((value) => value.id !== item.id) }))}><X /></button></div>)}</div>
@@ -67,6 +68,19 @@ function RequirementEditor({ opportunity }: { opportunity: Opportunity }) {
       </form>
     </Panel>
   )
+}
+
+function OpportunityDetail({ opportunity }: { opportunity: Opportunity }) {
+  const [editing, setEditing] = useState(false)
+  // 404 is the normal answer for a role that has never been matched, not an error worth
+  // retrying or surfacing; the brief renders its verdict as unknown in that case.
+  const run = useQuery({
+    queryKey: ['match-latest', opportunity.id],
+    queryFn: () => api<MatchRun>(`/api/matches/${opportunity.id}/latest`),
+    retry: false,
+  })
+  if (editing) return <RequirementEditor key={`${opportunity.id}-${opportunity.version}`} opportunity={opportunity} onDone={() => setEditing(false)} />
+  return <OpportunityBrief opportunity={opportunity} run={run.data} onEdit={() => setEditing(true)} />
 }
 
 function TargetSetManager({ opportunities }: { opportunities: Opportunity[] }) {
@@ -112,7 +126,7 @@ export function OpportunitiesPage() {
       <PageHeader eyebrow={t('Opportunity research')} title={t('Collect signals. Keep the source. Decide what matters.')} description={t('Capture individual roles from public pages or documents, review the structure, and understand patterns only within your saved research.')} actions={<button className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>} />
       <TargetSetManager opportunities={opportunities.data} />
       <div className="list-toolbar"><label className="search-field"><Search /><input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Research cards')}</button><button className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Knowledge graph')}</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button></div></div>
-      {view === 'landscape' ? <Panel title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel> : view === 'network' ? <Panel title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{t(item.status)}</span></header><h2>{item.title}</h2><p>{item.employer || t('Employer not specified')}</p><div className="opportunity-meta"><span><MapPin />{item.location || t(item.remote_mode)}</span><span><BriefcaseBusiness />{item.seniority || t('Seniority unknown')}</span>{item.deadline_at && <span><CalendarClock />{formatDate(item.deadline_at)}</span>}</div><footer><span>{plural(item.requirements.length, '{count} structured requirement', '{count} structured requirements')}</span><ArrowUpRight /></footer></button>) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}</section>{selected ? <RequirementEditor key={`${selected.id}-${selected.version}`} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>{t('Select a research card')}</h3><p>{t('Review its extracted content and atomic requirements here.')}</p></aside>}</div>}
+      {view === 'landscape' ? <Panel title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel> : view === 'network' ? <Panel title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{t(item.status)}</span></header><h2>{item.title}</h2><p>{item.employer || t('Employer not specified')}</p><div className="opportunity-meta"><span><MapPin />{item.location || t(item.remote_mode)}</span><span><BriefcaseBusiness />{item.seniority || t('Seniority unknown')}</span>{item.deadline_at && <span><CalendarClock />{formatDate(item.deadline_at)}</span>}</div><footer><span>{plural(item.requirements.length, '{count} structured requirement', '{count} structured requirements')}</span><ArrowUpRight /></footer></button>) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}</section>{selected ? <OpportunityDetail key={selected.id} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>{t('Select a research card')}</h3><p>{t('Review its extracted content and atomic requirements here.')}</p></aside>}</div>}
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
     </>
   )
