@@ -107,7 +107,7 @@ export function MatchesPage() {
       <PageHeader eyebrow={t('Evidence alignment')} title={t('Compare requirements without pretending to predict hiring.')} description={t('A deterministic, versioned score with separate eligibility, explicit evidence coverage, and a visible uncertainty interval.')} />
       <TargetPortfolioPanel />
       <Panel
-        title={t('Coverage across every target')}
+        title={t('Fit across every target')}
         subtitle={t('Requirements against roles. Sorted worst gap first; select any cell for its evidence.')}
       >
         <CoverageWorkbench runs={matches.data ?? []} opportunities={opportunities.data ?? []} />
