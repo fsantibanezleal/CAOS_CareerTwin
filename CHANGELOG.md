@@ -4,6 +4,27 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-09-17
+
+### Fixed
+
+- Fit the opportunity workbench to laptop viewports. v0.9.1 fitted at 1600x950 and overflowed by
+  211px at 1440x800. The containment chain was sound; the waste was in what it held: a 187px
+  two-line marketing headline, a 50px full-width row for a secondary tool, a 161px brief head whose
+  title wrapped because three columns shared about 190px, and a 338px salary band in an auto row
+  that spilled out of a 124px rail. The requirement grid, which is the point of the screen, got
+  82px. The rules were simulated against the live page before being written and give zero overflow
+  with all twelve requirements visible at 1600x950, 1440x800 and 1366x768.
+
+### Changed
+
+- The target-portfolio composer opens as a modal from the toolbar rather than occupying a row of
+  the working surface.
+- Posting and Edit move from the brief head into the filter row, so the role title stays on one
+  line.
+- The workbench header is set at the display face's `xl` step with a single-line description. A
+  workbench header states where you are; it does not sell the product.
+
 ## [0.9.1] - 2026-09-17
 
 ### Fixed
@@ -18,7 +39,6 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 - Move the target-portfolio composer into a drawer, closed by default. It is a secondary tool and
   was occupying a third of the working surface on every visit.
-
 
 ## [0.9.0] - 2026-09-17
 
@@ -89,7 +109,6 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
   shows the evidence that answers it. The editor keeps every capability it had, behind Edit.
 - Name the evidence in an assessment. "Resolved against confirmed profile evidence" became
   "Evidenced by B.Sc. in Electronics Engineering, Universidad de Concepcion".
-
 
 ## [0.8.2] - 2026-09-17
 

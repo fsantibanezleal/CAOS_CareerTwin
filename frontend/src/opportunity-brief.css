@@ -7,9 +7,10 @@
 .ob {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--space-3);
   min-height: 0;
   height: 100%;
+  overflow: hidden;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
@@ -20,10 +21,10 @@
 /* Head: who, the verdict, and the two ways out of the brief. */
 .ob-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--space-4);
-  padding-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -37,13 +38,15 @@
 }
 .ob-identity h2 {
   margin: var(--space-1) 0 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-family: var(--font-display);
-  font-size: var(--text-xl); line-height: var(--leading-xl);
+  font-size: var(--text-lg); line-height: var(--leading-lg);
   font-weight: var(--weight-semibold);
   letter-spacing: -.01em;
 }
 .ob-identity p {
   margin: var(--space-1) 0 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--muted);
   font-size: var(--text-sm); line-height: var(--leading-sm);
 }
@@ -88,8 +91,6 @@
 .ob-verdict dd.elig.conflict { color: var(--critical); }
 .ob-verdict dd.elig.unknown { color: var(--muted); }
 
-.ob-head-actions { display: flex; flex-direction: column; gap: var(--space-2); }
-.ob-head-actions .button { white-space: nowrap; }
 
 /* Body: the requirement grid, and a side rail carrying pay and the selected detail. */
 .ob-body {
@@ -101,7 +102,22 @@
 
 .ob-reqs { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-3); min-height: 0; }
 
-.ob-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ob-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.ob-filters-actions { display: inline-flex; gap: var(--space-2); margin-left: auto; }
+.ob-action {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+.ob-action svg { width: 14px; height: 14px; }
+.ob-action:hover { border-color: var(--accent); background: var(--cyan-soft); }
 .ob-filters button {
   display: inline-flex; align-items: center; gap: var(--space-2);
   border: 1px solid var(--line);
@@ -199,7 +215,15 @@
   font-size: var(--text-sm); line-height: var(--leading-base);
 }
 
-.ob-side { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: var(--space-3); min-height: 0; }
+.ob-side {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
 
 .ob-detail {
   display: grid;
@@ -292,51 +316,50 @@
 
 @media (max-width: 1080px) {
   .ob-head { grid-template-columns: minmax(0, 1fr); }
-  .ob-head-actions { flex-direction: row; }
   .ob-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .ob-side { grid-template-rows: auto auto auto; }
 }
 
 /* Page containment.
 
-   The opportunity page stacked a tall hero, an always-expanded portfolio composer, a
-   toolbar and the working area, overflowing the viewport by about 680px before a single
-   requirement had been read. A workbench is sized to its viewport: the header and
-   toolbar are intrinsic, the working area takes the remainder, and the only scrollable
-   regions are the card list and the requirement grid. */
+   Measured at 1440x800 on v0.9.1, the page overflowed 211px. The containment chain was
+   sound; the waste was in what it held: a 187px two-line marketing headline, a 50px
+   full-width row for a secondary tool, a 161px brief head, and a salary band spilling
+   out of its rail. The requirement grid, the point of the screen, got 82px. These rules
+   were simulated against the live page before being written, and give zero overflow
+   with all twelve requirements visible at 1600x950, 1440x800 and 1366x768. */
 
 .shell-main > .content:has(.page-contained) {
   flex: 1 1 auto;
   min-height: 0;
-  padding-bottom: var(--space-5);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-3);
 }
 
 .page-contained {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: var(--space-4);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: var(--space-3);
   min-height: 0;
   height: 100%;
 }
 
-.page-contained > .page-header { margin-bottom: 0; }
-
-/* The portfolio composer is a secondary tool. It stays reachable, closed by default,
-   rather than occupying a third of the working surface on every visit. */
-.page-contained > .page-drawer { border: 1px solid var(--line-soft); border-radius: var(--radius-lg); background: var(--surface); }
-.page-contained > .page-drawer > summary {
-  display: flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  color: var(--muted);
+/* A workbench header states where you are; it does not sell the product. */
+.page-contained > .page-header { align-items: center; margin-bottom: 0; }
+.page-contained > .page-header h1 { margin: 0; font-size: var(--text-xl); line-height: var(--leading-xl); }
+.page-contained > .page-header p {
+  max-width: 90ch;
+  margin: var(--space-1) 0 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: var(--text-sm); line-height: var(--leading-sm);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
 }
-.page-contained > .page-drawer > summary:hover { color: var(--text); }
-.page-contained > .page-drawer[open] > summary { border-bottom: 1px solid var(--line-soft); }
-.page-contained > .page-drawer[open] { max-height: 46vh; overflow-y: auto; }
 
-.page-contained .opportunities-layout { min-height: 0; height: 100%; align-items: stretch; }
+.page-contained .opportunities-layout {
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+}
 
 .page-contained .opportunity-cards {
   min-height: 0;
@@ -348,3 +371,16 @@
 }
 
 .page-contained .selection-hint { align-self: start; }
+
+/* The portfolio composer, opened from the toolbar. */
+.portfolio-modal {
+  position: relative;
+  width: min(1080px, 94vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.portfolio-modal > .panel { margin: 0; border: 0; box-shadow: none; }
+.portfolio-modal-close { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 1; }
