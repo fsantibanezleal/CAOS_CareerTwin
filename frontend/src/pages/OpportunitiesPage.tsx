@@ -9,6 +9,7 @@ import { OpportunityBrief } from '../components/OpportunityBrief'
 import type { Compensation } from '../components/SalaryBand'
 import { compact } from '../money'
 import { useI18n } from '../i18n'
+import { useClaims } from '../useClaims'
 import type { Landscape, MatchRun, Opportunity, OpportunityGraphData, OpportunitySnapshot, Requirement, TargetSet } from '../types'
 
 type CaptureMode = 'manual' | 'paste' | 'url' | 'file'
@@ -118,6 +119,8 @@ export function OpportunitiesPage() {
   const landscape = useQuery({ queryKey: ['landscape'], queryFn: () => api<Landscape>('/api/opportunities/visualization/landscape') })
   const graph = useQuery({ queryKey: ['opportunity-graph'], queryFn: () => api<OpportunityGraphData>('/api/opportunities/visualization/graph') })
   const matches = useQuery({ queryKey: ['matches'], queryFn: () => api<MatchRun[]>('/api/matches') })
+  // Warmed on mount: a requirement detail then opens with its evidence loaded.
+  useClaims()
   const latestRun = useMemo(() => {
     const out = new Map<string, MatchRun>()
     for (const run of matches.data ?? []) if (!out.has(run.opportunity_id)) out.set(run.opportunity_id, run)
