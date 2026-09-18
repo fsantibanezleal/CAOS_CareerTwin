@@ -101,6 +101,10 @@
   --viz-7: #1d4ed8;
   --viz-8: #b91c1c;
 
+  /* The scrim behind a dialog is dark in BOTH themes. It was once derived from --text,
+     which is near-white on charcoal, so the dark theme dimmed its page with a light haze. */
+  --scrim: rgba(22, 19, 15, .58);
+
   --shadow: 0 1px 2px rgba(22, 19, 15, .06), 0 8px 24px rgba(22, 19, 15, .06);
   --radius: var(--radius-lg);
 
@@ -151,6 +155,8 @@
   --viz-6: #86efac;
   --viz-7: #93c5fd;
   --viz-8: #fca5a5;
+
+  --scrim: rgba(6, 5, 4, .72);
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .34);
   --focus-ring: 0 0 0 3px rgba(147, 180, 255, .32);

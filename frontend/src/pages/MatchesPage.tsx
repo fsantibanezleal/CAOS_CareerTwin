@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowRight, CheckCircle2, CircleHelp, CircleOff, Compass, Gauge, Lightbulb, ListTodo, Play, Save, ShieldQuestion, Target, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowRight, CheckCircle2, CircleHelp, CircleOff, Compass, Lightbulb, ListTodo, Play, Save, ShieldQuestion, Target, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { api, json } from '../api'
 import { CoverageWorkbench } from '../components/CoverageWorkbench'
 import { SalaryBand } from '../components/SalaryBand'
 import { MatchWaterfall } from '../components/Visualizations'
-import { EmptyState, ErrorState, Loading, PageHeader, Panel, Score } from '../components/Primitives'
+import { EmptyState, ErrorState, Loading, Panel, Score } from '../components/Primitives'
 import { useI18n } from '../i18n'
 import type { MatchRun, Opportunity, Recommendation, TargetSet } from '../types'
 
@@ -93,29 +93,58 @@ function MatchDetail({ run, opportunity }: { run: MatchRun; opportunity: Opportu
 export function MatchesPage() {
   const { t } = useI18n()
   const client = useQueryClient()
-  const [selectedId, setSelectedId] = useState<string>()
+  const [roleId, setRoleId] = useState<string>()
+  const [portfoliosOpen, setPortfoliosOpen] = useState(false)
   const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities') })
   const matches = useQuery({ queryKey: ['matches'], queryFn: () => api<MatchRun[]>('/api/matches') })
-  const run = useMutation({ mutationFn: (opportunityId: string) => api<MatchRun>(`/api/matches/${opportunityId}/run`, { method: 'POST' }), onSuccess: (value) => { setSelectedId(value.opportunity_id); client.invalidateQueries({ queryKey: ['matches'] }); client.invalidateQueries({ queryKey: ['today'] }) } })
+  const targetSets = useQuery({ queryKey: ['target-sets'], queryFn: () => api<TargetSet[]>('/api/opportunities/target-sets') })
+  const runAll = useMutation({
+    // Sequential on purpose: each run is an immutable record, and the server computes them
+    // one at a time either way.
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) await api<MatchRun>(`/api/matches/${id}/run`, { method: 'POST' })
+    },
+    onSuccess: () => { client.invalidateQueries({ queryKey: ['matches'] }); client.invalidateQueries({ queryKey: ['today'] }) },
+  })
   const latest = useMemo(() => { const result = new Map<string, MatchRun>(); for (const item of matches.data ?? []) if (!result.has(item.opportunity_id)) result.set(item.opportunity_id, item); return result }, [matches.data])
   if (opportunities.isPending || matches.isPending) return <Loading label={t('Preparing transparent comparisons')} />
   if (opportunities.error || matches.error) return <ErrorState error={opportunities.error || matches.error} />
-  const selectedRun = selectedId ? latest.get(selectedId) : undefined
-  const selectedOpportunity = opportunities.data.find((item) => item.id === selectedId)
+  const unmatched = opportunities.data.filter((item) => !latest.has(item.id))
+  const role = roleId ? opportunities.data.find((item) => item.id === roleId) : undefined
+  const roleRun = roleId ? latest.get(roleId) : undefined
   return (
-    <>
-      <PageHeader eyebrow={t('Evidence alignment')} title={t('Compare requirements without pretending to predict hiring.')} description={t('A deterministic, versioned score with separate eligibility, explicit evidence coverage, and a visible uncertainty interval.')} />
-      <TargetPortfolioPanel />
-      <Panel
-        title={t('Fit across every target')}
-        subtitle={t('Requirements against roles. Sorted worst gap first; select any cell for its evidence.')}
-      >
-        <CoverageWorkbench runs={matches.data ?? []} opportunities={opportunities.data ?? []} />
-      </Panel>
-      <div className="match-layout">
-        <aside className="match-index"><div className="match-index-head"><h2>{t('Saved roles')}</h2><span>{opportunities.data.length}</span></div>{opportunities.data.length ? opportunities.data.map((opportunity) => { const value = latest.get(opportunity.id); return <article key={opportunity.id} className={selectedId === opportunity.id ? 'selected' : ''}><button onClick={() => setSelectedId(opportunity.id)}><span className="company-mark"><Target /></span><div><b>{opportunity.title}</b><small>{opportunity.employer || t('Employer unknown')}</small></div>{value ? <Score value={value.score} /> : <span className="unscored">{t('Not run')}</span>}</button><footer>{value ? <><span>{t('{count}% covered', { count: Math.round(value.coverage * 100) })}</span><span className={`eligibility-${value.eligibility}`}>{t(value.eligibility)}</span></> : <span>{t('Add or confirm evidence first')}</span>}<button className="text-button" onClick={() => run.mutate(opportunity.id)}><Play /> {t(value ? 'Re-run' : 'Run')}</button></footer></article> }) : <EmptyState title={t('No roles to compare')} description={t('Capture opportunities before running evidence alignment.')} />}</aside>
-        <section>{run.error && <ErrorState error={run.error} />}{selectedRun && selectedOpportunity ? <MatchDetail run={selectedRun} opportunity={selectedOpportunity} /> : <div className="match-empty"><div className="radar-illustration"><Gauge /><i /><i /><i /></div><h2>{t('Select a role and run matching')}</h2><p>{t('The engine will separate hard eligibility from weighted fit, cite current evidence, and preserve unknowns instead of silently treating them as failure.')}</p><div className="principle-grid"><span><ShieldQuestion /><b>{t('Unknown ≠ weak')}</b><small>{t('Missing evidence widens uncertainty.')}</small></span><span><TrendingUp /><b>{t('Versioned policy')}</b><small>{t('Same inputs produce the same result.')}</small></span><span><Target /><b>{t('No hiring prediction')}</b><small>{t('Alignment supports your decision.')}</small></span></div></div>}</section>
-      </div>
-    </>
+    <div className="page-contained workbench">
+      <header className="workbench-bar">
+        <h1>{t('Matches')}</h1>
+        <p className="workbench-note">{t('Fit is evidence alignment, never a hiring probability.')}</p>
+        {unmatched.length ? (
+          <span className="workbench-alert">{t('{count} roles not matched yet', { count: unmatched.length })}</span>
+        ) : null}
+        {targetSets.data?.length ? (
+          <button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><Target /> {t('Portfolios')}</button>
+        ) : null}
+        <button type="button" className="button primary" disabled={runAll.isPending} onClick={() => runAll.mutate(opportunities.data.map((item) => item.id))}>
+          <Play /> {t(runAll.isPending ? 'Matching…' : 'Re-run matches')}
+        </button>
+      </header>
+      {runAll.error ? <ErrorState error={runAll.error} /> : null}
+      <CoverageWorkbench runs={matches.data ?? []} opportunities={opportunities.data ?? []} onOpenRole={setRoleId} />
+      {role && roleRun ? (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setRoleId(undefined)}>
+          <section className="role-drawer" role="dialog" aria-modal="true" aria-label={role.title}>
+            <button type="button" className="icon-button role-drawer-close" onClick={() => setRoleId(undefined)} aria-label={t('Close')}><X /></button>
+            <MatchDetail run={roleRun} opportunity={role} />
+          </section>
+        </div>
+      ) : null}
+      {portfoliosOpen ? (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPortfoliosOpen(false)}>
+          <section className="portfolio-modal" role="dialog" aria-modal="true" aria-label={t('Target portfolio alignment')}>
+            <button type="button" className="icon-button portfolio-modal-close" onClick={() => setPortfoliosOpen(false)} aria-label={t('Close')}><X /></button>
+            <TargetPortfolioPanel />
+          </section>
+        </div>
+      ) : null}
+    </div>
   )
 }
