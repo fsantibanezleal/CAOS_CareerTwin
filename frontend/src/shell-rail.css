@@ -1,0 +1,51 @@
+/* Navigation rail, collapsed between the mobile bar and 1366px (issue #188). Tokens only.
+
+   At 1280x800 the full rail was 238px, 19% of the screen for five links and two cards, and it held
+   the opportunity brief to 47% of the screen against ADR-0071 section 8's 50% floor. Here the rail
+   is a 72px column of icons. Each label stays in the accessibility tree and appears beside its
+   icon on hover and on keyboard focus, so nothing loses its name. */
+
+@media (min-width: 901px) and (max-width: 1366px) {
+  .app-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .sidebar { width: 72px; align-items: stretch; padding: var(--space-4) var(--space-2); }
+
+  /* The brand keeps its mark; its words are read, not shown. */
+  .sidebar .brand-lockup.compact { justify-content: center; padding: 0 0 var(--space-5); }
+  .sidebar .brand-lockup.compact > span:last-child {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sidebar nav a { position: relative; justify-content: center; padding: 11px 0; }
+  .sidebar-trust { position: relative; justify-content: center; margin: auto 0 var(--space-2); padding: 10px 0; }
+  .architecture-trigger { position: relative; justify-content: center; padding: 10px 0; }
+
+  /* Labels float beside the rail: hidden, not removed, until pointed at or focused. */
+  .sidebar nav a > span,
+  .sidebar-trust > div,
+  .architecture-trigger > span {
+    position: absolute; top: 50%; left: calc(100% + var(--space-3)); z-index: 30;
+    display: grid;
+    gap: 2px;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font-size: var(--text-sm); line-height: var(--leading-sm);
+    white-space: nowrap;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-fast);
+  }
+  .sidebar nav a:hover > span,
+  .sidebar nav a:focus-visible > span,
+  .sidebar-trust:hover > div,
+  .architecture-trigger:hover > span,
+  .architecture-trigger:focus-visible > span { opacity: 1; }
+}
