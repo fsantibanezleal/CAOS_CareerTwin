@@ -4,6 +4,60 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-09-18
+
+### Changed
+
+- Rebuild the pipeline against ADR-0071 (#199). Measured at 1280x800, the board overflowed the page
+  by 309px and ran 1,183px sideways: nine columns of at least 230px, still 670px sideways at 2560.
+  The agenda overflowed by 416px and connections by 543px. Every view now fits the viewport under
+  one bar with the view switcher.
+- The board is journeys and a detail pane. A stage strip counts the applications in each open
+  stage, drawn to scale, and filters by stage; it replaces a funnel whose bar widths came from each
+  stage's position in the list rather than its count. One row per application carries the role,
+  its fit and salary ask, and its journey, drawn either across the six open stages with the date
+  each was reached and the days in the current one, or along the calendar as one bar per stage, as
+  long as the time spent in it. Rows sort by furthest along, best fit, highest ask or longest
+  waiting; closed applications are behind a toggle.
+- Selecting an application shows its fit with met requirements and gaps, the compensation band,
+  the legal next moves, its stage history with dates and notes, its tasks, its people and its
+  notes, with a link to the role. A move names what it does and asks to confirm, and closing moves
+  say they cannot be undone; the card offered a select that moved the application on change.
+- Calendar replaces the agenda: a month grid of stage changes, tasks, meetings and deadlines, and a
+  day pane with the counts ahead, what is coming up and the most recent activity. With no tasks
+  recorded, the agenda was an empty state while nine dated stage changes went unshown.
+- People replaces the contacts panel: contacts grouped by application, and a detail with role,
+  email, notes, the application's stage, fit and ask, and the tasks with that person. Deleting
+  asks to confirm.
+- Task and contact creation move into dialogs and name applications by role and employer rather
+  than "Application 1a2b3c4d", and open from the detail pane already bound to its application.
+- Connections sits in two columns with its cards restacked for the half width.
+- Opportunities opens a role from a link (`?role=`), which the pipeline's Open role uses.
+
+### Added
+
+- `GET /api/pipeline/events` returns every stage event in the workspace, oldest first, so the
+  journeys and the calendar need one request rather than one per application. Tested for order,
+  agreement with the per-application history, and tenant isolation.
+- A compact compensation band for side panes, about 100px tall where the panel takes 338px.
+
+### Fixed
+
+- Twenty-six Spanish strings shipped without accents (#200), two of them different words: "Anos"
+  for "Años" and "ano de experiencia" for "año de experiencia". A test now fails on any Spanish
+  entry containing a form that always carries an accent in interface copy.
+- Remove the board, agenda, funnel and contact-form rules that nothing renders any more.
+
+### Verification
+
+- `scripts/workbench-gate.mjs` covers the pipeline: every view and both board modes at 1280x800,
+  1600x900 and 2560x1440 in both themes, reading the strip's counts, each journey's stage, fit,
+  reached stages and time segments, each detail pane's history and band, the calendar's items per
+  day and the people list against the API, and checking that Open role lands on the same role. It
+  reads what is drawn rather than data attributes, and three deliberate breaks in a build each
+  failed it. `CAREERTWIN_GATE_ONLY` runs a single page's phase. 177 checks pass across the four
+  workbenches.
+
 ## [0.12.0] - 2026-09-18
 
 ### Changed
