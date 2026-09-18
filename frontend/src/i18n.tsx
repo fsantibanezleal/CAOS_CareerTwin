@@ -1003,6 +1003,8 @@ export const spanishMessages: Record<string, string> = {
   '{count} to review': '{count} por revisar',
   'across {count} role': 'en {count} cargo',
   'across {count} roles': 'en {count} cargos',
+  'Answered by the profile record named above, not by a confirmed claim.': 'Lo responde el registro del perfil indicado arriba, no una afirmación confirmada.',
+  'A confirmed claim no longer in the profile': 'Una afirmación confirmada que ya no está en el perfil',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {

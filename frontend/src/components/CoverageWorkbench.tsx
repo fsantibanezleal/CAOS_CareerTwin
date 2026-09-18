@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
+import { EvidenceList } from './EvidenceList'
 import type { MatchRun, Opportunity } from '../types'
 
 /**
@@ -262,10 +263,10 @@ export function CoverageWorkbench({
           </header>
           <h3>{detail.row.label}</h3>
           <p className="cw-detail-meta">
-            {detail.opportunity?.employer} &middot; {t(detail.cell.assessment.importance)} &middot;{' '}
-            {t('{count} evidence items', { count: detail.cell.assessment.evidence_ids.length })}
+            {detail.opportunity?.employer} &middot; {t(detail.cell.assessment.importance)}
           </p>
           {detail.cell.assessment.explanation ? <p>{detail.cell.assessment.explanation}</p> : null}
+          <EvidenceList ids={detail.cell.assessment.evidence_ids} status={detail.cell.assessment.status} />
         </aside>
       ) : null}
     </div>

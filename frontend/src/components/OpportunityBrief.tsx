@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, CircleHelp, CircleOff, FileText, Pencil, S
 import { useMemo, useState, type ReactElement } from 'react'
 import { useI18n } from '../i18n'
 import type { MatchRun, Opportunity } from '../types'
+import { EvidenceList } from './EvidenceList'
 import { SalaryBand, type Compensation } from './SalaryBand'
 
 /**
@@ -281,8 +282,8 @@ export function OpportunityBrief({
             <div><dt>{t('Importance')}</dt><dd>{t(detail.importance)}</dd></div>
             <div><dt>{t('Weight')}</dt><dd>{detail.requirement.weight}</dd></div>
             <div><dt>{t('Score')}</dt><dd>{detail.assessment?.score != null ? Math.round(detail.assessment.score * 100) : '–'}</dd></div>
-            <div><dt>{t('Evidence')}</dt><dd>{detail.assessment?.evidence_ids?.length ?? 0}</dd></div>
           </dl>
+          <EvidenceList ids={detail.assessment?.evidence_ids ?? []} status={detail.assessment?.status} />
         </aside>
       ) : null}
 

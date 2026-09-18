@@ -4,6 +4,23 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-09-18
+
+### Changed
+
+- Requirement details on Opportunities and Matches list the confirmed claims behind an
+  assessment as their statements, under "Backed by", instead of a count (#189). They read
+  "Evidence 0" beside "Met" whenever a profile record such as a degree or a role answered the
+  requirement; they now say that the record named in the explanation answered it.
+- The profile's claims are one cache shared by every page and loaded when Opportunities and
+  Matches open, so a detail opens with its evidence in place.
+
+### Verification
+
+- Tests for the evidence list: quoted statements from the shared cache, the note for a met
+  requirement that a profile record answered, and nothing for an unanswered one. 61 frontend
+  tests pass; the Opportunities and Matches gate phases pass on the built app with live data.
+
 ## [0.14.1] - 2026-09-18
 
 ### Changed
