@@ -8,6 +8,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ### Fixed
 
+- Carry accomplishments through the profile interchange. The module is called "Lossless profile
+  interchange" and dropped an entire entity: the accomplishment bank, which holds the STAR record
+  behind every achievement bullet. Export and reimport silently emptied it, which is why the
+  deployed workspace held eleven experiences, four education records and zero accomplishments.
+  Schema moves to 1.1; 1.0 documents still import, since they simply carry no bank. The
+  losslessness test asserted an exact counts dict and never created an accomplishment, so it stayed
+  green while the data was discarded; it now round-trips one and checks its evidence is remapped.
 - Apply the visual redesign, which shipped three releases ago and never rendered. `tokens.css`
   defined the warm paper canvas and the single ink-blue accent, but `styles.css` still declared the
   entire previous palette in its own `:root` block and is imported after it. At equal specificity

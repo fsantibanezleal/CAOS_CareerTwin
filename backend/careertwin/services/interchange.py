@@ -11,6 +11,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from careertwin.models import (
+    Accomplishment,
     ClaimState,
     Education,
     EvidenceClaim,
@@ -23,7 +24,10 @@ from careertwin.models import (
 from careertwin.schemas import EducationCreate, ExperienceCreate, ProfileUpdate, SkillCreate
 from careertwin.services.normalization import normalize_label
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
+# 1.0 documents are still importable; they simply carry no accomplishment bank. Refusing
+# them would strand every profile exported before the entity was added to the format.
+SUPPORTED_SCHEMA_VERSIONS = frozenset({"1.0", SCHEMA_VERSION})
 
 
 class InterchangeError(ValueError):
@@ -69,6 +73,13 @@ def export_profile_interchange(db: Session, workspace_id: str) -> dict[str, Any]
             select(Education)
             .where(Education.workspace_id == workspace_id)
             .order_by(Education.start_date)
+        ).all()
+    )
+    accomplishments = list(
+        db.scalars(
+            select(Accomplishment)
+            .where(Accomplishment.workspace_id == workspace_id)
+            .order_by(Accomplishment.created_at)
         ).all()
     )
     return {
@@ -148,6 +159,20 @@ def export_profile_interchange(db: Session, workspace_id: str) -> dict[str, Any]
             }
             for item in education
         ],
+        "accomplishments": [
+            {
+                "title": item.title,
+                "situation": item.situation,
+                "task": item.task,
+                "action": item.action,
+                "result": item.result,
+                "skills": item.skills,
+                "metrics": item.metrics,
+                "status": item.status,
+                "evidence_refs": item.evidence_ids,
+            }
+            for item in accomplishments
+        ],
     }
 
 
@@ -168,7 +193,7 @@ def import_profile_interchange(
     """Validate and import a portable profile while remapping every source/evidence reference."""
     if (
         document.get("format") != "CareerTwin profile"
-        or document.get("schema_version") != SCHEMA_VERSION
+        or document.get("schema_version") not in SUPPORTED_SCHEMA_VERSIONS
     ):
         raise InterchangeError("Unsupported CareerTwin profile format or schema version")
     profile_payload = document.get("profile")
@@ -195,6 +220,7 @@ def import_profile_interchange(
         validated_skills = [
             SkillCreate.model_validate({**row, "evidence_ids": []}) for row in skill_rows
         ]
+        accomplishment_rows = _list(document, "accomplishments", 1000)
     except ValidationError as exc:
         raise InterchangeError(
             f"Invalid CareerTwin profile document: {exc.errors()[0]['msg']}"
@@ -204,6 +230,7 @@ def import_profile_interchange(
         db.execute(delete(Skill).where(Skill.workspace_id == workspace_id))
         db.execute(delete(Experience).where(Experience.workspace_id == workspace_id))
         db.execute(delete(Education).where(Education.workspace_id == workspace_id))
+        db.execute(delete(Accomplishment).where(Accomplishment.workspace_id == workspace_id))
         db.execute(delete(EvidenceClaim).where(EvidenceClaim.workspace_id == workspace_id))
         db.execute(delete(Source).where(Source.workspace_id == workspace_id))
         db.flush()
@@ -293,12 +320,43 @@ def import_profile_interchange(
     db.add_all(
         [Education(workspace_id=workspace_id, **item.model_dump()) for item in education_rows]
     )
+
+    for row in accomplishment_rows:
+        title = str(row.get("title", "")).strip()
+        if not title or len(title) > 300:
+            raise InterchangeError("Every accomplishment needs a title of at most 300 characters")
+        # Evidence ids are remapped through the claims imported in this same document;
+        # a reference to a claim that did not come with it would dangle.
+        evidence_ids = [
+            claim_map[ref].id
+            for ref in (str(value) for value in row.get("evidence_refs", []))
+            if ref in claim_map
+        ]
+        bank_status = str(row.get("status", "draft"))[:30]
+        if bank_status == "confirmed" and not evidence_ids:
+            raise InterchangeError(f"Confirmed accomplishment '{title}' carries no evidence")
+        db.add(
+            Accomplishment(
+                workspace_id=workspace_id,
+                title=title,
+                situation=str(row.get("situation", "")),
+                task=str(row.get("task", "")),
+                action=str(row.get("action", "")),
+                result=str(row.get("result", "")),
+                skills=[str(value)[:120] for value in row.get("skills", [])][:60],
+                metrics=[value for value in row.get("metrics", []) if isinstance(value, dict)][:60],
+                status=bank_status,
+                evidence_ids=evidence_ids,
+            )
+        )
+
     return {
         "sources": len(source_rows),
         "claims": len(claim_rows),
         "skills": len(skill_rows),
         "experiences": len(experience_rows),
         "education": len(education_rows),
+        "accomplishments": len(accomplishment_rows),
     }
 
 
