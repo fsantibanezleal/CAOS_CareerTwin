@@ -1,13 +1,149 @@
-/* Opportunity brief. Tokens only; see docs/design/design-system.md.
+/* Opportunity workbench. Tokens only; see docs/design/design-system.md and
+   docs/design/opportunity-workbench-adr-0071.md.
 
-   Sized to its container: the head is intrinsic, the body takes the remainder, and the
-   only scrollable region is the requirement grid. The page itself never grows, which is
-   the whole point of showing a role as a brief rather than as a form. */
+   ADR-0071 is the floor: the document is exactly the viewport at 1280x800, 1600x900 and
+   2560x1440, content that does not fit is split rather than scrolled, and the working
+   surface gets the space rather than the chrome. Measured on v0.9.2 at 1440x800, about
+   400px of an 800px screen was chrome before the first requirement was drawn. */
 
-.ob {
+/* ------------------------------------------------------------------ page frame */
+
+.shell-main > .content:has(.page-contained) {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* ADR-0071 section 2: a workbench is not prose. The 1540px reading cap discarded
+     almost 800px of a 2560 display. */
+  width: 100%;
+  max-width: none;
+  padding: var(--space-4) var(--space-5);
+}
+
+.page-contained {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  height: 100%;
+}
+
+/* One bar: where you are, and everything you can do here. It replaces a serif marketing
+   headline, its description and a separate toolbar, about 150px on every visit. */
+.workbench-bar {
+  display: flex;
+  align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+}
+.workbench-bar h1 {
+  flex: none;
+  margin: 0 var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl); line-height: var(--leading-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+.workbench-bar .search-field { flex: 1 1 220px; min-width: 150px; }
+.workbench-bar .segmented,
+.workbench-bar .button { flex: none; white-space: nowrap; }
+
+.page-contained > .workbench-panel {
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.page-contained .opportunities-layout {
+  display: grid;
+  grid-template-columns: clamp(210px, 17vw, 300px) minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------ comparison list */
+
+/* A list of roles is also a comparison of them. Each row carries the two numbers a
+   candidate decides on, fit and pay, which the 211px cards it replaced never showed.
+   The one container here that may own long content: a search can hold many roles. */
+.opp-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: var(--space-1);
+}
+
+/* The title takes the full width and may take two lines: truncated to "Head of Data...",
+   two different roles read identically. The figures sit under it. */
+.opp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title title"
+    "sub   figures"
+    "bar   bar";
+  gap: var(--space-1) var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+.opp-row:hover { border-color: var(--line); background: var(--surface-2); }
+.opp-row.selected { border-color: var(--accent); background: var(--cyan-soft); }
+
+.opp-row-title {
+  grid-area: title;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-semibold);
+}
+.opp-row-sub {
+  grid-area: sub;
+  align-self: end;
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+.opp-row-figures { grid-area: figures; display: grid; gap: 0; justify-items: end; }
+.opp-row-figures b {
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.opp-row-figures small {
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.opp-row-bar {
+  grid-area: bar;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+}
+.opp-row-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+
+/* ------------------------------------------------------------------ the brief */
+
+.ob {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-width: 0;
   min-height: 0;
   height: 100%;
   overflow: hidden;
@@ -18,26 +154,15 @@
   box-shadow: var(--shadow);
 }
 
-/* Head: who, the verdict, and the two ways out of the brief. */
 .ob-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--line-soft);
 }
-
 .ob-identity { min-width: 0; }
-.ob-eyebrow {
-  display: block;
-  color: var(--faint);
-  font-size: var(--text-xs); line-height: var(--leading-xs);
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase; letter-spacing: .06em;
-}
 .ob-identity h2 {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-family: var(--font-display);
   font-size: var(--text-lg); line-height: var(--leading-lg);
@@ -45,29 +170,23 @@
   letter-spacing: -.01em;
 }
 .ob-identity p {
-  margin: var(--space-1) 0 0;
+  margin: 2px 0 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--muted);
   font-size: var(--text-sm); line-height: var(--leading-sm);
 }
 
-.ob-verdict { display: flex; align-items: center; gap: var(--space-4); }
+.ob-verdict { display: flex; align-items: center; gap: var(--space-3); }
 
-.ob-ring { position: relative; width: 64px; height: 64px; flex: none; }
+/* The ring draws the fit; the labelled number beside it states it. */
+.ob-ring { position: relative; width: 40px; height: 40px; flex: none; }
 .ob-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ob-ring circle { fill: none; stroke-width: 6; }
 .ob-ring-track { stroke: var(--surface-3); }
 .ob-ring-value { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray var(--motion-base) var(--ease); }
-.ob-ring b {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  font-size: var(--text-sm); line-height: 1;
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
-}
 
 .ob-verdict dl { display: flex; gap: var(--space-4); margin: 0; }
-.ob-verdict dl div { display: grid; gap: 2px; }
+.ob-verdict dl div { display: grid; gap: 0; }
 .ob-verdict dt {
   color: var(--faint);
   font-size: var(--text-2xs); line-height: var(--leading-2xs);
@@ -79,30 +198,51 @@
   font-size: var(--text-lg); line-height: var(--leading-lg);
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .ob-verdict dd span { color: var(--faint); font-size: var(--text-sm); font-weight: var(--weight-regular); }
+.ob-verdict dd.fit { color: var(--accent); }
 .ob-verdict dd.warn { color: var(--critical); }
 .ob-verdict dd.clear { color: var(--positive); }
-.ob-verdict dd.elig {
-  font-size: var(--text-sm); line-height: var(--leading-lg);
-  font-weight: var(--weight-semibold); text-transform: capitalize;
-}
+.ob-verdict dd.elig { font-size: var(--text-sm); font-weight: var(--weight-semibold); text-transform: capitalize; }
 .ob-verdict dd.elig.eligible { color: var(--positive); }
 .ob-verdict dd.elig.conflict { color: var(--critical); }
 .ob-verdict dd.elig.unknown { color: var(--muted); }
 
-
-/* Body: the requirement grid, and a side rail carrying pay and the selected detail. */
-.ob-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-  gap: var(--space-4);
-  min-height: 0;
+.ob-nosalary {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
 }
 
-.ob-reqs { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-3); min-height: 0; }
+/* Status filters, with the brief's two actions pushed to the right edge of the same row. */
+.ob-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+.ob-filters > button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-medium);
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.ob-filters > button svg { width: 14px; height: 14px; }
+.ob-filters > button span { font-variant-numeric: tabular-nums; font-weight: var(--weight-bold); }
+.ob-filters > button:hover { background: var(--surface-3); color: var(--text); }
+.ob-filters > button.active { border-color: var(--accent); background: var(--cyan-soft); color: var(--text); }
+.ob-filters > button.met svg { color: var(--status-met); }
+.ob-filters > button.partial svg { color: var(--status-partial); }
+.ob-filters > button.unknown svg { color: var(--status-unknown); }
+.ob-filters > button.missing svg { color: var(--status-missing); }
+.ob-filters > button.conflict svg { color: var(--status-conflict); }
 
-.ob-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .ob-filters-actions { display: inline-flex; gap: var(--space-2); margin-left: auto; }
 .ob-action {
   display: inline-flex; align-items: center; gap: var(--space-2);
@@ -118,52 +258,51 @@
 }
 .ob-action svg { width: 14px; height: 14px; }
 .ob-action:hover { border-color: var(--accent); background: var(--cyan-soft); }
-.ob-filters button {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-full);
-  padding: var(--space-1) var(--space-3);
-  background: var(--surface-2);
-  color: var(--muted);
-  font-size: var(--text-xs); line-height: var(--leading-xs);
-  font-weight: var(--weight-medium);
-  text-transform: capitalize;
-  cursor: pointer;
-  transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
-}
-.ob-filters button svg { width: 14px; height: 14px; }
-.ob-filters button span { font-variant-numeric: tabular-nums; font-weight: var(--weight-bold); }
-.ob-filters button:hover { background: var(--surface-3); color: var(--text); }
-.ob-filters button.active { border-color: var(--accent); background: var(--cyan-soft); color: var(--text); }
-.ob-filters button.met svg { color: var(--status-met); }
-.ob-filters button.partial svg { color: var(--status-partial); }
-.ob-filters button.unknown svg { color: var(--status-unknown); }
-.ob-filters button.missing svg { color: var(--status-missing); }
-.ob-filters button.conflict svg { color: var(--status-conflict); }
 
-/* A dense grid, so a whole role is legible at once instead of scrolled through. */
-.ob-grid {
+/* Requirements, split by importance into columns. ADR-0071 section 6: content that does
+   not fit is split, not scrolled. The column count follows the data. */
+.ob-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  align-content: start;
-  gap: var(--space-2);
+  align-items: start;
+  gap: var(--space-3);
+  min-width: 0;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  padding-right: var(--space-1);
 }
+
+.ob-col { display: grid; gap: var(--space-2); min-width: 0; }
+.ob-col h3 {
+  display: flex; align-items: baseline; gap: var(--space-2);
+  margin: 0;
+  padding-bottom: var(--space-1);
+  border-bottom: 2px solid var(--line-soft);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ob-col h3 span { color: var(--faint); font-variant-numeric: tabular-nums; }
+/* A data attribute, not a class: a bare `.eligibility` rule elsewhere in the app matched
+   this column and turned every requirement in it grey, uppercase and indented. */
+.ob-col[data-importance="required"] h3 { border-bottom-color: color-mix(in srgb, var(--critical) 45%, var(--line-soft)); }
+.ob-col[data-importance="eligibility"] h3 { border-bottom-color: color-mix(in srgb, var(--info) 45%, var(--line-soft)); }
+
+.ob-col ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 
 .ob-chip {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
   border: 1px solid var(--line-soft);
   border-left: 3px solid var(--status-unknown);
   border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  /* 6px, not 8: eight chips give back 32px, which is the Required column's overshoot at
+     1280x800. The target stays above the 24px WCAG 2.5.8 minimum. */
+  padding: calc(var(--space-1) * 1.5) var(--space-3);
   background: var(--surface-2);
+  color: var(--text);
   text-align: left;
   cursor: pointer;
   transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
@@ -184,59 +323,40 @@
 .ob-chip.missing .ob-chip-icon svg { color: var(--status-missing); }
 .ob-chip.conflict .ob-chip-icon svg { color: var(--status-conflict); }
 
+/* A label wraps rather than truncating: a requirement reads as a phrase, and an
+   ellipsis on "5 years in data management, governance or ..." hides the half that
+   says what the requirement is. Four lines holds the longest label in the data at the
+   narrowest ADR-0071 width; the columns that carry such labels are the short ones. */
 .ob-chip-label {
-  min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  color: var(--text);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
   font-size: var(--text-sm); line-height: var(--leading-sm);
   font-weight: var(--weight-medium);
 }
-.ob-chip-imp {
-  border-radius: var(--radius-sm);
-  padding: 1px var(--space-1);
-  background: var(--surface-3);
-  color: var(--faint);
-  font-size: var(--text-2xs); line-height: var(--leading-2xs);
-  font-weight: var(--weight-bold);
-  text-transform: uppercase;
-}
-.ob-chip-imp.required { color: var(--critical); }
-.ob-chip-imp.eligibility { color: var(--info); }
-.ob-chip-score {
-  color: var(--faint);
-  font-size: var(--text-2xs); line-height: var(--leading-2xs);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
-}
 
-.ob-empty, .ob-nosalary {
-  margin: 0;
-  color: var(--muted);
-  font-size: var(--text-sm); line-height: var(--leading-base);
-}
+.ob-empty { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-base); }
 
-.ob-side {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: var(--space-3);
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
+/* The selected requirement, over the columns rather than beside them. A permanent
+   detail column cost a third of the width for something read one requirement at a time. */
 .ob-detail {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 2;
   display: grid;
-  align-content: start;
   gap: var(--space-2);
-  min-height: 0;
+  width: min(380px, calc(100% - 2 * var(--space-4)));
+  max-height: 70%;
   overflow-y: auto;
-  border: 1px dashed var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
-.ob-detail.filled { border-style: solid; background: var(--surface-2); }
-.ob-detail-hint { margin: 0; color: var(--faint); font-size: var(--text-sm); line-height: var(--leading-base); }
+.ob-detail > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .ob-detail-status {
   display: inline-flex; align-items: center; gap: var(--space-1);
   font-size: var(--text-2xs); line-height: var(--leading-2xs);
@@ -249,19 +369,11 @@
 .ob-detail-status.unknown { color: var(--status-unknown); }
 .ob-detail-status.missing { color: var(--status-missing); }
 .ob-detail-status.conflict { color: var(--status-conflict); }
-.ob-detail h4 {
-  margin: 0;
-  font-size: var(--text-base); line-height: var(--leading-base);
-  font-weight: var(--weight-semibold);
-}
+.ob-detail h4 { margin: 0; font-size: var(--text-base); line-height: var(--leading-base); font-weight: var(--weight-semibold); }
 .ob-detail p { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-base); }
-.ob-detail dl { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; }
+.ob-detail dl { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: 0; }
 .ob-detail dl div { display: grid; gap: 2px; }
-.ob-detail dt {
-  color: var(--faint);
-  font-size: var(--text-2xs); line-height: var(--leading-2xs);
-  text-transform: uppercase; letter-spacing: .04em;
-}
+.ob-detail dt { color: var(--faint); font-size: var(--text-2xs); line-height: var(--leading-2xs); text-transform: uppercase; letter-spacing: .04em; }
 .ob-detail dd {
   margin: 0;
   font-size: var(--text-sm); line-height: var(--leading-sm);
@@ -269,6 +381,8 @@
   text-transform: capitalize;
   font-variant-numeric: tabular-nums;
 }
+
+/* ------------------------------------------------------------------- dialogs */
 
 /* The posting is a document, read in an overlay, not a textarea on the working surface. */
 .ob-posting {
@@ -314,65 +428,7 @@
 .ob-posting-body ul { margin: 0 0 var(--space-4); padding-left: var(--space-5); }
 .ob-posting-body li { margin-bottom: var(--space-1); }
 
-@media (max-width: 1080px) {
-  .ob-head { grid-template-columns: minmax(0, 1fr); }
-  .ob-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .ob-side { grid-template-rows: auto auto auto; }
-}
-
-/* Page containment.
-
-   Measured at 1440x800 on v0.9.1, the page overflowed 211px. The containment chain was
-   sound; the waste was in what it held: a 187px two-line marketing headline, a 50px
-   full-width row for a secondary tool, a 161px brief head, and a salary band spilling
-   out of its rail. The requirement grid, the point of the screen, got 82px. These rules
-   were simulated against the live page before being written, and give zero overflow
-   with all twelve requirements visible at 1600x950, 1440x800 and 1366x768. */
-
-.shell-main > .content:has(.page-contained) {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-3);
-}
-
-.page-contained {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: var(--space-3);
-  min-height: 0;
-  height: 100%;
-}
-
-/* A workbench header states where you are; it does not sell the product. */
-.page-contained > .page-header { align-items: center; margin-bottom: 0; }
-.page-contained > .page-header h1 { margin: 0; font-size: var(--text-xl); line-height: var(--leading-xl); }
-.page-contained > .page-header p {
-  max-width: 90ch;
-  margin: var(--space-1) 0 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: var(--text-sm); line-height: var(--leading-sm);
-}
-
-.page-contained .opportunities-layout {
-  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
-  min-height: 0;
-  height: 100%;
-  align-items: stretch;
-}
-
-.page-contained .opportunity-cards {
-  min-height: 0;
-  align-content: start;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  padding-right: var(--space-1);
-}
-
-.page-contained .selection-hint { align-self: start; }
-
-/* The portfolio composer, opened from the toolbar. */
+/* The portfolio composer, opened from the workbench bar. */
 .portfolio-modal {
   position: relative;
   width: min(1080px, 94vw);
@@ -384,3 +440,12 @@
 }
 .portfolio-modal > .panel { margin: 0; border: 0; box-shadow: none; }
 .portfolio-modal-close { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 1; }
+
+/* Below the smallest ADR-0071 size the workbench stacks; it is no longer a workbench. */
+@media (max-width: 1080px) {
+  .workbench-bar { flex-wrap: wrap; }
+  .page-contained .opportunities-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .opp-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+  .opp-row { min-width: 220px; }
+  .ob-head { grid-template-columns: minmax(0, 1fr); }
+}

@@ -825,6 +825,18 @@ export const spanishMessages: Record<string, string> = {
   'researched': 'investigado',
   '{count} evidence items': '{count} elementos de evidencia',
   '{from} to {to}': '{from} a {to}',
+  'Compensation': 'Compensacion',
+  'Met': 'Cumplidos',
+  'No band': 'Sin banda',
+  'Roles': 'Cargos',
+  'Score': 'Puntaje',
+  'View': 'Vista',
+  'Graph': 'Grafo',
+  'Portfolios': 'Portafolios',
+  'Fit': 'Ajuste',
+  'fit': 'ajuste',
+  '{fit}% fit, {coverage}% of requirements evaluated': '{fit}% de ajuste, {coverage}% de requisitos evaluados',
+  '{coverage}% of requirements evaluated': '{coverage}% de requisitos evaluados',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {
