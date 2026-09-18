@@ -4,6 +4,18 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-09-17
+
+### Fixed
+
+- Rank roles by fit on the matches page. The cross-role ranking in the coverage workbench sorted by
+  coverage, the share of requirements the matcher could evaluate, and printed it as the ranked
+  value. Every role read 100%, so the ranking compared nothing: an 82% fit sat level with 99% fits.
+  It now sorts and labels by fit, with coverage in the tooltip, and the matrix columns follow the
+  same best-fit-first order. v0.10.0 fixed the same defect on the opportunities page and missed
+  this one. `CoverageWorkbench.test.tsx` holds every role at full coverage so that a regression to
+  coverage fails immediately; reintroducing the coverage sort fails two of its three tests.
+
 ## [0.10.0] - 2026-09-17
 
 ### Fixed
