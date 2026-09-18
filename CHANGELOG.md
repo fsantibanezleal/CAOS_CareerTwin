@@ -15,6 +15,14 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
   token `styles.css` did not redeclare, `--font-display`, came through, which is why headings turned
   serif while nothing else moved. `tokens.css` is now the only file permitted to declare a palette
   token, guarded by `frontend/src/theme.test.ts`.
+- Move 60 literal colours in `styles.css` onto the theme tokens. Changing a token did nothing for
+  declarations that named the previous hues directly: the primary button's neon teal-to-blue
+  gradient, the violet avatar, every status tint, the login hero's hardcoded `#080d18` canvas. They
+  kept rendering the old design whatever `tokens.css` said, which is most of why the redesign
+  appeared not to have happened. `styles.css` now contains no literal colour at all.
+- Give the login hero its own tokens. It inverts the canvas by design, so once the palette actually
+  applied, the light theme put near-black heading text on a hardcoded dark panel and the headline
+  became unreadable.
 - Remove `--muted: #4d5a४b` from the light palette. The hex contained a Devanagari digit, so the
   browser discarded the declaration and the token was never set.
 - Resolve requirements against evidence with containment instead of token Jaccard similarity.

@@ -76,6 +76,28 @@ describe('theme ownership', () => {
     expect(accentOf(light)).not.toEqual(accentOf(dark))
   })
 
+  it('names no palette hue literally outside tokens.css', () => {
+    // Changing a token did nothing for 56 declarations that named the previous hues
+    // directly: the neon teal button, the violet avatar, every status tint. They kept
+    // rendering the old design whatever tokens.css said, which is most of why the
+    // redesign appeared not to have happened. Colours here come from tokens only.
+    const offenders: string[] = []
+    for (const name of stylesheets()) {
+      if (name === 'tokens.css') continue
+      const text = readFileSync(join(SRC, name), 'utf8')
+      for (const [, property, value] of text.matchAll(/([\w-]+)\s*:\s*([^;{}]+);/g)) {
+        if (!property || !value || property.startsWith('--')) continue
+        const hits = value.match(/#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g) ?? []
+        for (const hit of hits) {
+          // Neutral black and white overlays carry no hue and are theme-safe.
+          if (/^rgba?\(\s*(0,\s*0,\s*0|255,\s*255,\s*255)/.test(hit)) continue
+          offenders.push(`${name}: ${property}: ${hit}`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
   it('carries no invalid colour values', () => {
     // `--muted: #4d5a६b` sat in the light palette: a Devanagari digit inside a hex
     // colour, which the browser discards, leaving the token unset.
