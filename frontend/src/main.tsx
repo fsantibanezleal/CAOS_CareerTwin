@@ -11,6 +11,7 @@ import './career-timeline.css'
 import './salary-band.css'
 import './opportunity-brief.css'
 import './profile-workbench.css'
+import './pipeline-workbench.css'
 import '@react-sigma/core/lib/style.css'
 import '@xyflow/react/dist/style.css'
 
