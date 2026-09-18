@@ -46,8 +46,8 @@ failure: a panel whose content does not fit is split, not scrolled.
 
 ## Gate
 
-`E:/_Temp/ct-verify/verify.mjs` extended to the ADR-0071 sizes and both themes, across every
-saved role rather than the first one:
+[`scripts/workbench-gate.mjs`](../../scripts/workbench-gate.mjs), at the ADR-0071 sizes and in both
+themes, across every saved role rather than the first one:
 
 - `document.scrollHeight == innerHeight` and no horizontal overflow
 - every requirement of every role visible without scrolling its container
