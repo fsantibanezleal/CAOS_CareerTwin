@@ -81,22 +81,26 @@ describe('CoverageWorkbench ranking', () => {
 
   it('orders roles by fit, not by coverage', () => {
     renderWorkbench()
-    const ranking = screen.getByRole('region', { name: 'Opportunities ranked by fit' })
-    const employers = within(ranking).getAllByRole('article').map((row) => row.querySelector('b')?.textContent)
+    // The ranking is the matrix's header row: one column per role, best fit first.
+    const ranking = screen.getByRole('table', { name: 'Opportunities ranked by fit' })
+    const employers = [...ranking.querySelectorAll('thead .cw-rank-row')].map((cell) => cell.querySelector('b')?.textContent)
     expect(employers).toEqual(['Global66', 'Empresa Confidencial', 'Ultranav'])
   })
 
   it('prints the fit, labelled, for each role', () => {
     renderWorkbench()
-    const ranking = screen.getByRole('region', { name: 'Opportunities ranked by fit' })
-    const values = within(ranking).getAllByRole('article').map((row) => row.querySelector('.cw-rank-value')?.textContent)
+    // The ranking is the matrix's header row: one column per role, best fit first.
+    const ranking = screen.getByRole('table', { name: 'Opportunities ranked by fit' })
+    const values = [...ranking.querySelectorAll('thead .cw-rank-row')].map((cell) => cell.querySelector('.cw-rank-value')?.textContent)
     expect(values).toEqual(['99% fit', '96% fit', '82% fit'])
   })
 
   it('never prints coverage as the ranked value', () => {
     renderWorkbench()
-    const ranking = screen.getByRole('region', { name: 'Opportunities ranked by fit' })
+    // The ranking is the matrix's header row: one column per role, best fit first.
+    const ranking = screen.getByRole('table', { name: 'Opportunities ranked by fit' })
     // Every role here is at 100% coverage. If coverage were ranked, every value would read 100%.
-    expect(within(ranking).queryByText('100%')).toBeNull()
+    const header = ranking.querySelector('thead') as HTMLElement
+    expect(within(header).queryByText('100%')).toBeNull()
   })
 })

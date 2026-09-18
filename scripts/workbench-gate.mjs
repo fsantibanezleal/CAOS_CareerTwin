@@ -1,5 +1,5 @@
 /**
- * ADR-0071 gate for the opportunity workbench, run against a live deployment.
+ * ADR-0071 gate for the opportunity and matches workbenches, run against a live deployment.
  *
  * Binding sizes 1280x800, 1600x900 and 2560x1440, in both themes, across every saved
  * role. See docs/design/opportunity-workbench-adr-0071.md.
@@ -151,6 +151,95 @@ for (const viewport of SIZES) {
     await page.locator('.opp-row').first().click()
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}${viewport.width}x${viewport.height}-${theme}.png` })
+  }
+  await page.close()
+}
+
+
+// ---------------------------------------------------------------------------- Matches
+// The cross-role workbench: the header row is the ranking and must equal the API's fits
+// in best-fit order; every importance tab except "All" must fit its own box, with the gap
+// view on and off; and the per-role drawer must open from a header.
+const TABS = ['required', 'eligibility', 'preferred', 'all']
+for (const viewport of SIZES) {
+  const page = await browser.newPage({ viewport })
+  await page.goto(BASE, { waitUntil: 'networkidle' })
+  await page.fill('input[type="email"]', EMAIL)
+  await page.fill('input[type="password"]', PASSWORD)
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200),
+    page.click('form button.primary'),
+  ])
+  await page.locator('.shell-main').waitFor({ state: 'visible' })
+  await page.locator('.sidebar a[href="/matches"]').click()
+  await page.waitForURL((u) => u.pathname === '/matches')
+  await page.locator('.cw-rank-row').first().waitFor({ state: 'visible', timeout: 30000 })
+
+  const expectedHeaders = await page.evaluate(async () => {
+    const [runs, opportunities] = await Promise.all([
+      fetch('/api/matches', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/opportunities', { credentials: 'include' }).then((r) => r.json()),
+    ])
+    const latest = new Map()
+    for (const run of runs) if (!latest.has(run.opportunity_id)) latest.set(run.opportunity_id, run)
+    const employer = new Map(opportunities.map((o) => [o.id, o.employer]))
+    return [...latest.values()]
+      .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
+      .map((run) => `${employer.get(run.opportunity_id)} ${Math.round(run.score * 100)}% fit`)
+  })
+
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme)
+    for (const gaps of [true, false]) {
+      const box = page.locator('.cw-toggle input')
+      if ((await box.isChecked()) !== gaps) await box.click()
+      for (const tab of TABS) {
+        await page.locator('.cw-tabs button').nth(TABS.indexOf(tab)).click()
+        await page.waitForTimeout(250)
+        const r = await page.evaluate(() => {
+          const main = document.querySelector('.shell-main')
+          const doc = document.documentElement
+          const scroll = document.querySelector('.cw-matrix-scroll')
+          const bar = document.querySelector('.workbench-bar')
+          const barRight = Math.min(bar.getBoundingClientRect().right, innerWidth)
+          const hasText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+          return {
+            rows: document.querySelectorAll('.cw-matrix tbody tr').length,
+            inMatrix: scroll.scrollHeight - scroll.clientHeight,
+            scrollY: Math.max(doc.scrollHeight - innerHeight, main.scrollHeight - main.clientHeight),
+            scrollX: doc.scrollWidth - innerWidth,
+            barClipped: [...bar.children].filter((el) => el.getBoundingClientRect().right > barRight + 1).map((el) => el.textContent.trim().slice(0, 20)),
+            controls: Math.round(document.querySelector('.cw-controls').getBoundingClientRect().height),
+            tiny: [...document.querySelectorAll('.page-contained *')].filter((el) => hasText(el) && parseFloat(getComputedStyle(el).fontSize) < 12).length,
+            headers: [...document.querySelectorAll('thead .cw-rank-row')].map((th) => `${th.querySelector('b')?.textContent} ${th.querySelector('.cw-rank-value')?.textContent}`),
+          }
+        })
+        const problems = []
+        if (r.scrollY > 0) problems.push(`page scrolls (${r.scrollY}px)`)
+        if (r.scrollX > 0) problems.push(`page scrolls sideways (${r.scrollX}px)`)
+        if (r.barClipped.length) problems.push(`bar control cut off: ${r.barClipped.join(' | ')}`)
+        if (r.controls > 60) problems.push(`controls wrap (${r.controls}px)`)
+        if (r.tiny) problems.push(`${r.tiny} text node(s) under 12px`)
+        if (tab !== 'all' && r.inMatrix > 1) problems.push(`${tab} tab needs scrolling (${r.inMatrix}px)`)
+        if (JSON.stringify(r.headers) !== JSON.stringify(expectedHeaders)) problems.push(`headers ${JSON.stringify(r.headers)} != API ${JSON.stringify(expectedHeaders)}`)
+        const label = `matches ${viewport.width}x${viewport.height} ${theme.padEnd(5)} gaps=${gaps ? 'on ' : 'off'} ${tab.padEnd(11)} ${String(r.rows).padStart(2)} rows`
+        if (problems.length) {
+          failures.push(label)
+          console.log(`FAIL ${label}\n       ${problems.join('\n       ')}`)
+        } else {
+          console.log(`ok   ${label}`)
+        }
+      }
+    }
+    await page.locator('.cw-tabs button').nth(0).click()
+    await page.screenshot({ path: `${OUT}matches-${viewport.width}x${viewport.height}-${theme}.png` })
+  }
+
+  await page.locator('thead .cw-role').first().click()
+  await page.waitForTimeout(400)
+  if (!(await page.locator('.role-drawer').count())) {
+    failures.push(`matches ${viewport.width}: role drawer did not open`)
+    console.log(`FAIL matches ${viewport.width}: role drawer did not open`)
   }
   await page.close()
 }

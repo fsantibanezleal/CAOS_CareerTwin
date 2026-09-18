@@ -4,6 +4,32 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-18
+
+### Changed
+
+- Rebuild the matches page against ADR-0071. Measured at 1280x800 it overflowed by 2,365px: a
+  serif headline, a portfolio panel that was an empty selector whenever no portfolio existed, a
+  ranking block, a filter toolbar wrapping onto several lines, a requirement matrix of 29 rows at
+  55px, and a saved-roles index that repeated the ranking. It is now one instrument: the matrix's
+  header row is the ranking, one column per role with its fit and a fit bar, best fit first.
+  Requirements are split by importance into tabs so each group fits without scrolling; only "All"
+  may scroll, inside the matrix. The page opens on the gaps when there are any. Cells are labelled
+  status pills rather than unlabelled dots, and hatched where a role does not ask for the
+  requirement. The per-role detail, with its alignment shape, improvement actions and tracking,
+  opens in a drawer from a column header. The portfolio panel appears only when a portfolio exists.
+- Verified on the built app against the live data before release: every size, both themes, every
+  importance tab with the gap view on and off, header fits equal to the API's. The committed gate
+  `scripts/workbench-gate.mjs` now covers the matches page as well.
+
+### Fixed
+
+- Dim dialogs with a dark scrim in both themes. The backdrop was derived from `--text`, which is
+  near-white on charcoal, so in the dark theme a modal dimmed its page with a light haze. It now
+  has its own `--scrim` token.
+- Remove the rules for the saved-roles index, the empty radar illustration and the unscored
+  marker, which nothing renders any more.
+
 ## [0.10.1] - 2026-09-17
 
 ### Fixed

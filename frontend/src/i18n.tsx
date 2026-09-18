@@ -839,6 +839,13 @@ export const spanishMessages: Record<string, string> = {
   '{coverage}% of requirements evaluated': '{coverage}% de requisitos evaluados',
   'Opportunities ranked by fit': 'Oportunidades ordenadas por ajuste',
   'Fit across every target': 'Ajuste en todos los objetivos',
+  'Fit is evidence alignment, never a hiring probability.': 'El ajuste es alineamiento con evidencia, nunca una probabilidad de contratacion.',
+  '{count} roles not matched yet': '{count} cargos aun sin coincidencia',
+  'Re-run matches': 'Recalcular coincidencias',
+  'Matching…': 'Calculando…',
+  'Requirement importance': 'Importancia del requisito',
+  'Gaps only': 'Solo brechas',
+  'No gaps across your roles.': 'No hay brechas en tus cargos.',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {
