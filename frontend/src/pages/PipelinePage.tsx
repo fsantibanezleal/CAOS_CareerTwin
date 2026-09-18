@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, FileUp, Info, KanbanSquare, Link2, Plus, Users } from 'lucide-react'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router'
 import { api } from '../api'
 import { ApplicationDetail } from '../components/ApplicationDetail'
 import { CareerCalendar } from '../components/CareerCalendar'
@@ -53,7 +54,10 @@ type DialogState = { kind: 'task' | 'contact'; applicationId?: string } | null
 export function PipelinePage() {
   const { plural, t } = useI18n()
   const [view, setView] = useState<View>('board')
-  const [selectedId, setSelectedId] = useState<string>()
+  // `?application=<id>` opens an application directly, as Today's links do.
+  const [params] = useSearchParams()
+  const linked = params.get('application') ?? undefined
+  const [selectedId, setSelectedId] = useState<string | undefined>(linked)
   const [dialog, setDialog] = useState<DialogState>(null)
   const applications = useQuery({ queryKey: ['applications'], queryFn: () => api<Application[]>('/api/pipeline/applications') })
   const events = useQuery({ queryKey: ['pipeline-events'], queryFn: () => api<StageEvent[]>('/api/pipeline/events') })
@@ -79,7 +83,11 @@ export function PipelinePage() {
   const error = queries.find((query) => query.error)?.error
   if (error || !applications.data || !events.data || !tasks.data || !contacts.data || !analytics.data) return <ErrorState error={error} />
 
-  const selected = journeyView.visible.find((journey) => journey.application.id === selectedId) ?? journeyView.visible[0]
+  // A linked application shows even when the board's filters would hide it, closed ones included.
+  const selected =
+    journeyView.visible.find((journey) => journey.application.id === selectedId) ??
+    (selectedId && selectedId === linked ? journeys.find((journey) => journey.application.id === selectedId) : undefined) ??
+    journeyView.visible[0]
   // Opening an application from the calendar or people view lands on it in the board, even when
   // the board's filters would hide it.
   const openApplication = (id: string) => {

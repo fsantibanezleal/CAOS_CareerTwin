@@ -27,15 +27,16 @@ Docling, embedding service, or model volume.
 `release-smoke.py` runs a synthetic self-cleaning live journey. Supply disposable credentials only
 through `CAREERTWIN_SMOKE_*` process environment. It never prints them and purges the temporary seeker.
 
-`workbench-gate.mjs` measures the Opportunities, Matches, Profile and Pipeline workbenches against
+`workbench-gate.mjs` measures the Today, Opportunities, Matches, Profile and Pipeline workbenches against
 ADR-0071 on a live deployment, at 1280x800, 1600x900 and 2560x1440 in both themes. On every view
 it checks document scroll, controls cut off the bar and text under 12px; per page it reads what is
 drawn against the API: each role's fit on first paint and requirements clipped by the brief; the
 cross-role matrix; the skill map's totals and rows that fall outside it; and on the pipeline the
 stage strip's counts, each journey's stage, fit, reached stages and time segments, each detail
 pane's history and compensation band, the calendar's items per day, the people list, and that
-Open role lands on the same role. `CAREERTWIN_GATE_ONLY=pipeline` (or a comma list of
-`opportunities`, `matches`, `profile`, `pipeline`) runs a subset. Credentials come only from
+Open role lands on the same role; on Today the key figures, and every role on the fit and pay map
+read back through the drawn axes. `CAREERTWIN_GATE_ONLY=pipeline` (or a comma list of
+`opportunities`, `matches`, `profile`, `pipeline`, `today`) runs a subset. Credentials come only from
 `CAREERTWIN_GATE_*` process environment. Playwright is not a project dependency; the file header
 gives the install line. Screenshots go to the ignored `.run/workbench-gate/`.
 
