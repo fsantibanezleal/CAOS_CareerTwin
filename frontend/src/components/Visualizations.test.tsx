@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { I18nProvider } from '../i18n'
-import type { Landscape, MatchRun, ProfileGraphData } from '../types'
-import { CareerRiver, MatchWaterfall, OpportunityLandscape, ProfileConstellation } from './Visualizations'
+import type { Landscape, MatchRun } from '../types'
+import { MatchWaterfall, OpportunityLandscape, OpportunityNetwork } from './Visualizations'
 
 const captureSigmaSettings = vi.hoisted(() => vi.fn())
 
@@ -46,9 +46,11 @@ describe('decision-grade visual fallbacks', () => {
     vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })))
     stubTokens()
     document.documentElement.dataset.theme = 'dark'
-    renderEnglish(<ProfileConstellation data={{
-      nodes: [{ id: 'profile-1', label: 'Profile', type: 'profile' }, { id: 'skill-1', label: 'Python', type: 'skill' }],
-      edges: [{ id: 'edge-1', source: 'profile-1', target: 'skill-1', type: 'has_skill' }],
+    // The opportunity graph is the Sigma view a page renders; the profile constellation it once
+    // tested was replaced by the skill map (#210).
+    renderEnglish(<OpportunityNetwork data={{
+      nodes: [{ id: 'opportunity-1', label: 'Head of Data', type: 'opportunity' }, { id: 'requirement-1', label: 'Python', type: 'requirement' }],
+      edges: [{ id: 'edge-1', source: 'opportunity-1', target: 'requirement-1', type: 'requires_required' }],
     }} />)
     expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
       labelColor: { color: THEME_TOKENS.dark!['--text'] },
@@ -78,20 +80,6 @@ describe('decision-grade visual fallbacks', () => {
       defaultDrawNodeLabel: expect.any(Function),
       defaultDrawNodeHover: expect.any(Function),
     })))
-  })
-
-  it('represents career history as dated ranges with a readable table', () => {
-    const rows: ProfileGraphData['river'] = [
-      { id: 'experience-1', kind: 'experience', title: 'Lead Engineer', organization: 'Example Systems', start: '2021-01-01', end: '2024-06-30' },
-      { id: 'education-1', kind: 'education', title: 'MSc Data Science', organization: 'Example University', start: '2018-03-01', end: '2020-12-01' },
-    ]
-    renderEnglish(<CareerRiver rows={rows} />)
-    expect(screen.getByRole('img', { name: 'Career duration timeline chart' })).toBeInTheDocument()
-    fireEvent.click(screen.getByText('Read career timeline as a table'))
-    const table = screen.getByRole('table')
-    expect(within(table).getByText('Lead Engineer')).toBeInTheDocument()
-    expect(within(table).getByText('Example University')).toBeInTheDocument()
-    expect(within(table).getByText('2021-01-01')).toBeInTheDocument()
   })
 
   it('switches opportunity analysis between ranked skills, seniority, and industries', () => {
