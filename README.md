@@ -1,5 +1,7 @@
 # CareerTwin
 
+Release `0.9.0`. See [`CHANGELOG.md`](CHANGELOG.md).
+
 CareerTwin is an evidence-first career-research system for one professional per account and many
 job opportunities. The product is this public repository: domain modules, graph projections,
 deterministic matching and recommendations, connectors, external-provider agents, native harness,

@@ -106,7 +106,11 @@ export function EChart({
   const container = useRef<HTMLDivElement>(null)
   const chartRef = useRef<ECharts | null>(null)
   const selectRef = useRef(onSelect)
-  selectRef.current = onSelect
+  // Kept current in an effect, not during render: the click listener is registered once
+  // on mount and has to reach whatever handler the latest render supplied.
+  useEffect(() => {
+    selectRef.current = onSelect
+  }, [onSelect])
 
   const build = useCallback(() => {
     const chart = chartRef.current
