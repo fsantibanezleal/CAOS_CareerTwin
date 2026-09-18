@@ -79,6 +79,15 @@
   --status-unknown: #78716c;
   --status-met: #15803d;
 
+  /* The login hero is a deliberate ink panel in BOTH themes, like the cover of a
+     report. Because it inverts the canvas, page text tokens are unreadable on it, so
+     it carries its own set. These do not flip with the theme; that is the point. */
+  --hero-bg: #16130f;
+  --hero-text: #f4f0ea;
+  --hero-muted: #bdb4a8;
+  --hero-line: #443b32;
+  --hero-accent: #93b4ff;
+
   --shadow: 0 1px 2px rgba(22, 19, 15, .06), 0 8px 24px rgba(22, 19, 15, .06);
   --radius: var(--radius-lg);
 
