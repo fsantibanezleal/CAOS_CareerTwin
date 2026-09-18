@@ -58,3 +58,63 @@
 @media (max-width: 720px) {
   .sb-figures { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Strip form: the same three marks on one row, for surfaces whose height belongs to other
+   content. As a stacked panel the band needs 338px; in the opportunity workbench that is
+   exactly the height the requirement columns do not have. The research note and source
+   sit behind the info mark rather than stacked in layout. */
+.sb-strip {
+  display: grid;
+  grid-template-columns: auto auto minmax(60px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+}
+.sb-strip-label {
+  display: grid;
+  gap: 0;
+  color: var(--text);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap;
+}
+.sb-strip-label small {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-medium);
+  text-transform: none; letter-spacing: 0;
+}
+.sb-strip.researched .sb-strip-label small { color: var(--positive); }
+.sb-strip dl { display: flex; gap: var(--space-4); margin: 0; }
+.sb-strip dl div { display: grid; gap: 0; }
+.sb-strip dt {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.sb-strip dd {
+  margin: 0;
+  white-space: nowrap;
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.sb-strip .emphasis dd {
+  color: var(--accent);
+  font-size: var(--text-base); line-height: var(--leading-sm);
+  font-weight: var(--weight-bold);
+}
+.sb-strip .sb-scale { height: var(--space-3); }
+.sb-strip-basis {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  white-space: nowrap;
+  cursor: help;
+}
+.sb-strip-basis svg { width: 14px; height: 14px; flex: none; color: var(--faint); }
