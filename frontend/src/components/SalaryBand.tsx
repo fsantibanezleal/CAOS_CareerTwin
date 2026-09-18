@@ -28,13 +28,13 @@ export type Compensation = {
   source?: string
 }
 
-function compact(value: number, currency: string): string {
+/** A figure without its currency: all five share one, stated once in the basis line. */
+function compact(value: number): string {
   if (value >= 1_000_000) {
     const millions = value / 1_000_000
-    const text = millions >= 10 ? millions.toFixed(0) : millions.toFixed(1)
-    return `${text}M ${currency}`
+    return `${millions >= 10 ? millions.toFixed(0) : millions.toFixed(1)}M`
   }
-  return `${Math.round(value / 1000)}K ${currency}`
+  return `${Math.round(value / 1000)}K`
 }
 
 export function SalaryBand({ compensation }: { compensation?: Compensation | null }) {
@@ -74,24 +74,24 @@ export function SalaryBand({ compensation }: { compensation?: Compensation | nul
       <dl className="sb-figures">
         <div>
           <dt>{t('Floor')}</dt>
-          <dd>{compact(floor, currency)}</dd>
+          <dd>{compact(floor)}</dd>
         </div>
         <div>
           <dt>{t('Central')}</dt>
           <dd>
-            {compact(centralLow, currency)} &ndash; {compact(centralHigh, currency)}
+            {compact(centralLow)}&ndash;{compact(centralHigh)}
           </dd>
         </div>
         <div className="emphasis">
           <dt>{t('Ask')}</dt>
           <dd>
-            {compact(askLow, currency)} &ndash; {compact(askHigh, currency)}
+            {compact(askLow)}&ndash;{compact(askHigh)}
           </dd>
         </div>
       </dl>
 
       <p className="sb-basis">
-        {[period, basis].filter(Boolean).join(', ')}
+        {[currency, period, basis].filter(Boolean).join(', ')}
         {compensation.researched ? ` · ${t('researched')} ${compensation.researched}` : ''}
       </p>
 
