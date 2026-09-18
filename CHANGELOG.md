@@ -4,6 +4,15 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-09-18
+
+### Removed
+
+- The `ProfileConstellation` and `CareerRiver` visualizations, which no page has rendered since the
+  profile rebuild replaced them with the skill map and the career timeline (#210), with their
+  imports, helper and chart rule. The Sigma theming test they carried now covers
+  `OpportunityNetwork`, the graph the Opportunities page renders.
+
 ## [0.14.2] - 2026-09-18
 
 ### Changed
