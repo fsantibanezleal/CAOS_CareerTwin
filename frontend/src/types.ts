@@ -158,6 +158,16 @@ export type Application = {
   updated_at: string
 }
 
+/** One append-only stage transition; `from_stage` is null when tracking started. */
+export type StageEvent = {
+  id: string
+  application_id: string
+  from_stage?: string | null
+  to_stage: string
+  note: string
+  occurred_at: string
+}
+
 export type CareerTask = {
   id: string
   application_id?: string

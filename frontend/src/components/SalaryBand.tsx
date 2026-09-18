@@ -35,8 +35,9 @@ export function SalaryBand({
   variant = 'panel',
 }: {
   compensation?: Compensation | null
-  /** `strip` is one row, for surfaces whose height belongs to other content. */
-  variant?: 'panel' | 'strip'
+  /** `strip` is one row, for surfaces whose height belongs to other content; `compact` is
+      the band for a narrow side pane, where a row does not fit and a panel is too tall. */
+  variant?: 'panel' | 'strip' | 'compact'
 }) {
   const { t } = useI18n()
   if (!compensation || compensation.floor === undefined) return null
@@ -63,6 +64,38 @@ export function SalaryBand({
       <span className="sb-mark floor" style={{ left: `${at(floor)}%` }} title={t('Floor')} />
     </div>
   )
+
+  if (variant === 'compact') {
+    const detail = [compensation.note, compensation.source].filter(Boolean).join(' · ')
+    return (
+      <section className={`sb-compact ${compensation.confidence ?? 'unknown'}`} aria-label={t('Compensation band')}>
+        <header>
+          <span>
+            {t('Compensation')} <small>{t(compensation.confidence === 'researched' ? 'researched' : 'comparable')}</small>
+          </span>
+          <span className="sb-strip-basis" title={detail || undefined}>
+            {[currency, period, basis].filter(Boolean).join(', ')}
+            {detail ? <Info aria-label={detail} /> : null}
+          </span>
+        </header>
+        {scale}
+        <dl className="sb-figures">
+          <div>
+            <dt>{t('Floor')}</dt>
+            <dd>{compact(floor)}</dd>
+          </div>
+          <div>
+            <dt>{t('Central')}</dt>
+            <dd>{compact(centralLow)}&ndash;{compact(centralHigh)}</dd>
+          </div>
+          <div className="emphasis">
+            <dt>{t('Ask')}</dt>
+            <dd>{compact(askLow)}&ndash;{compact(askHigh)}</dd>
+          </div>
+        </dl>
+      </section>
+    )
+  }
 
   if (variant === 'strip') {
     // The research note and its source are one hover away rather than stacked in layout.

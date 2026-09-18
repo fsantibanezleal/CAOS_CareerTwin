@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, FileUp, FolderKanban, History, LayoutGrid, Link2, List, Network, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { api, json } from '../api'
 import { OpportunityLandscape, OpportunityNetwork } from '../components/Visualizations'
 import { EmptyState, ErrorState, ExternalLink, Loading, Panel } from '../components/Primitives'
@@ -110,7 +111,9 @@ export function OpportunitiesPage() {
   const [portfoliosOpen, setPortfoliosOpen] = useState(false)
   const [view, setView] = useState<'cards' | 'landscape' | 'network'>('cards')
   const [queryText, setQueryText] = useState('')
-  const [selectedId, setSelectedId] = useState<string>()
+  // `?role=<id>` opens a role directly, as the pipeline's Open role link does.
+  const [params] = useSearchParams()
+  const [selectedId, setSelectedId] = useState<string | undefined>(() => params.get('role') ?? undefined)
   const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities'), refetchInterval: (query) => (query.state.data as Opportunity[] | undefined)?.some((item) => ['pending', 'processing'].includes(String(item.structured_data.capture_status))) ? 2000 : false })
   const landscape = useQuery({ queryKey: ['landscape'], queryFn: () => api<Landscape>('/api/opportunities/visualization/landscape') })
   const graph = useQuery({ queryKey: ['opportunity-graph'], queryFn: () => api<OpportunityGraphData>('/api/opportunities/visualization/graph') })

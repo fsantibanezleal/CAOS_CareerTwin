@@ -37,4 +37,15 @@ describe('Spanish coverage', () => {
     expect(translate('es', 'Next best moves')).toBe('Próximos mejores pasos')
     expect(translate('es', 'Application flow')).toBe('Flujo de postulaciones')
   })
+
+  // Entries written without accents shipped for weeks, and one was not merely unaccented but
+  // a different, embarrassing word: "Anos" for "Años". These forms always carry an accent in
+  // interface copy; placeholders such as {version} are ignored.
+  it('writes Spanish with its accents', () => {
+    const unaccented = /\b(anos?|todavia|aun|linea|busqueda|pretension|liquido|ningun|alfabetico|evalua|dias?|mas|tambien|segun|ultim[oa]s?|proxim[oa]s?|categorias?|\w+cion)\b/i
+    const offenders = Object.entries(spanishMessages).filter(([, value]) => unaccented.test(value.replace(/\{\w+\}/g, '')))
+    expect(offenders).toEqual([])
+    expect(translate('es', 'Years')).toBe('Años')
+    expect(translate('es', '{count} years of experience', { count: 12 })).toBe('12 años de experiencia')
+  })
 })
