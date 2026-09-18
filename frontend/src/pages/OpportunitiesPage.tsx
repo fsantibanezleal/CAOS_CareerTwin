@@ -111,6 +111,8 @@ function TargetSetManager({ opportunities }: { opportunities: Opportunity[] }) {
 export function OpportunitiesPage() {
   const { plural, t, formatDate } = useI18n()
   const [captureOpen, setCaptureOpen] = useState(false)
+  // A secondary tool: reachable from the toolbar, never occupying the working surface.
+  const [portfoliosOpen, setPortfoliosOpen] = useState(false)
   const [view, setView] = useState<'cards' | 'landscape' | 'network'>('cards')
   const [queryText, setQueryText] = useState('')
   const [selectedId, setSelectedId] = useState<string>()
@@ -124,13 +126,17 @@ export function OpportunitiesPage() {
   return (
     <div className="page-contained">
       <PageHeader eyebrow={t('Opportunity research')} title={t('Collect signals. Keep the source. Decide what matters.')} description={t('Capture individual roles from public pages or documents, review the structure, and understand patterns only within your saved research.')} actions={<button className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>} />
-      <details className="page-drawer">
-        <summary><FolderKanban /> {t('Target portfolios')}</summary>
-        <TargetSetManager opportunities={opportunities.data} />
-      </details>
-      <div className="list-toolbar"><label className="search-field"><Search /><input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Research cards')}</button><button className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Knowledge graph')}</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button></div></div>
+      <div className="list-toolbar"><button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Target portfolios')}</button><label className="search-field"><Search /><input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Research cards')}</button><button className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Knowledge graph')}</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button></div></div>
       {view === 'landscape' ? <Panel title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel> : view === 'network' ? <Panel title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{t(item.status)}</span></header><h2>{item.title}</h2><p>{item.employer || t('Employer not specified')}</p><div className="opportunity-meta"><span><MapPin />{item.location || t(item.remote_mode)}</span><span><BriefcaseBusiness />{item.seniority || t('Seniority unknown')}</span>{item.deadline_at && <span><CalendarClock />{formatDate(item.deadline_at)}</span>}</div><footer><span>{plural(item.requirements.length, '{count} structured requirement', '{count} structured requirements')}</span><ArrowUpRight /></footer></button>) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}</section>{selected ? <OpportunityDetail key={selected.id} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>{t('Select a research card')}</h3><p>{t('Review its extracted content and atomic requirements here.')}</p></aside>}</div>}
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
+      {portfoliosOpen ? (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPortfoliosOpen(false)}>
+          <section className="portfolio-modal" role="dialog" aria-modal="true" aria-label={t('Target portfolios')}>
+            <button type="button" className="icon-button portfolio-modal-close" onClick={() => setPortfoliosOpen(false)} aria-label={t('Close')}><X /></button>
+            <TargetSetManager opportunities={opportunities.data} />
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }

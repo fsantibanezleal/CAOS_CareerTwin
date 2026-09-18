@@ -174,14 +174,6 @@ export function OpportunityBrief({
           </dl>
         </div>
 
-        <div className="ob-head-actions">
-          <button type="button" className="button ghost" onClick={() => setPosting(true)}>
-            <FileText aria-hidden /> {t('Posting')}
-          </button>
-          <button type="button" className="button ghost" onClick={onEdit}>
-            <Pencil aria-hidden /> {t('Edit')}
-          </button>
-        </div>
       </header>
 
       <div className="ob-body">
@@ -200,6 +192,14 @@ export function OpportunityBrief({
                 {ICON[status]} {t(status)} <span>{counts[status]}</span>
               </button>
             ))}
+            <span className="ob-filters-actions">
+              <button type="button" className="ob-action" onClick={() => setPosting(true)}>
+                <FileText aria-hidden /> {t('Posting')}
+              </button>
+              <button type="button" className="ob-action" onClick={onEdit}>
+                <Pencil aria-hidden /> {t('Edit')}
+              </button>
+            </span>
           </nav>
 
           <div className="ob-grid">
