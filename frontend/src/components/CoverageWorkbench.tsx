@@ -59,7 +59,8 @@ export function CoverageWorkbench({
       const prior = latest.get(run.opportunity_id)
       if (!prior || run.created_at > prior.created_at) latest.set(run.opportunity_id, run)
     }
-    return [...latest.values()].sort((a, b) => b.coverage - a.coverage)
+    // Best fit first. A run too thin to score sorts last rather than being ranked on coverage.
+    return [...latest.values()].sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
   }, [runs])
 
   /** Requirement label is the row key: the same capability asked by several employers is one row. */
@@ -144,20 +145,26 @@ export function CoverageWorkbench({
 
   return (
     <div className="cw">
-      {/* Ranking: sorted horizontal bars, the correct form for comparing categories. */}
-      <section className="cw-rank" aria-label={t('Opportunities ranked by requirement coverage')}>
+      {/* Ranking: sorted horizontal bars, the correct form for comparing categories. It
+          ranks by fit. It ranked by coverage, the share of requirements that could be
+          evaluated, which read 100% for every role and so compared nothing. */}
+      <section className="cw-rank" aria-label={t('Opportunities ranked by fit')}>
         {columns.map((run) => {
           const opportunity = byId.get(run.opportunity_id)
           return (
-            <article key={run.id} className="cw-rank-row">
+            <article
+              key={run.id}
+              className="cw-rank-row"
+              title={t('{fit}% fit, {coverage}% of requirements evaluated', { fit: pct(run.score ?? 0), coverage: pct(run.coverage) })}
+            >
               <span className="cw-rank-name">
                 <b>{opportunity?.employer ?? t('Unknown')}</b>
                 <small>{opportunity?.title ?? ''}</small>
               </span>
               <span className="cw-rank-bar">
-                <i style={{ width: `${pct(run.coverage)}%` }} />
+                <i style={{ width: `${pct(run.score ?? 0)}%` }} />
               </span>
-              <span className="cw-rank-value">{pct(run.coverage)}%</span>
+              <span className="cw-rank-value">{run.score != null ? `${pct(run.score)}% ${t('fit')}` : '–'}</span>
             </article>
           )
         })}
