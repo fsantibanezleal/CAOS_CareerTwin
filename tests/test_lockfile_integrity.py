@@ -19,6 +19,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LOCK = REPO_ROOT / "frontend" / "package-lock.json"
 PACKAGE = REPO_ROOT / "frontend" / "package.json"
 
+# Dependencies whose genuine published version equals a project release. Matching the
+# version string alone produced a false positive at 0.10.1, because
+# graphology-layout-forceatlas2 really is at 0.10.1. A blanket string replace rewrites a
+# dependency's version and tarball URL but leaves its integrity hash untouched, since the
+# hash does not contain the version; so the hash is what separates the real package from
+# a collateral rewrite. Each entry is verified against the npm registry when added.
+GENUINE_VERSION_COINCIDENCES: frozenset[tuple[str, str, str]] = frozenset(
+    {
+        (
+            # npm view graphology-layout-forceatlas2@0.10.1 dist.integrity, 2026-09-17;
+            # a dependency since "feat: make career insights decision-grade".
+            "node_modules/graphology-layout-forceatlas2",
+            "0.10.1",
+            "sha512-ogzBeF1FvWzjkikrIFwxhlZXvD2+wlY54lqhsrWprcdPjopM2J9HoMweUmIgwaTvY4bUYVimpSsOdvDv1gPRFQ==",
+        ),
+    }
+)
+
 
 def _version() -> str:
     return (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
@@ -54,6 +72,8 @@ def test_no_dependency_carries_the_project_version() -> None:
     for name, entry in (lock.get("packages") or {}).items():
         if name == "":
             continue
+        if (name, entry.get("version"), entry.get("integrity")) in GENUINE_VERSION_COINCIDENCES:
+            continue
         if entry.get("version") == expected:
             offenders.append(f"{name} version=={expected}")
         resolved = entry.get("resolved") or ""
@@ -63,6 +83,9 @@ def test_no_dependency_carries_the_project_version() -> None:
         "Dependency entries carry the project version, which means a version bump "
         "string-replaced the lockfile instead of editing its root keys:\n  "
         + "\n  ".join(offenders)
+        + "\nIf a dependency genuinely publishes this version, confirm it with `npm view "
+        "<name>@<version> dist.integrity` and add (path, version, integrity) to "
+        "GENUINE_VERSION_COINCIDENCES."
     )
 
 
