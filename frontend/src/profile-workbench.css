@@ -1,0 +1,390 @@
+/* Profile workbench. Tokens only; see docs/design/profile-workbench-adr-0071.md.
+
+   Measured on v0.11.0 at 1280x800, every Profile tab overflowed, the Overview by 4,740px,
+   beneath a headline that wrapped to three lines at 39px. The page is now a workbench:
+   one bar carries the title and the tabs, and each tab is sized to what remains. */
+
+/* ------------------------------------------------------------------- the bar */
+
+.bar-tabs {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.bar-tabs button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+.bar-tabs button svg { width: 16px; height: 16px; }
+.bar-tabs button:hover { color: var(--text); background: var(--surface-2); }
+.bar-tabs button.active { border-color: var(--line); background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+/* ---------------------------------------------------------- tab containers */
+
+.profile-overview,
+.profile-career,
+.profile-artifacts {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Panels that keep their original, longer content. This is the one scrolling container on
+   the tab, never the page (ADR-0071 section 1). */
+.profile-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.profile-scroll > .panel { margin: 0; }
+
+.profile-section-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+}
+.profile-section-head p { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); }
+
+.profile-career > .career-timeline,
+.profile-career > :last-child {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------------------------------------ identity strip */
+
+.identity {
+  display: grid;
+  /* The facts column is capped: an auto column sized itself to the longest fact and ran it
+     past the card's edge. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px) auto;
+  align-items: start;
+  gap: var(--space-5);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.identity-text { min-width: 0; }
+.identity-text h2 {
+  margin: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--text-lg); line-height: var(--leading-lg);
+  font-weight: var(--weight-semibold);
+}
+.identity-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+}
+.identity-summary.expanded { display: block; max-height: 30vh; overflow-y: auto; }
+.identity .text-button {
+  margin-top: var(--space-1);
+  border: 0; padding: 0;
+  background: none;
+  color: var(--accent);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.identity-facts {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  max-width: 320px;
+}
+/* Grid items default to min-width:auto, so one unbreakable fact widened the whole column
+   past the card and every fact inherited that width. Allowing them to shrink lets the
+   ellipsis apply. */
+.identity-facts, .identity-facts > div, .identity-facts dd { min-width: 0; }
+.identity-facts dd {
+  margin: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+}
+
+/* ---------------------------------------------------------------- skill map */
+
+.sm {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.sm-controls { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.sm-search {
+  display: flex; align-items: center; gap: var(--space-2);
+  flex: 1 1 200px; min-width: 150px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+}
+.sm-search svg { width: 16px; height: 16px; flex: none; color: var(--faint); }
+.sm-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--text-sm); }
+.sm-category {
+  flex: none;
+  width: auto;
+  max-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-size: var(--text-sm);
+  text-transform: capitalize;
+}
+.sm-toggle {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  color: var(--text);
+  font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-medium);
+  white-space: nowrap; cursor: pointer;
+}
+.sm-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+.sm-toggle span { color: var(--warning); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.sm-legend {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  white-space: nowrap;
+  color: var(--faint);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+
+/* Evidence mark: filled when a confirmed claim backs the skill, hollow when none does. */
+.sm-mark {
+  display: inline-block; flex: none;
+  width: 10px; height: 10px;
+  border: 2px solid var(--warning);
+  border-radius: var(--radius-full);
+  background: transparent;
+}
+.sm-mark.backed { border-color: var(--positive); background: var(--positive); }
+
+/* Categories flow into as many columns as the width allows, so the whole map reads at once
+   instead of scrolling past 73 cards. */
+.sm-columns {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+/* Balanced columns in an auto-height flow. Columns in a height-constrained box overflow
+   sideways instead of down, which put eight of eleven categories off-screen. */
+.sm-flow {
+  column-width: 220px;
+  column-gap: var(--space-5);
+  column-fill: balance;
+}
+.sm-group { break-inside: avoid; margin-bottom: var(--space-3); }
+.sm-group h3 {
+  display: flex; align-items: baseline; gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.sm-group h3 span { color: var(--faint); font-variant-numeric: tabular-nums; }
+.sm-group ul { margin: 0; padding: 0; list-style: none; }
+
+.sm-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 56px 30px;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-1);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.sm-row:hover { background: var(--surface-2); }
+.sm-row.selected { background: var(--cyan-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.sm-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+}
+.sm-bar { height: 5px; overflow: hidden; border-radius: var(--radius-full); background: var(--surface-3); }
+.sm-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.sm-years {
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.sm-empty { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+
+.sm-detail {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 2;
+  display: grid;
+  gap: var(--space-2);
+  width: min(380px, calc(100% - 2 * var(--space-4)));
+  max-height: 72%;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.sm-detail header { display: flex; align-items: center; justify-content: space-between; }
+.sm-detail-category {
+  color: var(--faint);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.sm-detail h4 { margin: 0; font-size: var(--text-base); line-height: var(--leading-base); font-weight: var(--weight-semibold); }
+.sm-detail dl { display: flex; gap: var(--space-4); margin: 0; }
+.sm-detail dl div { display: grid; gap: 2px; }
+.sm-detail dt { color: var(--faint); font-size: var(--text-2xs); line-height: var(--leading-2xs); text-transform: uppercase; letter-spacing: .04em; }
+.sm-detail dd { margin: 0; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+.sm-detail-evidence { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); }
+.sm-claims { display: grid; gap: var(--space-2); margin: 0; padding-left: var(--space-4); color: var(--text); font-size: var(--text-sm); line-height: var(--leading-sm); }
+
+/* ------------------------------------------------------------- STAR stories */
+
+.ss {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+}
+.ss-list {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  min-height: 0;
+}
+.ss-list > header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ss-list > header b { color: var(--text); }
+.ss-list ul { display: grid; align-content: start; gap: var(--space-2); min-height: 0; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
+.ss-item {
+  display: grid; gap: 2px;
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.ss-item:hover { background: var(--surface-2); }
+.ss-item.selected { border-color: var(--accent); background: var(--cyan-soft); }
+.ss-item b { font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-semibold); }
+.ss-item small { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.ss-status-label { text-transform: capitalize; }
+.ss-status { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--status-unknown); }
+.ss-status.confirmed { background: var(--positive); }
+.ss-empty { margin: 0; color: var(--muted); font-size: var(--text-sm); }
+
+.ss-pane {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.ss-pane > header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.ss-pane h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg); line-height: var(--leading-lg);
+  font-weight: var(--weight-semibold);
+}
+.ss-metrics { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ss-metrics li {
+  border-radius: var(--radius-full);
+  padding: 2px var(--space-3);
+  background: var(--cyan-soft);
+  color: var(--accent);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+}
+.ss-star { display: grid; gap: var(--space-3); margin: 0; }
+.ss-star div { display: grid; gap: 2px; }
+.ss-star dt { color: var(--faint); font-size: var(--text-2xs); line-height: var(--leading-2xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: .05em; }
+.ss-star dd { margin: 0; color: var(--text); font-size: var(--text-sm); line-height: var(--leading-base); }
+.ss-star .result dd { font-weight: var(--weight-semibold); }
+.ss-skills { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: 0; }
+.ss-skills span {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+.ss-evidence h4 { margin: 0 0 var(--space-1); color: var(--faint); font-size: var(--text-2xs); line-height: var(--leading-2xs); text-transform: uppercase; letter-spacing: .05em; }
+.ss-evidence ul { display: grid; gap: var(--space-1); margin: 0; padding-left: var(--space-4); color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); }
+
+/* ------------------------------------------------------------------ dialogs */
+
+.dialog-sheet {
+  position: relative;
+  width: min(720px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.dialog-sheet.wide { width: min(1040px, 94vw); }
+.dialog-sheet > .panel { margin: 0; border: 0; box-shadow: none; }
+.dialog-close { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 1; }
+
+@media (max-width: 1080px) {
+  .identity { grid-template-columns: minmax(0, 1fr); }
+  .ss { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+}
+
+/* The artifact sub-tabs are already written in sentence case; the shared tab style
+   capitalises every word for the importance keys on Matches, which gave "Import And Export". */
+.profile-artifacts .cw-tabs button { text-transform: none; }
