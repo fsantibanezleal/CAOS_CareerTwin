@@ -5,29 +5,7 @@
    at 2560. The board is now journeys and a detail pane, the agenda a calendar, the contacts a
    list and detail, and each view keeps its long content inside one container of its own. */
 
-/* A stage's colour, from the existing visualisation tokens so both themes carry it. The stage
-   classes set --stage on whatever element names a stage: strip, track step, chip, mark. */
-.pipeline-page,
-.dialog-sheet {
-  --stage-saved: var(--faint);
-  --stage-preparing: var(--viz-5);
-  --stage-applied: var(--accent);
-  --stage-screening: var(--viz-2);
-  --stage-interview: var(--viz-4);
-  --stage-offer: var(--viz-6);
-  --stage-accepted: var(--positive);
-  --stage-rejected: var(--critical);
-  --stage-withdrawn: var(--faint);
-}
-.stage-saved { --stage: var(--stage-saved); }
-.stage-preparing { --stage: var(--stage-preparing); }
-.stage-applied { --stage: var(--stage-applied); }
-.stage-screening { --stage: var(--stage-screening); }
-.stage-interview { --stage: var(--stage-interview); }
-.stage-offer { --stage: var(--stage-offer); }
-.stage-accepted { --stage: var(--stage-accepted); }
-.stage-rejected { --stage: var(--stage-rejected); }
-.stage-withdrawn { --stage: var(--stage-withdrawn); }
+/* Stage colours (--stage and the .stage-* classes) are design tokens in tokens.css. */
 
 .pipeline-page .workbench-bar > .button { flex: none; white-space: nowrap; }
 

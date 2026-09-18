@@ -166,6 +166,33 @@
   :root { --motion-fast: 0ms; --motion-base: 0ms; }
 }
 
+/* Application stages, drawn by the pipeline and by Today. They reference theme tokens, so each
+   theme carries them without a second declaration: early stages are neutral and warm, the
+   stages that involve the employer are the accent and the cool hues, the outcomes are the
+   status colours. The stage classes set --stage on whatever element names a stage. */
+:root {
+  --stage-saved: var(--faint);
+  --stage-preparing: var(--viz-5);
+  --stage-applied: var(--accent);
+  --stage-screening: var(--viz-2);
+  --stage-interview: var(--viz-4);
+  --stage-offer: var(--viz-6);
+  --stage-accepted: var(--positive);
+  --stage-rejected: var(--critical);
+  --stage-withdrawn: var(--faint);
+  --stage-untracked: var(--line);
+}
+.stage-saved { --stage: var(--stage-saved); }
+.stage-preparing { --stage: var(--stage-preparing); }
+.stage-applied { --stage: var(--stage-applied); }
+.stage-screening { --stage: var(--stage-screening); }
+.stage-interview { --stage: var(--stage-interview); }
+.stage-offer { --stage: var(--stage-offer); }
+.stage-accepted { --stage: var(--stage-accepted); }
+.stage-rejected { --stage: var(--stage-rejected); }
+.stage-withdrawn { --stage: var(--stage-withdrawn); }
+.stage-untracked { --stage: var(--stage-untracked); }
+
 body {
   font-family: var(--font-ui);
   font-size: var(--text-base);
