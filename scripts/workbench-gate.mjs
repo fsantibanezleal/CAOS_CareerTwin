@@ -60,8 +60,14 @@ for (const viewport of SIZES) {
   await page.goto(BASE, { waitUntil: 'networkidle' })
   await page.fill('input[type="email"]', EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
-  await page.click('form button.primary')
-  await page.waitForLoadState('networkidle')
+  // Wait for the sign-in itself. `networkidle` can resolve before the login request has
+  // finished, so the first requests race it, fail with 401, and sit in a retry: the
+  // measurement then records a loading spinner as the page.
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200),
+    page.click('form button.primary'),
+  ])
+  await page.locator('.shell-main').waitFor({ state: 'visible' })
   await page.getByRole('link', { name: /opportunit|oportunidad/i }).first().click()
   await page.locator('.opp-row').first().waitFor({ state: 'visible', timeout: 30000 })
   const roles = await page.locator('.opp-row').count()
