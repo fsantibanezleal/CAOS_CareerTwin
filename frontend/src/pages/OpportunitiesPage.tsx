@@ -150,7 +150,7 @@ export function OpportunitiesPage() {
         <button type="button" className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>
       </header>
       {view === 'landscape' ? (
-        <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel>
+        <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles, not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel>
       ) : view === 'network' ? (
         <Panel className="workbench-panel" title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel>
       ) : (
