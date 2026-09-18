@@ -1,5 +1,5 @@
 /**
- * ADR-0071 gate for the opportunity and matches workbenches, run against a live deployment.
+ * ADR-0071 gate for the opportunity, matches and profile workbenches, run against a live deployment.
  *
  * Binding sizes 1280x800, 1600x900 and 2560x1440, in both themes, across every saved
  * role. See docs/design/opportunity-workbench-adr-0071.md.
@@ -240,6 +240,106 @@ for (const viewport of SIZES) {
   if (!(await page.locator('.role-drawer').count())) {
     failures.push(`matches ${viewport.width}: role drawer did not open`)
     console.log(`FAIL matches ${viewport.width}: role drawer did not open`)
+  }
+  await page.close()
+}
+
+
+// ---------------------------------------------------------------------------- Profile
+// Every tab and artifact sub-tab. The skill map's totals are read against the API, and its
+// rows are checked for being visible sideways, because the first version of this check
+// counted DOM rows and passed while 42 skills sat off-screen to the right.
+const PROFILE_TABS = ['Overview', 'Evidence', 'Career', 'Artifacts', 'GitHub']
+const ARTIFACT_TABS = ['Stories', 'Resume versions', 'Communication', 'Import and export']
+for (const viewport of SIZES) {
+  const page = await browser.newPage({ viewport })
+  await page.goto(BASE, { waitUntil: 'networkidle' })
+  await page.fill('input[type="email"]', EMAIL)
+  await page.fill('input[type="password"]', PASSWORD)
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200),
+    page.click('form button.primary'),
+  ])
+  await page.locator('.shell-main').waitFor({ state: 'visible' })
+  await page.locator('.sidebar a[href="/profile"]').click()
+  await page.waitForURL((u) => u.pathname === '/profile')
+  await page.locator('.bar-tabs button').first().waitFor({ state: 'visible', timeout: 30000 })
+
+  const api = await page.evaluate(async () => {
+    const [skills, stories] = await Promise.all([
+      fetch('/api/profile/skills', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/artifacts/accomplishments', { credentials: 'include' }).then((r) => r.json()),
+    ])
+    return { skills: skills.length, unbacked: skills.filter((s) => s.evidence_count === 0).length, stories: stories.length }
+  })
+
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme)
+    for (const tab of PROFILE_TABS) {
+      await page.locator('.bar-tabs button', { hasText: tab }).first().click()
+      await page.waitForTimeout(700)
+      for (const sub of tab === 'Artifacts' ? ARTIFACT_TABS : [null]) {
+        if (sub) {
+          await page.locator('.profile-artifacts .cw-tabs button', { hasText: sub }).first().click()
+          await page.waitForTimeout(500)
+        }
+        const r = await page.evaluate(() => {
+          const main = document.querySelector('.shell-main')
+          const doc = document.documentElement
+          const bar = document.querySelector('.workbench-bar')
+          const barRight = Math.min(bar.getBoundingClientRect().right, innerWidth)
+          const hasText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+          const tabsBox = document.querySelector('.bar-tabs')
+          const map = document.querySelector('.sm-columns')
+          const mapBox = map?.getBoundingClientRect()
+          const card = document.querySelector('.identity')
+          return {
+            scrollY: Math.max(doc.scrollHeight - innerHeight, main.scrollHeight - main.clientHeight),
+            scrollX: doc.scrollWidth - innerWidth,
+            barClipped: [...bar.children].filter((el) => el.getBoundingClientRect().right > barRight + 1).length,
+            tabsHidden: tabsBox ? tabsBox.scrollWidth - tabsBox.clientWidth : 0,
+            tiny: [...document.querySelectorAll('.page-contained *')].filter((el) => hasText(el) && parseFloat(getComputedStyle(el).fontSize) < 12).length,
+            skillRows: document.querySelectorAll('.sm-row').length,
+            unbackedShown: document.querySelector('.sm-toggle span')?.textContent,
+            sideways: map ? [...map.querySelectorAll('.sm-row')].filter((row) => { const b = row.getBoundingClientRect(); return b.right > mapBox.right + 1 || b.left < mapBox.left - 1 }).length : 0,
+            factsOverflow: card ? [...card.querySelectorAll('.identity-facts dd')].filter((dd) => dd.getBoundingClientRect().right > card.getBoundingClientRect().right + 1).length : 0,
+            collisions: [...document.querySelectorAll('.ct-row')].filter((row) => {
+              const label = row.querySelector('.ct-outside')
+              const track = row.querySelector('.ct-track')
+              const count = row.querySelector('.ct-count')
+              if (!label || !track) return false
+              const l = label.getBoundingClientRect()
+              const t = track.getBoundingClientRect()
+              const c = count?.getBoundingClientRect()
+              return l.left < t.left - 1 || l.right > t.right + 1 || (c && c.width > 0 && l.right > c.left)
+            }).length,
+            stories: document.querySelectorAll('.ss-item').length,
+          }
+        })
+        const problems = []
+        if (r.scrollY > 0) problems.push(`page scrolls (${r.scrollY}px)`)
+        if (r.scrollX > 0) problems.push(`page scrolls sideways (${r.scrollX}px)`)
+        if (r.barClipped) problems.push(`${r.barClipped} bar control(s) cut off`)
+        if (r.tabsHidden > 1) problems.push(`tabs need horizontal scrolling (${r.tabsHidden}px)`)
+        if (r.tiny) problems.push(`${r.tiny} text node(s) under 12px`)
+        if (r.sideways) problems.push(`${r.sideways} skill row(s) outside the map sideways`)
+        if (r.factsOverflow) problems.push(`${r.factsOverflow} identity fact(s) run past the card`)
+        if (r.collisions) problems.push(`${r.collisions} timeline label(s) collide`)
+        if (tab === 'Overview' && r.skillRows !== api.skills) problems.push(`skill map shows ${r.skillRows} skills, API holds ${api.skills}`)
+        if (tab === 'Overview' && r.unbackedShown !== String(api.unbacked)) problems.push(`unbacked shown ${r.unbackedShown}, API ${api.unbacked}`)
+        if (sub === 'Stories' && r.stories !== api.stories) problems.push(`stories ${r.stories}, API ${api.stories}`)
+        const label = `profile ${viewport.width}x${viewport.height} ${theme.padEnd(5)} ${tab}${sub ? ` / ${sub}` : ''}`
+        if (problems.length) {
+          failures.push(label)
+          console.log(`FAIL ${label}\n       ${problems.join('\n       ')}`)
+        } else {
+          console.log(`ok   ${label}`)
+        }
+      }
+    }
+    await page.locator('.bar-tabs button', { hasText: 'Overview' }).first().click()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: `${OUT}profile-${viewport.width}x${viewport.height}-${theme}.png` })
   }
   await page.close()
 }

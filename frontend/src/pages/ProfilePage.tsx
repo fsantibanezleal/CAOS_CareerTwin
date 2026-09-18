@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
+import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, FileUp, GitBranch, GraduationCap, Pencil, Plus, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api, json } from '../api'
 import { CareerTimeline } from '../components/CareerTimeline'
-import { EvidenceMatrix } from '../components/Visualizations'
-import { EmptyState, ErrorState, Loading, PageHeader, Panel } from '../components/Primitives'
+import { Dialog } from '../components/Dialog'
+import { SkillMap } from '../components/SkillMap'
+import { StarStories } from '../components/StarStories'
+import { EmptyState, ErrorState, Loading, Panel } from '../components/Primitives'
 import { useI18n } from '../i18n'
-import type { Accomplishment, Artifact, Claim, Education, Experience, Opportunity, Profile, ProfileGraphData, ResumeVariant, Skill, Source } from '../types'
+import type { Accomplishment, Artifact, Claim, Education, Experience, Opportunity, Profile, ResumeVariant, Skill, Source } from '../types'
 
 type ProfileTab = 'overview' | 'evidence' | 'graph' | 'river' | 'github' | 'artifacts'
 
@@ -27,21 +29,21 @@ function ProfileEditor({ profile }: { profile: Profile }) {
   )
 }
 
-function SkillsPanel({ skills, claims }: { skills: Skill[]; claims: Claim[] }) {
+function SkillsPanel({ skills, claims, formOnly = false, onDone }: { skills: Skill[]; claims: Claim[]; formOnly?: boolean; onDone?: () => void }) {
   const { plural, t } = useI18n()
   const client = useQueryClient()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(formOnly)
   const [name, setName] = useState('')
   const [category, setCategory] = useState('technical')
   const [level, setLevel] = useState(0.5)
   const confirmed = claims.filter((claim) => claim.state === 'confirmed')
   const [evidence, setEvidence] = useState<string[]>([])
-  const add = useMutation({ mutationFn: () => api('/api/profile/skills', json('POST', { name, category, level, years: 0, confidence: evidence.length ? 0.8 : 0.5, evidence_ids: evidence })), onSuccess: () => { setName(''); setEvidence([]); setOpen(false); client.invalidateQueries({ queryKey: ['skills'] }); client.invalidateQueries({ queryKey: ['profile-graph'] }) } })
+  const add = useMutation({ mutationFn: () => api('/api/profile/skills', json('POST', { name, category, level, years: 0, confidence: evidence.length ? 0.8 : 0.5, evidence_ids: evidence })), onSuccess: () => { onDone?.(); setName(''); setEvidence([]); setOpen(false); client.invalidateQueries({ queryKey: ['skills'] }); client.invalidateQueries({ queryKey: ['profile-graph'] }) } })
   const remove = useMutation({ mutationFn: (id: string) => api(`/api/profile/skills/${id}`, { method: 'DELETE' }), onSuccess: () => { client.invalidateQueries({ queryKey: ['skills'] }); client.invalidateQueries({ queryKey: ['profile-graph'] }) } })
   return (
-    <Panel title={t('Capability map')} subtitle={t('Skills are stronger when they point to confirmed evidence')} actions={<button className="button secondary" onClick={() => setOpen(!open)}><Plus /> {t('Add skill')}</button>}>
+    <Panel title={t(formOnly ? 'Add skill' : 'Capability map')} subtitle={t('Skills are stronger when they point to confirmed evidence')} actions={formOnly ? undefined : <button className="button secondary" onClick={() => setOpen(!open)}><Plus /> {t('Add skill')}</button>}>
       {open && <form className="inline-editor" onSubmit={(event) => { event.preventDefault(); add.mutate() }}><div className="form-grid three"><label>{t('Skill')}<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>{t('Category')}<select value={category} onChange={(event) => setCategory(event.target.value)}>{['technical', 'domain', 'leadership', 'language', 'tool'].map((value) => <option key={value} value={value}>{t(value)}</option>)}</select></label><label>{t('Level')} <span>{Math.round(level * 100)}%</span><input type="range" min="0" max="1" step="0.05" value={level} onChange={(event) => setLevel(Number(event.target.value))} /></label></div><label>{t('Link confirmed evidence')}<select multiple value={evidence} onChange={(event) => setEvidence(Array.from(event.target.selectedOptions, (option) => option.value))}>{confirmed.map((claim) => <option key={claim.id} value={claim.id}>{claim.statement.slice(0, 100)}</option>)}</select></label>{add.error && <ErrorState error={add.error} />}<div className="form-actions"><button type="button" className="button ghost" onClick={() => setOpen(false)}>{t('Cancel')}</button><button className="button primary">{t('Add to profile')}</button></div></form>}
-      {skills.length ? <div className="skill-cloud">{skills.map((skill) => <article key={skill.id}><div className="skill-ring" style={{ '--progress': `${skill.level * 360}deg` } as React.CSSProperties}><span>{Math.round(skill.level * 100)}</span></div><div><b>{skill.name}</b><small>{t(skill.category)} · {plural(skill.years, '{count} year', '{count} years')}</small><span>{skill.evidence_count ? plural(skill.evidence_count, '{count} evidence link', '{count} evidence links') : t('Unlinked — add evidence')}</span></div><button onClick={() => remove.mutate(skill.id)} aria-label={t('Remove {name}', { name: skill.name })}><X /></button></article>)}</div> : <EmptyState title={t('No curated skills yet')} description={t('Add a skill manually or review claims extracted from your documents and GitHub portfolio.')} />}
+      {formOnly ? null : skills.length ? <div className="skill-cloud">{skills.map((skill) => <article key={skill.id}><div className="skill-ring" style={{ '--progress': `${skill.level * 360}deg` } as React.CSSProperties}><span>{Math.round(skill.level * 100)}</span></div><div><b>{skill.name}</b><small>{t(skill.category)} · {plural(skill.years, '{count} year', '{count} years')}</small><span>{skill.evidence_count ? plural(skill.evidence_count, '{count} evidence link', '{count} evidence links') : t('Unlinked: add evidence')}</span></div><button onClick={() => remove.mutate(skill.id)} aria-label={t('Remove {name}', { name: skill.name })}><X /></button></article>)}</div> : <EmptyState title={t('No curated skills yet')} description={t('Add a skill manually or review claims extracted from your documents and GitHub portfolio.')} />}
     </Panel>
   )
 }
@@ -97,7 +99,7 @@ function GithubImporter() {
   )
 }
 
-function AccomplishmentBank({ claims }: { claims: Claim[] }) {
+function AccomplishmentBank({ claims, formOnly = false, onDone }: { claims: Claim[]; formOnly?: boolean; onDone?: () => void }) {
   const { plural, t } = useI18n()
   const client = useQueryClient()
   const accomplishments = useQuery({ queryKey: ['accomplishments'], queryFn: () => api<Accomplishment[]>('/api/artifacts/accomplishments') })
@@ -123,6 +125,7 @@ function AccomplishmentBank({ claims }: { claims: Claim[] }) {
     })),
     onSuccess: () => {
       setTitle(''); setSituation(''); setTask(''); setAction(''); setResult(''); setSkills(''); setEvidenceIds([])
+      onDone?.()
       client.invalidateQueries({ queryKey: ['accomplishments'] })
     },
   })
@@ -136,7 +139,7 @@ function AccomplishmentBank({ claims }: { claims: Claim[] }) {
         {create.error && <ErrorState error={create.error} />}
         <div className="form-actions"><button className="button secondary" disabled={create.isPending}><Plus /> {t('Save STAR story')}</button></div>
       </form>
-      {accomplishments.isPending ? <Loading label={t('Loading accomplishment bank')} /> : accomplishments.error ? <ErrorState error={accomplishments.error} /> : accomplishments.data.length ? <div className="artifact-grid">{accomplishments.data.map((item) => <article key={item.id}><span className={`status-badge ${item.status === 'confirmed' ? 'confirmed' : ''}`}>{t(item.status)}</span><h3>{item.title}</h3><small>{item.skills.join(' · ') || t('No skill labels')} · {plural(item.evidence_ids.length, '{count} evidence link', '{count} evidence links')}</small><p><b>{t('Situation')}:</b> {item.situation || t('Not recorded')}</p><p><b>{t('Action')}:</b> {item.action || t('Not recorded')}</p><p><b>{t('Result')}:</b> {item.result || t('Not recorded')}</p><button className="button ghost danger" onClick={() => remove.mutate(item.id)}><X /> {t('Delete')}</button></article>)}</div> : <EmptyState title={t('No accomplishment stories yet')} description={t('Capture a concrete situation, task, action, and result, then anchor it to evidence.')} />}
+      {formOnly ? null : accomplishments.isPending ? <Loading label={t('Loading accomplishment bank')} /> : accomplishments.error ? <ErrorState error={accomplishments.error} /> : accomplishments.data.length ? <div className="artifact-grid">{accomplishments.data.map((item) => <article key={item.id}><span className={`status-badge ${item.status === 'confirmed' ? 'confirmed' : ''}`}>{t(item.status)}</span><h3>{item.title}</h3><small>{item.skills.join(' · ') || t('No skill labels')} · {plural(item.evidence_ids.length, '{count} evidence link', '{count} evidence links')}</small><p><b>{t('Situation')}:</b> {item.situation || t('Not recorded')}</p><p><b>{t('Action')}:</b> {item.action || t('Not recorded')}</p><p><b>{t('Result')}:</b> {item.result || t('Not recorded')}</p><button className="button ghost danger" onClick={() => remove.mutate(item.id)}><X /> {t('Delete')}</button></article>)}</div> : <EmptyState title={t('No accomplishment stories yet')} description={t('Capture a concrete situation, task, action, and result, then anchor it to evidence.')} />}
     </Panel>
   )
 }
@@ -179,11 +182,11 @@ function ArtifactStudio({ claims }: { claims: Claim[] }) {
   const [title, setTitle] = useState('Evidence-grounded résumé')
   const create = useMutation({ mutationFn: () => api('/api/artifacts', json('POST', { kind, title, evidence_ids: claims.filter((claim) => claim.state === 'confirmed').map((claim) => claim.id) })), onSuccess: () => client.invalidateQueries({ queryKey: ['artifacts'] }) })
   return (
-    <div className="profile-layout"><AccomplishmentBank claims={claims} /><ResumeVariantStudio claims={claims} /><Panel title={t('Communication artifact studio')} subtitle={t('Versioned drafts assembled only from confirmed evidence')}>
+    <Panel title={t('Communication artifact studio')} subtitle={t('Versioned drafts assembled only from confirmed evidence')}>
       <form className="artifact-compose" onSubmit={(event) => { event.preventDefault(); create.mutate() }}><select value={kind} onChange={(event) => setKind(event.target.value as Artifact['kind'])}><option value="resume">{t('Résumé')}</option><option value="cover_letter">{t('Cover letter')}</option><option value="interview_brief">{t('Interview brief')}</option><option value="follow_up">{t('Follow-up')}</option></select><input value={title} onChange={(event) => setTitle(event.target.value)} required /><button className="button primary"><FileStack /> {t('Compose draft')}</button></form>
       {create.error && <ErrorState error={create.error} />}
       {artifacts.data?.length ? <div className="artifact-grid">{artifacts.data.map((artifact) => <article key={artifact.id}><span className="status-badge">{t(artifact.kind.replace('_', ' '))}</span><h3>{artifact.title}</h3><small>{plural(artifact.evidence_ids.length, 'Version {version} · {count} evidence citation', 'Version {version} · {count} evidence citations', { version: artifact.version })}</small><pre>{artifact.content.slice(0, 700)}</pre></article>)}</div> : <EmptyState title={t('No career artifacts yet')} description={t('Compose a résumé, cover letter, interview brief, or follow-up grounded in your confirmed evidence.')} />}
-    </Panel></div>
+    </Panel>
   )
 }
 
@@ -227,29 +230,159 @@ function ProfilePortability() {
   )
 }
 
+type Dialogs = 'profile' | 'skill' | 'career' | 'story' | null
+type ArtifactTab = 'stories' | 'resumes' | 'communication' | 'portability'
+
+/** The profile read as a profile: the canonical fields as text, with editing on request. */
+function IdentityStrip({ profile, onEdit }: { profile: Profile; onEdit: () => void }) {
+  const { t, plural } = useI18n()
+  const [expanded, setExpanded] = useState(false)
+  const facts = [
+    profile.location,
+    profile.seniority,
+    profile.years_experience ? plural(profile.years_experience, '{count} year of experience', '{count} years of experience') : '',
+    profile.availability,
+  ].filter(Boolean)
+  return (
+    <section className="identity" aria-label={t('Identity and direction')}>
+      <div className="identity-text">
+        <h2 title={profile.headline}>{profile.headline || t('Build a profile that can show its work.')}</h2>
+        <p className={expanded ? 'identity-summary expanded' : 'identity-summary'}>{profile.summary || t('No narrative recorded yet.')}</p>
+        {profile.summary && profile.summary.length > 220 ? (
+          <button type="button" className="text-button" onClick={() => setExpanded((value) => !value)}>
+            {t(expanded ? 'Show less' : 'Read the full narrative')}
+          </button>
+        ) : null}
+      </div>
+      <dl className="identity-facts">
+        {facts.map((fact) => (
+          <div key={fact}><dd>{fact}</dd></div>
+        ))}
+      </dl>
+      <button type="button" className="ob-action identity-edit" onClick={onEdit}>
+        <Pencil aria-hidden /> {t('Edit profile')}
+      </button>
+    </section>
+  )
+}
+
 export function ProfilePage() {
   const { t } = useI18n()
+  const client = useQueryClient()
   const [tab, setTab] = useState<ProfileTab>('overview')
+  const [artifactTab, setArtifactTab] = useState<ArtifactTab>('stories')
+  const [dialog, setDialog] = useState<Dialogs>(null)
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api<Profile>('/api/profile') })
   const skills = useQuery({ queryKey: ['skills'], queryFn: () => api<Skill[]>('/api/profile/skills') })
   const claims = useQuery({ queryKey: ['claims'], queryFn: () => api<Claim[]>('/api/profile/claims') })
-  const graph = useQuery({ queryKey: ['profile-graph'], queryFn: () => api<ProfileGraphData>('/api/profile/graph') })
   const experiences = useQuery({ queryKey: ['experiences'], queryFn: () => api<Experience[]>('/api/profile/experiences') })
   const education = useQuery({ queryKey: ['education'], queryFn: () => api<Education[]>('/api/profile/education') })
-  if (profile.isPending || skills.isPending || claims.isPending || graph.isPending || experiences.isPending || education.isPending) return <Loading label={t('Mapping your professional twin')} />
-  const error = profile.error || skills.error || claims.error || graph.error || experiences.error || education.error
+  const stories = useQuery({ queryKey: ['accomplishments'], queryFn: () => api<Accomplishment[]>('/api/artifacts/accomplishments') })
+  const removeSkill = useMutation({
+    mutationFn: (id: string) => api(`/api/profile/skills/${id}`, { method: 'DELETE' }),
+    onSuccess: () => { client.invalidateQueries({ queryKey: ['skills'] }); client.invalidateQueries({ queryKey: ['profile-graph'] }) },
+  })
+  const removeStory = useMutation({
+    mutationFn: (id: string) => api(`/api/artifacts/accomplishments/${id}`, { method: 'DELETE' }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['accomplishments'] }),
+  })
+  // The evidence matrix and its graph request are gone: the skill map carries that content,
+  // and waiting on the graph projection was most of the time this page took to render.
+  if (profile.isPending || skills.isPending || claims.isPending || experiences.isPending || education.isPending) return <Loading label={t('Mapping your professional twin')} />
+  const error = profile.error || skills.error || claims.error || experiences.error || education.error
   if (error) return <ErrorState error={error} />
   const pending = claims.data.filter((claim) => claim.state === 'proposed').length
-  const tabs: Array<[ProfileTab, string, React.ReactNode]> = [['overview', t('Overview'), <CircleUserRound />], ['evidence', `${t('Evidence')}${pending ? ` (${pending})` : ''}`, <BookOpenCheck />], ['river', t('Career river'), <Sparkles />], ['github', 'GitHub', <GitBranch />], ['artifacts', t('Artifacts'), <FileStack />]]
+  const tabs: Array<[ProfileTab, string, React.ReactNode]> = [
+    ['overview', t('Overview'), <CircleUserRound />],
+    ['evidence', `${t('Evidence')}${pending ? ` (${pending})` : ''}`, <BookOpenCheck />],
+    ['river', t('Career'), <Sparkles />],
+    ['artifacts', t('Artifacts'), <FileStack />],
+    ['github', t('GitHub'), <GitBranch />],
+  ]
+  const artifactTabs: Array<[ArtifactTab, string]> = [
+    ['stories', t('Stories')],
+    ['resumes', t('Resume versions')],
+    ['communication', t('Communication')],
+    ['portability', t('Import and export')],
+  ]
   return (
-    <>
-      <PageHeader eyebrow={t('Your professional twin')} title={profile.data.headline || t('Build a profile that can show its work.')} description={t('Curate your story, trace claims to their sources, and inspect capability without confusing missing evidence for weakness.')} />
-      <nav className="section-tabs" aria-label={t('Profile views')}>{tabs.map(([key, label, icon]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{icon}{label}</button>)}</nav>
-      {tab === 'overview' && <div className="profile-layout"><Panel title={t('Identity and direction')} subtitle={t('User-curated canonical fields')}><ProfileEditor profile={profile.data} /></Panel><SkillsPanel skills={skills.data} claims={claims.data} /><TimelineEditors experiences={experiences.data} education={education.data} /><ProfilePortability /></div>}
-      {tab === 'evidence' && <EvidenceInbox claims={claims.data} />}
-      {tab === 'river' && <div className="profile-layout"><Panel title={t('Career timeline')} subtitle={t('Every role named, scaled by its real dates. Select a row for its achievements.')}><CareerTimeline experiences={experiences.data ?? []} education={education.data ?? []} /></Panel><Panel title={t('Evidence matrix')} subtitle={t('Capability level and source coverage side by side')}><EvidenceMatrix rows={graph.data.matrix} /></Panel></div>}
-      {tab === 'github' && <GithubImporter />}
-      {tab === 'artifacts' && <ArtifactStudio claims={claims.data} />}
-    </>
+    <div className="page-contained workbench profile-page">
+      <header className="workbench-bar">
+        <h1>{t('Profile')}</h1>
+        <nav className="bar-tabs" aria-label={t('Profile views')}>
+          {tabs.map(([key, label, icon]) => (
+            <button key={key} type="button" className={tab === key ? 'active' : ''} aria-pressed={tab === key} onClick={() => setTab(key)}>
+              {icon} {label}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {tab === 'overview' && (
+        <div className="profile-overview">
+          <IdentityStrip profile={profile.data} onEdit={() => setDialog('profile')} />
+          {removeSkill.error ? <ErrorState error={removeSkill.error} /> : null}
+          <SkillMap skills={skills.data} claims={claims.data} onAdd={() => setDialog('skill')} onRemove={(skill) => removeSkill.mutate(skill.id)} />
+        </div>
+      )}
+
+      {tab === 'evidence' && <div className="profile-scroll"><EvidenceInbox claims={claims.data} /></div>}
+
+      {tab === 'river' && (
+        <div className="profile-career">
+          <header className="profile-section-head">
+            <p>{t('Every role named, scaled by its real dates. Select a row for its achievements.')}</p>
+            <button type="button" className="ob-action" onClick={() => setDialog('career')}><Pencil aria-hidden /> {t('Edit career')}</button>
+          </header>
+          <CareerTimeline experiences={experiences.data ?? []} education={education.data ?? []} />
+        </div>
+      )}
+
+      {tab === 'artifacts' && (
+        <div className="profile-artifacts">
+          <nav className="cw-tabs" aria-label={t('Artifacts')}>
+            {artifactTabs.map(([key, label]) => (
+              <button key={key} type="button" className={artifactTab === key ? 'active' : ''} aria-pressed={artifactTab === key} onClick={() => setArtifactTab(key)}>
+                {label}
+              </button>
+            ))}
+          </nav>
+          {artifactTab === 'stories' && (
+            <>
+              {removeStory.error ? <ErrorState error={removeStory.error} /> : null}
+              {stories.isPending ? <Loading label={t('Loading accomplishment bank')} /> : stories.error ? <ErrorState error={stories.error} /> : (
+                <StarStories stories={stories.data} claims={claims.data} onCreate={() => setDialog('story')} onRemove={(story) => removeStory.mutate(story.id)} />
+              )}
+            </>
+          )}
+          {artifactTab === 'resumes' && <div className="profile-scroll"><ResumeVariantStudio claims={claims.data} /></div>}
+          {artifactTab === 'communication' && <div className="profile-scroll"><ArtifactStudio claims={claims.data} /></div>}
+          {artifactTab === 'portability' && <div className="profile-scroll"><ProfilePortability /></div>}
+        </div>
+      )}
+
+      {tab === 'github' && <div className="profile-scroll"><GithubImporter /></div>}
+
+      {dialog === 'profile' && (
+        <Dialog label={t('Edit profile')} onClose={() => setDialog(null)} wide>
+          <Panel title={t('Identity and direction')} subtitle={t('User-curated canonical fields')}><ProfileEditor profile={profile.data} /></Panel>
+        </Dialog>
+      )}
+      {dialog === 'skill' && (
+        <Dialog label={t('Add skill')} onClose={() => setDialog(null)} wide>
+          <SkillsPanel skills={skills.data} claims={claims.data} formOnly onDone={() => setDialog(null)} />
+        </Dialog>
+      )}
+      {dialog === 'career' && (
+        <Dialog label={t('Edit career')} onClose={() => setDialog(null)} wide>
+          <TimelineEditors experiences={experiences.data} education={education.data} />
+        </Dialog>
+      )}
+      {dialog === 'story' && (
+        <Dialog label={t('New story')} onClose={() => setDialog(null)} wide>
+          <AccomplishmentBank claims={claims.data} formOnly onDone={() => setDialog(null)} />
+        </Dialog>
+      )}
+    </div>
   )
 }

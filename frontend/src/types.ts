@@ -34,6 +34,8 @@ export type Skill = {
   confidence: number
   category: string
   evidence_count: number
+  /** Confirmed claims behind the skill. */
+  evidence_ids: string[]
 }
 
 export type Claim = {
