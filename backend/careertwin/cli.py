@@ -25,8 +25,8 @@ from careertwin.models import (
     TaxonomyRelation,
     User,
 )
-from careertwin.services.matching import POLICY_VERSION, calculate_match
 from careertwin.services.blob import configured_blob_store
+from careertwin.services.matching import POLICY_VERSION, calculate_match
 from careertwin.services.security import create_user
 from careertwin.services.taxonomy import (
     ESCO_RELEASE,
