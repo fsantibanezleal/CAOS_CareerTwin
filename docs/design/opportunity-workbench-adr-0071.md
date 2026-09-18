@@ -80,6 +80,13 @@ The fit shown in the list and the brief equals the stored score on first paint f
   that carries no linked confirmed claim, so the detail reads "Evidence 0" beside "Met". The
   profile holds 73 skills and 36 skill-to-claim links. The match is sound; the audit trail behind
   it is incomplete.
+  *Resolved in v0.14.2 (#189):* the 41 skills without a confirmed claim were each linked to a
+  claim quoted from the candidate's own technology audit and evidence dossier, located by file
+  and line, so all 73 skills are backed; and requirement details list the claims behind an
+  assessment as statements, or say that a named profile record, such as the degree, answered it.
+  The matching policy is unchanged: a skill with no confirmed claim still resolves as met,
+  because the skill map and Today already show such skills as unbacked rather than hiding them,
+  and in this workspace there are none left.
 
 ### What the gate learned
 
