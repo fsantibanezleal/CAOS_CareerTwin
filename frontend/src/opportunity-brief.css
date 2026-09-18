@@ -296,3 +296,55 @@
   .ob-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .ob-side { grid-template-rows: auto auto auto; }
 }
+
+/* Page containment.
+
+   The opportunity page stacked a tall hero, an always-expanded portfolio composer, a
+   toolbar and the working area, overflowing the viewport by about 680px before a single
+   requirement had been read. A workbench is sized to its viewport: the header and
+   toolbar are intrinsic, the working area takes the remainder, and the only scrollable
+   regions are the card list and the requirement grid. */
+
+.shell-main > .content:has(.page-contained) {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: var(--space-5);
+}
+
+.page-contained {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  height: 100%;
+}
+
+.page-contained > .page-header { margin-bottom: 0; }
+
+/* The portfolio composer is a secondary tool. It stays reachable, closed by default,
+   rather than occupying a third of the working surface on every visit. */
+.page-contained > .page-drawer { border: 1px solid var(--line-soft); border-radius: var(--radius-lg); background: var(--surface); }
+.page-contained > .page-drawer > summary {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.page-contained > .page-drawer > summary:hover { color: var(--text); }
+.page-contained > .page-drawer[open] > summary { border-bottom: 1px solid var(--line-soft); }
+.page-contained > .page-drawer[open] { max-height: 46vh; overflow-y: auto; }
+
+.page-contained .opportunities-layout { min-height: 0; height: 100%; align-items: stretch; }
+
+.page-contained .opportunity-cards {
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: var(--space-1);
+}
+
+.page-contained .selection-hint { align-self: start; }
