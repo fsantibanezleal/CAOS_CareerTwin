@@ -1,6 +1,6 @@
 # Opportunity workbench against ADR-0071
 
-Status: implementing, 2026-09-17. Issue #178.
+Status: implemented in v0.10.0, 2026-09-17. Issue #178.
 
 ADR-0071 (sized containers, no incidental scrolling) is the binding floor. It is verified at
 **1280x800, 1600x900 and 2560x1440 in both themes**, by measurement.
@@ -53,3 +53,35 @@ saved role rather than the first one:
 - every requirement of every role visible without scrolling its container
 - no requirement label clipped
 - no text below 12px
+
+## Outcome
+
+Verified on the built app against the live data before release, every saved role, both themes:
+
+| Size | Page overflow | Requirements cut off | Labels clipped | Brief share of screen |
+|---|---|---|---|---|
+| 1280x800 | 0 | 0 | 0 | 47% |
+| 1600x900 | 0 | 0 | 0 | 53% |
+| 2560x1440 | 0 | 0 | 0 | 68% |
+
+The fit shown in the list and the brief equals the stored score on first paint for all four roles
+(99, 99, 96 and 82).
+
+### Where it still falls short
+
+- **Section 8 at 1280x800.** The brief is 47% of the screen, under the 50% floor. The largest
+  single consumer at that size is the application's 238px navigation rail, which belongs to the
+  shared shell rather than this page. Collapsing it to icons below about 1366px would clear the
+  floor, and is a shell decision for every page, not a local one.
+- **Evidence on met requirements.** Several requirements resolve as met against a profile skill
+  that carries no linked confirmed claim, so the detail reads "Evidence 0" beside "Met". The
+  profile holds 73 skills and 36 skill-to-claim links. The match is sound; the audit trail behind
+  it is incomplete.
+
+### What the gate learned
+
+The first version of the gate passed while the screenshots showed a clipped button, grey
+uppercase requirements, and a role reading "0/18 met" during a load. It measured document
+overflow, which `.shell-main` clipping made blind to controls pushed off the bar, and it never
+read the numbers it was guarding. It now checks every bar control's edge, every chip against the
+brief's visible box, label transforms, and the displayed fit against the API.

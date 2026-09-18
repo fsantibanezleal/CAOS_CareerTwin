@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowUpRight, BriefcaseBusiness, Building2, CalendarClock, Check, FileUp, FolderKanban, Globe2, History, LayoutGrid, Link2, List, MapPin, Network, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, FileUp, FolderKanban, History, LayoutGrid, Link2, List, Network, Plus, Radar, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { api, json } from '../api'
 import { OpportunityLandscape, OpportunityNetwork } from '../components/Visualizations'
-import { EmptyState, ErrorState, ExternalLink, Loading, PageHeader, Panel } from '../components/Primitives'
+import { EmptyState, ErrorState, ExternalLink, Loading, Panel } from '../components/Primitives'
 import { OpportunityBrief } from '../components/OpportunityBrief'
+import type { Compensation } from '../components/SalaryBand'
+import { compact } from '../money'
 import { useI18n } from '../i18n'
 import type { Landscape, MatchRun, Opportunity, OpportunityGraphData, OpportunitySnapshot, Requirement, TargetSet } from '../types'
 
@@ -70,17 +72,10 @@ function RequirementEditor({ opportunity, onDone }: { opportunity: Opportunity; 
   )
 }
 
-function OpportunityDetail({ opportunity }: { opportunity: Opportunity }) {
+function OpportunityDetail({ opportunity, run }: { opportunity: Opportunity; run?: MatchRun }) {
   const [editing, setEditing] = useState(false)
-  // 404 is the normal answer for a role that has never been matched, not an error worth
-  // retrying or surfacing; the brief renders its verdict as unknown in that case.
-  const run = useQuery({
-    queryKey: ['match-latest', opportunity.id],
-    queryFn: () => api<MatchRun>(`/api/matches/${opportunity.id}/latest`),
-    retry: false,
-  })
   if (editing) return <RequirementEditor key={`${opportunity.id}-${opportunity.version}`} opportunity={opportunity} onDone={() => setEditing(false)} />
-  return <OpportunityBrief opportunity={opportunity} run={run.data} onEdit={() => setEditing(true)} />
+  return <OpportunityBrief opportunity={opportunity} run={run} onEdit={() => setEditing(true)} />
 }
 
 function TargetSetManager({ opportunities }: { opportunities: Opportunity[] }) {
@@ -109,7 +104,7 @@ function TargetSetManager({ opportunities }: { opportunities: Opportunity[] }) {
 }
 
 export function OpportunitiesPage() {
-  const { plural, t, formatDate } = useI18n()
+  const { t } = useI18n()
   const [captureOpen, setCaptureOpen] = useState(false)
   // A secondary tool: reachable from the toolbar, never occupying the working surface.
   const [portfoliosOpen, setPortfoliosOpen] = useState(false)
@@ -119,15 +114,70 @@ export function OpportunitiesPage() {
   const opportunities = useQuery({ queryKey: ['opportunities'], queryFn: () => api<Opportunity[]>('/api/opportunities'), refetchInterval: (query) => (query.state.data as Opportunity[] | undefined)?.some((item) => ['pending', 'processing'].includes(String(item.structured_data.capture_status))) ? 2000 : false })
   const landscape = useQuery({ queryKey: ['landscape'], queryFn: () => api<Landscape>('/api/opportunities/visualization/landscape') })
   const graph = useQuery({ queryKey: ['opportunity-graph'], queryFn: () => api<OpportunityGraphData>('/api/opportunities/visualization/graph') })
-  const filtered = useMemo(() => (opportunities.data ?? []).filter((item) => `${item.title} ${item.employer} ${item.industry}`.toLowerCase().includes(queryText.toLowerCase())), [opportunities.data, queryText])
-  const selected = opportunities.data?.find((item) => item.id === selectedId)
-  if (opportunities.isPending || landscape.isPending || graph.isPending) return <Loading label={t('Organizing your opportunity research')} />
-  if (opportunities.error || landscape.error || graph.error) return <ErrorState error={opportunities.error || landscape.error || graph.error} />
+  const matches = useQuery({ queryKey: ['matches'], queryFn: () => api<MatchRun[]>('/api/matches') })
+  const latestRun = useMemo(() => {
+    const out = new Map<string, MatchRun>()
+    for (const run of matches.data ?? []) if (!out.has(run.opportunity_id)) out.set(run.opportunity_id, run)
+    return out
+  }, [matches.data])
+  const fitOf = (id: string) => latestRun.get(id)?.score ?? -1
+  const filtered = useMemo(
+    () =>
+      (opportunities.data ?? [])
+        .filter((item) => `${item.title} ${item.employer} ${item.industry}`.toLowerCase().includes(queryText.toLowerCase()))
+        .sort((a, b) => fitOf(b.id) - fitOf(a.id) || a.title.localeCompare(b.title)),
+    // fitOf reads latestRun, which is the real dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [opportunities.data, queryText, latestRun],
+  )
+  const selected = opportunities.data?.find((item) => item.id === selectedId) ?? filtered[0]
+  if (opportunities.isPending || landscape.isPending || graph.isPending || matches.isPending) return <Loading label={t('Organizing your opportunity research')} />
+  if (opportunities.error || landscape.error || graph.error || matches.error) return <ErrorState error={opportunities.error || landscape.error || graph.error || matches.error} />
   return (
-    <div className="page-contained">
-      <PageHeader eyebrow={t('Opportunity research')} title={t('Collect signals. Keep the source. Decide what matters.')} description={t('Capture individual roles from public pages or documents, review the structure, and understand patterns only within your saved research.')} actions={<button className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>} />
-      <div className="list-toolbar"><button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Target portfolios')}</button><label className="search-field"><Search /><input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} /></label><div className="segmented"><button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Research cards')}</button><button className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Knowledge graph')}</button><button className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button></div></div>
-      {view === 'landscape' ? <Panel title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel> : view === 'network' ? <Panel title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel> : <div className="opportunities-layout"><section className="opportunity-cards">{filtered.length ? filtered.map((item) => <button key={item.id} className={`opportunity-card ${selectedId === item.id ? 'selected' : ''}`} onClick={() => setSelectedId(item.id)}><header><span className="company-mark"><Building2 /></span><span className={`status-badge ${item.status}`}>{t(item.status)}</span></header><h2>{item.title}</h2><p>{item.employer || t('Employer not specified')}</p><div className="opportunity-meta"><span><MapPin />{item.location || t(item.remote_mode)}</span><span><BriefcaseBusiness />{item.seniority || t('Seniority unknown')}</span>{item.deadline_at && <span><CalendarClock />{formatDate(item.deadline_at)}</span>}</div><footer><span>{plural(item.requirements.length, '{count} structured requirement', '{count} structured requirements')}</span><ArrowUpRight /></footer></button>) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}</section>{selected ? <OpportunityDetail key={selected.id} opportunity={selected} /> : filtered.length > 0 && <aside className="selection-hint"><Globe2 /><h3>{t('Select a research card')}</h3><p>{t('Review its extracted content and atomic requirements here.')}</p></aside>}</div>}
+    <div className="page-contained workbench">
+      <header className="workbench-bar">
+        <h1>{t('Opportunities')}</h1>
+        <label className="search-field">
+          <Search />
+          <input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} />
+        </label>
+        <div className="segmented" role="tablist" aria-label={t('View')}>
+          <button role="tab" aria-selected={view === 'cards'} className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Roles')}</button>
+          <button role="tab" aria-selected={view === 'network'} className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Graph')}</button>
+          <button role="tab" aria-selected={view === 'landscape'} className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button>
+        </div>
+        <button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Portfolios')}</button>
+        <button type="button" className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>
+      </header>
+      {view === 'landscape' ? (
+        <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles—not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel>
+      ) : view === 'network' ? (
+        <Panel className="workbench-panel" title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel>
+      ) : (
+        <div className="opportunities-layout">
+          <nav className="opp-list" aria-label={t('Saved roles')}>
+            {filtered.length ? filtered.map((item) => {
+              const run = latestRun.get(item.id)
+              const fit = run?.score != null ? Math.round(run.score * 100) : null
+              const pay = item.compensation as unknown as Compensation
+              const ask = pay?.ask_low !== undefined && pay?.ask_high !== undefined ? `${compact(pay.ask_low)}\u2013${compact(pay.ask_high)}` : null
+              const active = selected?.id === item.id
+              return (
+                <button key={item.id} type="button" className={`opp-row ${active ? 'selected' : ''}`} aria-current={active} onClick={() => setSelectedId(item.id)}>
+                  <b className="opp-row-title" title={item.title}>{item.title}</b>
+                  <small className="opp-row-sub" title={item.employer}>{item.employer || t('Employer not specified')}</small>
+                  <span className="opp-row-figures" title={run ? t('{fit}% fit, {coverage}% of requirements evaluated', { fit: fit ?? 0, coverage: Math.round(run.coverage * 100) }) : undefined}>
+                    <b>{fit === null ? '\u2013' : `${fit}% ${t('fit')}`}</b>
+                    <small>{ask ?? t('No band')}</small>
+                  </span>
+                  <span className="opp-row-bar" aria-hidden><i style={{ width: `${fit ?? 0}%` }} /></span>
+                </button>
+              )
+            }) : <EmptyState title={t('No opportunity matches this view')} description={t('Capture a role from a URL, document, pasted text, or manual entry.')} action={<button className="button primary" onClick={() => setCaptureOpen(true)}>{t('Add the first role')}</button>} />}
+          </nav>
+          {selected ? <OpportunityDetail key={selected.id} opportunity={selected} run={latestRun.get(selected.id)} /> : null}
+        </div>
+      )}
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
       {portfoliosOpen ? (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPortfoliosOpen(false)}>
