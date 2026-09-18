@@ -88,6 +88,19 @@
   --hero-line: #443b32;
   --hero-accent: #93b4ff;
 
+  /* Categorical scale for graph node types. Canvas renderers cannot read CSS custom
+     properties, so these are resolved at runtime and passed as strings, but they are
+     authored here with the rest of the palette rather than drifting in a TypeScript
+     literal. Authored per theme, not inverted: these are darkened for paper. */
+  --viz-1: #4338ca;
+  --viz-2: #0f766e;
+  --viz-3: #c2410c;
+  --viz-4: #a21caf;
+  --viz-5: #a16207;
+  --viz-6: #15803d;
+  --viz-7: #1d4ed8;
+  --viz-8: #b91c1c;
+
   --shadow: 0 1px 2px rgba(22, 19, 15, .06), 0 8px 24px rgba(22, 19, 15, .06);
   --radius: var(--radius-lg);
 
@@ -129,6 +142,15 @@
   --status-partial: #e3b341;
   --status-unknown: #9c938a;
   --status-met: #7ee2a8;
+
+  --viz-1: #a5b4fc;
+  --viz-2: #5eead4;
+  --viz-3: #fdba74;
+  --viz-4: #f0abfc;
+  --viz-5: #fde047;
+  --viz-6: #86efac;
+  --viz-7: #93c5fd;
+  --viz-8: #fca5a5;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .34);
   --focus-ring: 0 0 0 3px rgba(147, 180, 255, .32);

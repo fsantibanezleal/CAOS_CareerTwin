@@ -27,6 +27,12 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
   gradient, the violet avatar, every status tint, the login hero's hardcoded `#080d18` canvas. They
   kept rendering the old design whatever `tokens.css` said, which is most of why the redesign
   appeared not to have happened. `styles.css` now contains no literal colour at all.
+- Put the graph palette on tokens. `Visualizations.tsx` carried its own full palette: node-type hues
+  in the previous teal and violet, and graph surfaces hardcoded to a `#0e1421` navy. Its own comment
+  instructed the reader to keep those values aligned with the stylesheet by hand, a sync that was
+  never performed and became impossible once the palette moved. Every graph therefore rendered the
+  old design on an old canvas whatever the theme said. A categorical `--viz-1` to `--viz-8` scale is
+  now authored per theme in `tokens.css` and resolved at runtime, the way `EChart` already did it.
 - Give the login hero its own tokens. It inverts the canvas by design, so once the palette actually
   applied, the light theme put near-black heading text on a hardcoded dark panel and the headline
   became unreadable.

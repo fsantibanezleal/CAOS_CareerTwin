@@ -24,6 +24,19 @@ vi.mock('@react-sigma/core', () => ({
   }),
 }))
 
+const THEME_TOKENS: Record<string, Record<string, string>> = {
+  dark: { '--text': '#f4f0ea', '--surface': '#1e1a16', '--line': '#443b32', '--faint': '#938a7e', '--accent': '#93b4ff', '--surface-3': '#322b24' },
+  light: { '--text': '#16130f', '--surface': '#ffffff', '--line': '#d6cfc4', '--faint': '#6f6962', '--accent': '#1d4ed8', '--surface-3': '#e8e3dc' },
+}
+
+/** jsdom does not load tokens.css, so the component's token reads resolve to nothing. */
+function stubTokens() {
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((() => ({
+    getPropertyValue: (name: string) =>
+      THEME_TOKENS[document.documentElement.dataset.theme === 'light' ? 'light' : 'dark']?.[name] ?? '',
+  })) as unknown as typeof window.getComputedStyle)
+}
+
 function renderEnglish(node: React.ReactNode) {
   return render(<I18nProvider initial="en">{node}</I18nProvider>)
 }
@@ -31,14 +44,15 @@ function renderEnglish(node: React.ReactNode) {
 describe('decision-grade visual fallbacks', () => {
   it('keeps Sigma labels, edges, and hover rendering readable across themes', async () => {
     vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })))
+    stubTokens()
     document.documentElement.dataset.theme = 'dark'
     renderEnglish(<ProfileConstellation data={{
       nodes: [{ id: 'profile-1', label: 'Profile', type: 'profile' }, { id: 'skill-1', label: 'Python', type: 'skill' }],
       edges: [{ id: 'edge-1', source: 'profile-1', target: 'skill-1', type: 'has_skill' }],
     }} />)
     expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
-      labelColor: { color: '#edf3fc' },
-      defaultEdgeColor: '#697991',
+      labelColor: { color: THEME_TOKENS.dark!['--text'] },
+      defaultEdgeColor: THEME_TOKENS.dark!['--faint'],
       labelDensity: 0.05,
       labelGridCellSize: 150,
       labelRenderedSizeThreshold: 11,
@@ -59,8 +73,8 @@ describe('decision-grade visual fallbacks', () => {
 
     document.documentElement.dataset.theme = 'light'
     await waitFor(() => expect(captureSigmaSettings).toHaveBeenLastCalledWith(expect.objectContaining({
-      labelColor: { color: '#152036' },
-      defaultEdgeColor: '#738198',
+      labelColor: { color: THEME_TOKENS.light!['--text'] },
+      defaultEdgeColor: THEME_TOKENS.light!['--faint'],
       defaultDrawNodeLabel: expect.any(Function),
       defaultDrawNodeHover: expect.any(Function),
     })))
