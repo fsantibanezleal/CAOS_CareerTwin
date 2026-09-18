@@ -64,6 +64,10 @@ def _profile(db: Db, user: CurrentUser) -> ProfessionalProfile:
 
 
 def _skill_read(skill: Skill) -> SkillRead:
+    # Confirmed claims only. The count used to include proposed and rejected links, while the
+    # matcher, and this endpoint's own description, mean confirmed evidence; the two agreed
+    # only while every claim in a workspace happened to be confirmed.
+    confirmed = sorted(claim.id for claim in skill.evidence if claim.state == ClaimState.CONFIRMED)
     return SkillRead(
         id=skill.id,
         name=skill.name,
@@ -73,7 +77,8 @@ def _skill_read(skill: Skill) -> SkillRead:
         years=skill.years,
         confidence=skill.confidence,
         category=skill.category,
-        evidence_count=len(skill.evidence),
+        evidence_count=len(confirmed),
+        evidence_ids=confirmed,
     )
 
 

@@ -93,6 +93,9 @@ class SkillRead(ApiModel):
     confidence: float
     category: str
     evidence_count: int = 0
+    # The confirmed claims behind the skill, so a reader can see what backs it rather than
+    # only how many things do.
+    evidence_ids: list[str] = Field(default_factory=list)
 
 
 class ExperienceCreate(BaseModel):

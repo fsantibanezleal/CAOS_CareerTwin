@@ -42,6 +42,12 @@ function formatYear(value: number): string {
   return String(Math.floor(value))
 }
 
+// A bar holds its own dates only when it is wide enough: 9% of the track was about 58px at
+// 1280, too narrow for "2022-2024", which rendered as "2022-20".
+const INSIDE_MIN = 14
+// Past this point a label to the right of the bar would run into the count column.
+const FLIP_AT = 78
+
 export function CareerTimeline({
   experiences,
   education,
@@ -148,20 +154,25 @@ export function CareerTimeline({
                 </span>
                 <span className="ct-track">
                   <i
-                    className={`${row.current ? 'current' : ''}${width < 9 ? ' narrow' : ''}`}
+                    className={`${row.current ? 'current' : ''}${width < INSIDE_MIN ? ' narrow' : ''}`}
                     style={{ left: `${left}%`, width: `${width}%` }}
                     title={`${formatYear(row.start)} – ${row.current ? t('present') : formatYear(row.end)}`}
                   >
                     {/* A label wider than its bar renders as clipped nonsense ("20", "2"),
                         so a short span puts its dates beside the bar instead of inside it. */}
-                    {width >= 9 ? (
+                    {width >= INSIDE_MIN ? (
                       <em>
                         {formatYear(row.start)}&ndash;{row.current ? t('now') : formatYear(row.end)}
                       </em>
                     ) : null}
                   </i>
-                  {width < 9 ? (
-                    <span className="ct-outside" style={{ left: `calc(${left + width}% + var(--space-2))` }}>
+                  {width < INSIDE_MIN ? (
+                    <span
+                      className="ct-outside"
+                      // Beside the bar on the side with room: a recent role sits at the right
+                      // edge, where a label to its right ran into the achievement count.
+                      style={left + width > FLIP_AT ? { right: `calc(${100 - left}% + var(--space-2))` } : { left: `calc(${left + width}% + var(--space-2))` }}
+                    >
                       {formatYear(row.start)}&ndash;{row.current ? t('now') : formatYear(row.end)}
                     </span>
                   ) : null}
