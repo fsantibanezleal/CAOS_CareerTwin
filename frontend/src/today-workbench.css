@@ -1,0 +1,265 @@
+/* Today workbench. Tokens only; see docs/design/today-workbench-adr-0071.md.
+
+   Measured on v0.13.0 the page overflowed by 587px at 1280x800 beneath a marketing headline and
+   a guided workflow that was complete. It is now one bar, a row of key figures, the roles on fit
+   and pay with the selected role beneath them, and what needs attention beside them. */
+
+.today-page .workbench-bar h1 { margin-right: 0; }
+.today-date { color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); white-space: nowrap; }
+.today-export { margin-left: auto; flex: none; }
+
+.td {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------- setup row */
+
+.td-setup {
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  margin: 0; padding: 0; list-style: none;
+}
+.td-setup a {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-semibold);
+}
+.td-setup svg { width: 16px; height: 16px; }
+.td-setup li.done a { color: var(--muted); font-weight: var(--weight-medium); }
+.td-setup li.done svg { color: var(--positive); }
+
+/* ----------------------------------------------------------- key figures */
+
+.td-figures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+.td-figures > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+}
+.td-figures dt { color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); font-weight: var(--weight-semibold); }
+.td-figures dd {
+  grid-row: span 2;
+  align-self: center;
+  margin: 0;
+  /* A step smaller on narrow screens, so the labels beside the numbers keep their words. */
+  font-size: clamp(var(--text-lg), 1.6vw, var(--text-xl)); line-height: var(--leading-xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.td-figures dd span { color: var(--muted); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.td-figures .fit dd { color: var(--accent); }
+.td-figures small {
+  grid-column: 1;
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+/* Applications by stage, drawn to scale in the stage colours. */
+.td-stack,
+.td-share {
+  grid-column: 1;
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  margin: var(--space-1) 0;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+}
+.td-stack i { display: block; background: var(--stage); }
+.td-share i { display: block; height: 100%; background: var(--positive); }
+
+/* ------------------------------------------------------------------ main */
+
+.td-main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+.td-map,
+.td-side {
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.td-map {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+.td-map > header { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-1) var(--space-4); }
+.td-map h2,
+.td-side h2 {
+  margin: 0;
+  font-size: var(--text-base); line-height: var(--leading-base);
+  font-weight: var(--weight-semibold);
+}
+.td-legend {
+  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3);
+  margin: 0; padding: 0; list-style: none;
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+}
+.td-legend li { display: inline-flex; align-items: center; gap: var(--space-1); }
+.td-legend li::before { content: ''; width: 6px; height: 12px; border-radius: var(--radius-sm); background: var(--stage); }
+.td-legend li.td-legend-band { cursor: help; }
+.td-legend li.td-legend-band::before { display: none; }
+.td-legend svg { width: 14px; height: 14px; }
+
+/* The chart measures this box and draws in its pixels. */
+.rm { position: relative; flex: 1 1 0; min-height: 200px; }
+.rm svg { position: absolute; inset: 0; overflow: visible; }
+.rm-tick line { stroke: var(--line-soft); stroke-width: 1; }
+.rm-tick text { fill: var(--muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.rm-x text { text-anchor: middle; }
+.rm-y text { text-anchor: end; }
+.rm-axis { fill: var(--muted); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-anchor: end; }
+.rm-role { cursor: pointer; outline: none; }
+.rm-hit { fill: transparent; }
+.rm-central { stroke: color-mix(in srgb, var(--stage) 38%, transparent); stroke-width: 2; }
+.rm-ask { stroke: var(--stage); stroke-width: 6; stroke-linecap: round; }
+.rm-role.hover .rm-ask,
+.rm-role.selected .rm-ask { stroke-width: 8; }
+.rm-floor { stroke: var(--critical); stroke-width: 2; }
+.rm-dot { fill: var(--surface); stroke: var(--stage); stroke-width: 3; }
+.rm-role.selected .rm-dot { fill: var(--stage); stroke: var(--text); stroke-width: 2; }
+.rm-role:focus-visible .rm-dot { stroke: var(--accent); stroke-width: 4; }
+.rm-label { fill: var(--text); font-size: var(--text-xs); font-weight: var(--weight-semibold); }
+.stage-untracked .rm-ask { stroke-dasharray: 3 4; stroke: var(--faint); }
+.rm-tip {
+  position: absolute; z-index: 3;
+  display: grid; gap: 2px;
+  max-width: 250px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  pointer-events: none;
+}
+.rm-tip b { color: var(--text); font-size: var(--text-sm); line-height: var(--leading-sm); }
+
+/* The selected role, under the map. */
+.td-role { display: grid; gap: var(--space-2); min-width: 0; border-top: 1px solid var(--line-soft); padding-top: var(--space-2); }
+.td-role > header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-2); min-width: 0; }
+.td-role h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--text-base); line-height: var(--leading-base);
+  font-weight: var(--weight-semibold);
+}
+.td-role-employer { margin-left: var(--space-1); color: var(--muted); font-size: var(--text-sm); font-weight: var(--weight-regular); }
+/* The strip, drawn for the brief's full width, puts its scale on a second row here. */
+.td-role .sb-strip { grid-template-columns: auto auto minmax(0, 1fr); row-gap: var(--space-2); }
+.td-role .sb-strip .sb-scale { grid-column: 1 / -1; grid-row: 2; }
+.td-role .sb-strip .sb-strip-basis { justify-self: end; }
+.td-role-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin: 0; }
+.td-role-figures > div {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-2);
+}
+.td-role-figures dt { color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.td-role-figures dd { margin: 0; font-size: var(--text-base); line-height: var(--leading-sm); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.td-role-figures dd span { color: var(--muted); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+.td-role-figures .fit dd { color: var(--accent); }
+.td-role-figures dd.warn { color: var(--critical); }
+.td-role-figures dd.clear { color: var(--positive); }
+.td-unplaced { margin: 0; color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+
+/* ------------------------------------------------------------------ side */
+
+/* The one scrolling container on the page, and only when attention and activity outgrow it. */
+.td-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.td-side section { display: grid; gap: var(--space-2); }
+.td-side ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.td-attention h2 b {
+  margin-left: var(--space-1);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-2);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+.ta-item a {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.ta-item a:hover { border-color: var(--accent); }
+.ta-item i { align-self: stretch; border-radius: var(--radius-full); background: var(--stage, var(--line)); }
+.ta-item i svg { display: none; }
+.ta-item.kind-overdue i { background: var(--critical); }
+.ta-item.kind-due i { background: var(--viz-7); }
+.ta-item.kind-review i,
+.ta-item.kind-evidence i { background: var(--warning); }
+.ta-item span { display: grid; min-width: 0; }
+.ta-item b { font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: var(--weight-semibold); }
+.ta-item small { color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.ta-item.kind-overdue small { color: var(--critical); }
+.ta-item em {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-2);
+  color: var(--accent);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-style: normal;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+.ta-item > a > svg { width: 14px; height: 14px; color: var(--muted); }
+.td-recent .cc-item { align-items: center; }
+
+.td-note { margin: 0; color: var(--muted); font-size: var(--text-xs); line-height: var(--leading-xs); }
+
+@media (max-width: 1080px) {
+  .td-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .td-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(360px, 1fr) auto; }
+}
