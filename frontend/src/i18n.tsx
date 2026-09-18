@@ -837,6 +837,8 @@ export const spanishMessages: Record<string, string> = {
   'fit': 'ajuste',
   '{fit}% fit, {coverage}% of requirements evaluated': '{fit}% de ajuste, {coverage}% de requisitos evaluados',
   '{coverage}% of requirements evaluated': '{coverage}% de requisitos evaluados',
+  'Opportunities ranked by fit': 'Oportunidades ordenadas por ajuste',
+  'Fit across every target': 'Ajuste en todos los objetivos',
 }
 
 function interpolate(message: string, values: TranslationValues = {}): string {
