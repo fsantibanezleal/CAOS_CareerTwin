@@ -118,3 +118,36 @@
   cursor: help;
 }
 .sb-strip-basis svg { width: 14px; height: 14px; flex: none; color: var(--faint); }
+
+/* Compact form: the band in a side pane about 360px wide. A single row does not fit that
+   width and the stacked panel costs 338px of the pane's height; this is about 100px. */
+.sb-compact {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--surface-2);
+}
+.sb-compact header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2);
+  min-width: 0;
+}
+.sb-compact header > span:first-child {
+  color: var(--text);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap;
+}
+.sb-compact header small {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-medium);
+  text-transform: none; letter-spacing: 0;
+}
+.sb-compact.researched header small { color: var(--positive); }
+.sb-compact .sb-scale { height: var(--space-3); }
+.sb-compact .sb-figures dd { font-size: var(--text-sm); }
+.sb-compact .sb-figures .emphasis dd { font-size: var(--text-sm); }
