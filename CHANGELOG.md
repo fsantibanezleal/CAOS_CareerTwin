@@ -4,6 +4,35 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-17
+
+### Fixed
+
+- Headline fit, not coverage. Every role showed "100%", which was coverage: the share of
+  requirements the matcher could evaluate, a data-quality measure. The run also carries the fit
+  score, and Ultranav is an 82% fit with a missing requirement and four partials that read "100%"
+  beside roles at 99%. The ring and the comparison list now show fit, labelled, and coverage moves
+  to a tooltip. The list sorts best fit first.
+- Never render a loading state as a verdict. The brief fetched its own run and, until it returned,
+  rendered "0/18 met, 18 unknown, eligibility unknown", indistinguishable from a disastrous result.
+  It now takes the run from the list the page has already loaded, and the page waits for it.
+- Eligibility requirements rendered grey, uppercase and indented: a bare `.eligibility` rule from
+  the matches page matched the column class. Importance is now a data attribute.
+
+### Changed
+
+- Rebuild the opportunity workbench against ADR-0071. Measured at 1440x800, about 400px of an
+  800px screen was chrome before the first requirement. One bar replaces the marketing headline,
+  its description and the toolbar. The card gallery becomes a comparison list carrying fit and the
+  salary ask per role. Compensation is a single-row strip. Requirements are split by importance
+  into columns, per ADR-0071 section 6: content that does not fit is split, not scrolled. The
+  selected requirement opens as an overlay.
+- Verified on the built app against the live data before release, across every saved role at
+  1280x800, 1600x900 and 2560x1440 in both themes: no document scroll, no control cut off the bar,
+  every requirement inside the visible brief, no clipped label, no text under 12px, and the fit
+  shown in both list and brief equal to the stored score on first paint.
+- Remove sixteen rules that styled the card gallery and the selection hint, which nothing renders.
+
 ## [0.9.2] - 2026-09-17
 
 ### Fixed
