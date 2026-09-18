@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import { useI18n } from '../i18n'
+import { compact } from '../money'
 
 /**
  * Compensation band for an opportunity.
@@ -28,16 +29,15 @@ export type Compensation = {
   source?: string
 }
 
-function compact(value: number, currency: string): string {
-  if (value >= 1_000_000) {
-    const millions = value / 1_000_000
-    const text = millions >= 10 ? millions.toFixed(0) : millions.toFixed(1)
-    return `${text}M ${currency}`
-  }
-  return `${Math.round(value / 1000)}K ${currency}`
-}
 
-export function SalaryBand({ compensation }: { compensation?: Compensation | null }) {
+export function SalaryBand({
+  compensation,
+  variant = 'panel',
+}: {
+  compensation?: Compensation | null
+  /** `strip` is one row, for surfaces whose height belongs to other content. */
+  variant?: 'panel' | 'strip'
+}) {
   const { t } = useI18n()
   if (!compensation || compensation.floor === undefined) return null
 
@@ -56,6 +56,46 @@ export function SalaryBand({ compensation }: { compensation?: Compensation | nul
   const basis = compensation.basis === 'net' ? t('net') : compensation.basis === 'gross' ? t('gross') : ''
   const period = compensation.period === 'month' ? t('monthly') : compensation.period ?? ''
 
+  const scale = (
+    <div className="sb-scale" aria-hidden>
+      <span className="sb-range central" style={{ left: `${at(centralLow)}%`, width: `${at(centralHigh) - at(centralLow)}%` }} />
+      <span className="sb-range ask" style={{ left: `${at(askLow)}%`, width: `${Math.max(at(askHigh) - at(askLow), 1)}%` }} />
+      <span className="sb-mark floor" style={{ left: `${at(floor)}%` }} title={t('Floor')} />
+    </div>
+  )
+
+  if (variant === 'strip') {
+    // The research note and its source are one hover away rather than stacked in layout.
+    const detail = [compensation.note, compensation.source].filter(Boolean).join(' \u00b7 ')
+    return (
+      <section className={`sb-strip ${compensation.confidence ?? 'unknown'}`} aria-label={t('Compensation band')}>
+        <span className="sb-strip-label">
+          {t('Compensation')}
+          <small>{t(compensation.confidence === 'researched' ? 'researched' : 'comparable')}</small>
+        </span>
+        <dl>
+          <div>
+            <dt>{t('Floor')}</dt>
+            <dd>{compact(floor)}</dd>
+          </div>
+          <div>
+            <dt>{t('Central')}</dt>
+            <dd>{compact(centralLow)}&ndash;{compact(centralHigh)}</dd>
+          </div>
+          <div className="emphasis">
+            <dt>{t('Ask')}</dt>
+            <dd>{compact(askLow)}&ndash;{compact(askHigh)}</dd>
+          </div>
+        </dl>
+        {scale}
+        <span className="sb-strip-basis" title={detail || undefined}>
+          {[currency, period, basis].filter(Boolean).join(', ')}
+          {detail ? <Info aria-label={detail} /> : null}
+        </span>
+      </section>
+    )
+  }
+
   return (
     <section className="sb" aria-label={t('Compensation band')}>
       <header>
@@ -65,33 +105,29 @@ export function SalaryBand({ compensation }: { compensation?: Compensation | nul
         </span>
       </header>
 
-      <div className="sb-scale">
-        <span className="sb-range central" style={{ left: `${at(centralLow)}%`, width: `${at(centralHigh) - at(centralLow)}%` }} />
-        <span className="sb-range ask" style={{ left: `${at(askLow)}%`, width: `${Math.max(at(askHigh) - at(askLow), 1)}%` }} />
-        <span className="sb-mark floor" style={{ left: `${at(floor)}%` }} title={t('Floor')} />
-      </div>
+      {scale}
 
       <dl className="sb-figures">
         <div>
           <dt>{t('Floor')}</dt>
-          <dd>{compact(floor, currency)}</dd>
+          <dd>{compact(floor)}</dd>
         </div>
         <div>
           <dt>{t('Central')}</dt>
           <dd>
-            {compact(centralLow, currency)} &ndash; {compact(centralHigh, currency)}
+            {compact(centralLow)}&ndash;{compact(centralHigh)}
           </dd>
         </div>
         <div className="emphasis">
           <dt>{t('Ask')}</dt>
           <dd>
-            {compact(askLow, currency)} &ndash; {compact(askHigh, currency)}
+            {compact(askLow)}&ndash;{compact(askHigh)}
           </dd>
         </div>
       </dl>
 
       <p className="sb-basis">
-        {[period, basis].filter(Boolean).join(', ')}
+        {[currency, period, basis].filter(Boolean).join(', ')}
         {compensation.researched ? ` · ${t('researched')} ${compensation.researched}` : ''}
       </p>
 
