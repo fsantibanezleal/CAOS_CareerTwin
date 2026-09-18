@@ -73,6 +73,9 @@ The fit shown in the list and the brief equals the stored score on first paint f
   single consumer at that size is the application's 238px navigation rail, which belongs to the
   shared shell rather than this page. Collapsing it to icons below about 1366px would clear the
   floor, and is a shell decision for every page, not a local one.
+  *Resolved in v0.14.1 (#188):* between 901px and 1366px the rail is a 72px column of icons whose
+  labels appear on hover and keyboard focus. The brief is 58% of the screen at 1280x800, and the
+  gate now fails any brief under 50%; it did, at 48%, on a build without the rail.
 - **Evidence on met requirements.** Several requirements resolve as met against a profile skill
   that carries no linked confirmed claim, so the detail reads "Evidence 0" beside "Met". The
   profile holds 73 skills and 36 skill-to-claim links. The match is sound; the audit trail behind

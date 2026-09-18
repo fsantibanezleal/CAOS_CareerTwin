@@ -4,6 +4,21 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-09-18
+
+### Changed
+
+- Collapse the navigation rail to a 72px column of icons between 901px and 1366px (#188). At
+  1280x800 the full rail took 238px, 19% of the screen for five links and two cards, and held the
+  opportunity brief to 47% of the screen against ADR-0071 section 8's 50% floor. Every page gains
+  166px at that size; the brief is 58% of the screen. Each label stays in the accessibility tree
+  and appears beside its icon on hover and keyboard focus.
+
+### Verification
+
+- The workbench gate fails any opportunity brief under half the screen. A build without the rail
+  failed it at 48%; with it, 195 checks pass across the five workbenches.
+
 ## [0.14.0] - 2026-09-18
 
 ### Changed
