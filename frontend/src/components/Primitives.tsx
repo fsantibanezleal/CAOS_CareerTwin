@@ -14,16 +14,6 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow: 
     </header>
   )
 }
-export function StatCard({ label, value, detail, tone = 'cyan' }: { label: string; value: ReactNode; detail: string; tone?: 'cyan' | 'violet' | 'amber' | 'green' }) {
-  return (
-    <article className={`stat-card tone-${tone}`}>
-      <div className="stat-spark" aria-hidden="true" />
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
-  )
-}
 
 export function Panel({ title, subtitle, actions, children, className = '' }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (

@@ -1,5 +1,5 @@
 /**
- * ADR-0071 gate for the opportunity, matches, profile and pipeline workbenches, run against a live deployment.
+ * ADR-0071 gate for the opportunity, matches, profile, pipeline and today workbenches, run against a live deployment.
  *
  * Binding sizes 1280x800, 1600x900 and 2560x1440, in both themes, across every saved
  * role. See docs/design/opportunity-workbench-adr-0071.md.
@@ -25,7 +25,7 @@
  *   CAREERTWIN_GATE_BASE=https://<host> CAREERTWIN_GATE_EMAIL=... CAREERTWIN_GATE_PASSWORD=... \
  *     node scripts/workbench-gate.mjs
  *
- * CAREERTWIN_GATE_ONLY=pipeline (or a comma list of opportunities, matches, profile, pipeline)
+ * CAREERTWIN_GATE_ONLY=pipeline (or a comma list of opportunities, matches, profile, pipeline, today)
  * runs only those pages.
  *
  * Screenshots go to .run/workbench-gate/, which is ignored.
@@ -551,6 +551,138 @@ for (const viewport of phase('pipeline')) {
     console.log(`FAIL pipeline ${viewport.width}: Open role showed "${opened}" for "${role}"`)
   } else {
     console.log(`ok   pipeline ${viewport.width}x${viewport.height} Open role lands on ${role}`)
+  }
+  await page.close()
+}
+
+// ------------------------------------------------------------------------------ Today
+// The key figures, and every role on the fit and pay map read back through the drawn axes: each
+// ask range's ends and each dot's fit are converted from pixels to values by the axis labels
+// shown, then compared with the API. One attention item per open application; selecting a role
+// shows that role.
+for (const viewport of phase('today')) {
+  const page = await browser.newPage({ viewport })
+  await page.goto(BASE, { waitUntil: 'networkidle' })
+  await page.fill('input[type="email"]', EMAIL)
+  await page.fill('input[type="password"]', PASSWORD)
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/auth/login') && r.status() === 200),
+    page.click('form button.primary'),
+  ])
+  await page.locator('.shell-main').waitFor({ state: 'visible' })
+  await page.locator('.sidebar a[href="/"]').click()
+  await page.locator('.rm-role').first().waitFor({ state: 'visible', timeout: 30000 })
+  await page.waitForTimeout(600)
+
+  const api = await page.evaluate(async () => {
+    const get = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json())
+    const [today, opportunities, runs, apps, skills] = await Promise.all(['/api/workspace/today', '/api/opportunities', '/api/matches', '/api/pipeline/applications', '/api/profile/skills'].map(get))
+    const latest = new Map()
+    for (const run of runs) if (!latest.has(run.opportunity_id)) latest.set(run.opportunity_id, run)
+    const roles = {}
+    for (const o of opportunities) {
+      const run = latest.get(o.id)
+      const pay = o.compensation ?? {}
+      if (run?.score == null || typeof pay.ask_low !== 'number' || typeof pay.ask_high !== 'number') continue
+      roles[o.id] = { title: o.title, fit: Math.round(run.score * 100), askLow: pay.ask_low, askHigh: pay.ask_high }
+    }
+    return {
+      fit: today.global_alignment == null ? '–' : `${Math.round(today.global_alignment * 100)}%`,
+      applications: String(Object.values(today.applications_by_stage).reduce((sum, value) => sum + value, 0)),
+      claims: String(today.confirmed_evidence),
+      skills: `${skills.filter((s) => s.evidence_count > 0).length}/${skills.length}`,
+      open: apps.filter((a) => ['saved', 'preparing', 'applied', 'screening', 'interview', 'offer'].includes(a.stage)).length,
+      roles,
+    }
+  })
+
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme)
+    await page.waitForTimeout(300)
+    const r = await page.evaluate(() => {
+      const main = document.querySelector('.shell-main')
+      const doc = document.documentElement
+      const bar = document.querySelector('.workbench-bar')
+      const barRight = Math.min(bar.getBoundingClientRect().right, innerWidth)
+      const hasText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+      const figure = (selector) => document.querySelector(`.td-figures ${selector} dd`)?.textContent.trim()
+      // Axis labels as drawn: "95%" and "7.0M" at their positions.
+      const money = (text) => parseFloat(text) * (/M$/.test(text) ? 1e6 : /K$/.test(text) ? 1e3 : 1)
+      const axis = (selector, parse, coord) =>
+        [...document.querySelectorAll(selector)].map((g) => ({ value: parse(g.querySelector('text').textContent.trim()), at: g.querySelector('line').getBoundingClientRect()[coord] }))
+      const xs = axis('.rm-x', (text) => parseFloat(text), 'left')
+      const ys = axis('.rm-y', money, 'top')
+      const invert = (ticks, at) => {
+        const [a, b] = [ticks[0], ticks.at(-1)]
+        return a.value + ((at - a.at) / (b.at - a.at)) * (b.value - a.value)
+      }
+      const pxPerFit = xs.length > 1 ? Math.abs((xs.at(-1).at - xs[0].at) / (xs.at(-1).value - xs[0].value)) : 1
+      const drawn = [...document.querySelectorAll('.rm-role')].map((g) => {
+        const ask = g.querySelector('.rm-ask').getBoundingClientRect()
+        const dot = g.querySelector('.rm-dot').getBoundingClientRect()
+        return { id: g.dataset.role, fit: invert(xs, dot.left + dot.width / 2), askHigh: invert(ys, ask.top), askLow: invert(ys, ask.bottom) }
+      })
+      return {
+        scrollY: Math.max(doc.scrollHeight - innerHeight, main.scrollHeight - main.clientHeight),
+        scrollX: doc.scrollWidth - innerWidth,
+        barClipped: [...bar.children].filter((el) => el.getBoundingClientRect().right > barRight + 1).length,
+        tiny: [...document.querySelectorAll('.page-contained *')].filter((el) => hasText(el) && parseFloat(getComputedStyle(el).fontSize) < 12).length,
+        figures: { fit: figure('.fit'), applications: figure('.apps'), claims: figure('div:nth-child(4)'), skills: figure('.skills') },
+        drawn,
+        // Roles set side by side move up to this far, in fit points, from their true position.
+        tolerance: 18 / pxPerFit + 0.6,
+        payRange: ys.length > 1 ? Math.abs(ys.at(-1).value - ys[0].value) : 1,
+        applicationItems: document.querySelectorAll('.ta-item[data-kind="application"]').length,
+        labelsOverlap: (() => {
+          const boxes = [...document.querySelectorAll('.rm-label')].map((el) => el.getBoundingClientRect())
+          return boxes.filter((a, i) => boxes.some((b, j) => j > i && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom)).length
+        })(),
+      }
+    })
+    const problems = []
+    if (r.scrollY > 0) problems.push(`page scrolls (${r.scrollY}px)`)
+    if (r.scrollX > 0) problems.push(`page scrolls sideways (${r.scrollX}px)`)
+    if (r.barClipped) problems.push(`${r.barClipped} bar control(s) cut off`)
+    if (r.tiny) problems.push(`${r.tiny} text node(s) under 12px`)
+    if (r.figures.fit !== api.fit) problems.push(`portfolio fit shows ${r.figures.fit}, API ${api.fit}`)
+    if (r.figures.applications !== api.applications) problems.push(`applications show ${r.figures.applications}, API ${api.applications}`)
+    if (r.figures.claims !== api.claims) problems.push(`confirmed claims show ${r.figures.claims}, API ${api.claims}`)
+    if (r.figures.skills !== api.skills) problems.push(`skills with evidence show ${r.figures.skills}, API ${api.skills}`)
+    if (r.drawn.length !== Object.keys(api.roles).length) problems.push(`${r.drawn.length} roles drawn, API has ${Object.keys(api.roles).length} with a fit and a band`)
+    for (const d of r.drawn) {
+      const want = api.roles[d.id]
+      if (!want) {
+        problems.push(`role ${d.id} drawn without a fit and a band in the API`)
+        continue
+      }
+      const name = want.title.slice(0, 28)
+      if (Math.abs(d.fit - want.fit) > r.tolerance) problems.push(`${name}: drawn at ${d.fit.toFixed(1)}% fit, API ${want.fit}%`)
+      // Within 2% of the axis span: a pixel is worth about that much at 1280.
+      if (Math.abs(d.askLow - want.askLow) > r.payRange * 0.02 || Math.abs(d.askHigh - want.askHigh) > r.payRange * 0.02) problems.push(`${name}: ask drawn ${Math.round(d.askLow / 1e5) / 10}M-${Math.round(d.askHigh / 1e5) / 10}M, API ${want.askLow / 1e6}M-${want.askHigh / 1e6}M`)
+    }
+    if (r.applicationItems !== api.open) problems.push(`${r.applicationItems} applications need attention, API has ${api.open} open`)
+    if (r.labelsOverlap) problems.push(`${r.labelsOverlap} role label(s) overlap`)
+    const label = `today ${viewport.width}x${viewport.height} ${theme.padEnd(5)}`
+    if (problems.length) {
+      failures.push(label)
+      console.log(`FAIL ${label}\n       ${problems.join('\n       ')}`)
+    } else {
+      console.log(`ok   ${label} ${r.drawn.length} roles`)
+    }
+    await page.screenshot({ path: `${OUT}today-${viewport.width}x${viewport.height}-${theme}.png` })
+  }
+
+  // Selecting each role shows it.
+  for (const id of Object.keys(api.roles)) {
+    await page.locator(`.rm-role[data-role="${id}"] .rm-dot`).click()
+    await page.waitForTimeout(200)
+    const title = await page.evaluate(() => document.querySelector('.td-role h3')?.textContent ?? '')
+    if (!title.startsWith(api.roles[id].title)) {
+      failures.push(`today ${viewport.width} select ${id}`)
+      console.log(`FAIL today ${viewport.width}: selecting ${api.roles[id].title} shows "${title}"`)
+    } else {
+      console.log(`ok   today ${viewport.width}x${viewport.height} selects ${api.roles[id].title}`)
+    }
   }
   await page.close()
 }
