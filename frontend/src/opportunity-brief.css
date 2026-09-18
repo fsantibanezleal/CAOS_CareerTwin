@@ -1,0 +1,298 @@
+/* Opportunity brief. Tokens only; see docs/design/design-system.md.
+
+   Sized to its container: the head is intrinsic, the body takes the remainder, and the
+   only scrollable region is the requirement grid. The page itself never grows, which is
+   the whole point of showing a role as a brief rather than as a form. */
+
+.ob {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Head: who, the verdict, and the two ways out of the brief. */
+.ob-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ob-identity { min-width: 0; }
+.ob-eyebrow {
+  display: block;
+  color: var(--faint);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.ob-identity h2 {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl); line-height: var(--leading-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -.01em;
+}
+.ob-identity p {
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+}
+
+.ob-verdict { display: flex; align-items: center; gap: var(--space-4); }
+
+.ob-ring { position: relative; width: 64px; height: 64px; flex: none; }
+.ob-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ob-ring circle { fill: none; stroke-width: 6; }
+.ob-ring-track { stroke: var(--surface-3); }
+.ob-ring-value { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray var(--motion-base) var(--ease); }
+.ob-ring b {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: var(--text-sm); line-height: 1;
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ob-verdict dl { display: flex; gap: var(--space-4); margin: 0; }
+.ob-verdict dl div { display: grid; gap: 2px; }
+.ob-verdict dt {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  text-transform: uppercase; letter-spacing: .04em;
+  white-space: nowrap;
+}
+.ob-verdict dd {
+  margin: 0;
+  font-size: var(--text-lg); line-height: var(--leading-lg);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.ob-verdict dd span { color: var(--faint); font-size: var(--text-sm); font-weight: var(--weight-regular); }
+.ob-verdict dd.warn { color: var(--critical); }
+.ob-verdict dd.clear { color: var(--positive); }
+.ob-verdict dd.elig {
+  font-size: var(--text-sm); line-height: var(--leading-lg);
+  font-weight: var(--weight-semibold); text-transform: capitalize;
+}
+.ob-verdict dd.elig.eligible { color: var(--positive); }
+.ob-verdict dd.elig.conflict { color: var(--critical); }
+.ob-verdict dd.elig.unknown { color: var(--muted); }
+
+.ob-head-actions { display: flex; flex-direction: column; gap: var(--space-2); }
+.ob-head-actions .button { white-space: nowrap; }
+
+/* Body: the requirement grid, and a side rail carrying pay and the selected detail. */
+.ob-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: var(--space-4);
+  min-height: 0;
+}
+
+.ob-reqs { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-3); min-height: 0; }
+
+.ob-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ob-filters button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-xs); line-height: var(--leading-xs);
+  font-weight: var(--weight-medium);
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.ob-filters button svg { width: 14px; height: 14px; }
+.ob-filters button span { font-variant-numeric: tabular-nums; font-weight: var(--weight-bold); }
+.ob-filters button:hover { background: var(--surface-3); color: var(--text); }
+.ob-filters button.active { border-color: var(--accent); background: var(--cyan-soft); color: var(--text); }
+.ob-filters button.met svg { color: var(--status-met); }
+.ob-filters button.partial svg { color: var(--status-partial); }
+.ob-filters button.unknown svg { color: var(--status-unknown); }
+.ob-filters button.missing svg { color: var(--status-missing); }
+.ob-filters button.conflict svg { color: var(--status-conflict); }
+
+/* A dense grid, so a whole role is legible at once instead of scrolled through. */
+.ob-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  align-content: start;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: var(--space-1);
+}
+
+.ob-chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--status-unknown);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+.ob-chip:hover { background: var(--surface-3); }
+.ob-chip.selected { border-color: var(--accent); background: var(--cyan-soft); }
+.ob-chip.met { border-left-color: var(--status-met); }
+.ob-chip.partial { border-left-color: var(--status-partial); }
+.ob-chip.unknown { border-left-color: var(--status-unknown); }
+.ob-chip.missing { border-left-color: var(--status-missing); }
+.ob-chip.conflict { border-left-color: var(--status-conflict); }
+
+.ob-chip-icon { display: grid; place-items: center; }
+.ob-chip-icon svg { width: 16px; height: 16px; }
+.ob-chip.met .ob-chip-icon svg { color: var(--status-met); }
+.ob-chip.partial .ob-chip-icon svg { color: var(--status-partial); }
+.ob-chip.unknown .ob-chip-icon svg { color: var(--status-unknown); }
+.ob-chip.missing .ob-chip-icon svg { color: var(--status-missing); }
+.ob-chip.conflict .ob-chip-icon svg { color: var(--status-conflict); }
+
+.ob-chip-label {
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text);
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-medium);
+}
+.ob-chip-imp {
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-1);
+  background: var(--surface-3);
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+}
+.ob-chip-imp.required { color: var(--critical); }
+.ob-chip-imp.eligibility { color: var(--info); }
+.ob-chip-score {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ob-empty, .ob-nosalary {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm); line-height: var(--leading-base);
+}
+
+.ob-side { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: var(--space-3); min-height: 0; }
+
+.ob-detail {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+.ob-detail.filled { border-style: solid; background: var(--surface-2); }
+.ob-detail-hint { margin: 0; color: var(--faint); font-size: var(--text-sm); line-height: var(--leading-base); }
+.ob-detail-status {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.ob-detail-status svg { width: 14px; height: 14px; }
+.ob-detail-status.met { color: var(--status-met); }
+.ob-detail-status.partial { color: var(--status-partial); }
+.ob-detail-status.unknown { color: var(--status-unknown); }
+.ob-detail-status.missing { color: var(--status-missing); }
+.ob-detail-status.conflict { color: var(--status-conflict); }
+.ob-detail h4 {
+  margin: 0;
+  font-size: var(--text-base); line-height: var(--leading-base);
+  font-weight: var(--weight-semibold);
+}
+.ob-detail p { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-base); }
+.ob-detail dl { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; }
+.ob-detail dl div { display: grid; gap: 2px; }
+.ob-detail dt {
+  color: var(--faint);
+  font-size: var(--text-2xs); line-height: var(--leading-2xs);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.ob-detail dd {
+  margin: 0;
+  font-size: var(--text-sm); line-height: var(--leading-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: capitalize;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The posting is a document, read in an overlay, not a textarea on the working surface. */
+.ob-posting {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(760px, 92vw);
+  max-height: 86vh;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.ob-posting > header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--line-soft);
+}
+.ob-posting > header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg); line-height: var(--leading-lg);
+  font-weight: var(--weight-semibold);
+}
+.ob-posting-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  font-size: var(--text-base); line-height: var(--leading-base);
+}
+.ob-posting-body h4 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-lg); line-height: var(--leading-lg);
+}
+.ob-posting-body h4:first-child { margin-top: 0; }
+.ob-posting-body h5 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: var(--text-base); line-height: var(--leading-base);
+  font-weight: var(--weight-semibold);
+}
+.ob-posting-body p { margin: 0 0 var(--space-3); color: var(--text); }
+.ob-posting-body p.ob-kv { color: var(--muted); font-size: var(--text-sm); line-height: var(--leading-sm); }
+.ob-posting-body ul { margin: 0 0 var(--space-4); padding-left: var(--space-5); }
+.ob-posting-body li { margin-bottom: var(--space-1); }
+
+@media (max-width: 1080px) {
+  .ob-head { grid-template-columns: minmax(0, 1fr); }
+  .ob-head-actions { flex-direction: row; }
+  .ob-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .ob-side { grid-template-rows: auto auto auto; }
+}

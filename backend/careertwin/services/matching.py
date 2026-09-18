@@ -15,9 +15,13 @@ from careertwin.models import (
     ProfessionalProfile,
     Skill,
 )
-from careertwin.services.normalization import label_similarity, normalize_label
+from careertwin.services.normalization import (
+    label_containment,
+    label_similarity,
+    normalize_label,
+)
 
-POLICY_VERSION = "match-v1.0.0"
+POLICY_VERSION = "match-v1.1.0"
 MINIMUM_COVERAGE = 0.35
 
 
@@ -85,28 +89,43 @@ def _skill_assessment(requirement: Any, skills: list[Skill]) -> dict[str, Any]:
     }
 
 
-def _text_assessment(requirement: Any, corpus: list[tuple[str, list[str]]]) -> dict[str, Any]:
+def _excerpt(text: str, limit: int = 88) -> str:
+    """A short, quotable handle for a record, for use in an explanation."""
+    collapsed = " ".join(text.split())
+    return collapsed if len(collapsed) <= limit else f"{collapsed[: limit - 1]}…"
+
+
+def _text_assessment(
+    requirement: Any, corpus: list[tuple[str, list[str], str]]
+) -> dict[str, Any]:
+    """Judge a requirement against named evidence records.
+
+    Scored by containment rather than Jaccard similarity. Jaccard divides by the union
+    of both token sets, so a rich evidence record scores lower against the same
+    requirement than a terse one, and no threshold can separate a real match from a
+    coincidence: "Engineering degree" peaked at 0.09 against a genuine doctorate.
+    """
+    requirement_text = getattr(requirement, "label", "") or requirement.normalized_name
     candidates = sorted(
         (
-            (label_similarity(requirement.normalized_name, text), evidence)
-            for text, evidence in corpus
+            (label_containment(requirement_text, text), evidence, label)
+            for text, evidence, label in corpus
         ),
-        key=lambda item: item[0],
-        reverse=True,
+        key=lambda item: (-item[0], item[2]),
     )
-    if not candidates or candidates[0][0] < 0.4:
+    if not candidates or candidates[0][0] < 0.5:
         return {
             "status": "unknown",
             "score": None,
             "evidence_ids": [],
-            "explanation": "Available confirmed evidence does not resolve this requirement.",
+            "explanation": "No profile record covers the terms of this requirement.",
         }
-    similarity, evidence = candidates[0]
+    coverage, evidence, label = candidates[0]
     return {
-        "status": "met" if similarity >= 0.75 else "partial",
-        "score": _round(similarity),
+        "status": "met" if coverage >= 0.8 else "partial",
+        "score": _round(coverage),
         "evidence_ids": evidence,
-        "explanation": "Resolved against confirmed profile evidence.",
+        "explanation": f"Evidenced by {label}.",
     }
 
 
@@ -120,16 +139,37 @@ def calculate_match(
 ) -> MatchCalculation:
     """Calculate an explainable alignment score; this is never a hiring probability."""
     confirmed_claims = [claim for claim in claims if claim.state.value == "confirmed"]
-    claim_corpus = [(claim.statement, [claim.id]) for claim in confirmed_claims]
-    experience_corpus: list[tuple[str, list[str]]] = [
-        (" ".join([item.role, item.organization, item.summary, *item.skills]), [])
+    # Every corpus entry carries the name of the record it came from, so an assessment
+    # can say WHICH degree or role answered the requirement instead of asserting that
+    # "confirmed profile evidence" exists somewhere.
+    claim_corpus: list[tuple[str, list[str], str]] = [
+        (claim.statement, [claim.id], _excerpt(claim.statement)) for claim in confirmed_claims
+    ]
+    experience_corpus: list[tuple[str, list[str], str]] = [
+        (
+            " ".join([item.role, item.organization, item.summary, *item.skills]),
+            [],
+            f"{item.role} at {item.organization}" if item.organization else item.role,
+        )
         for item in experiences
     ]
-    education_corpus: list[tuple[str, list[str]]] = [
-        (" ".join([item.credential, item.field, item.institution, item.details]), [])
+    education_corpus: list[tuple[str, list[str], str]] = [
+        (
+            " ".join([item.credential, item.field, item.institution, item.details]),
+            [],
+            f"{item.credential}, {item.institution}" if item.institution else item.credential,
+        )
         for item in education
     ]
-    general_corpus = claim_corpus + experience_corpus + education_corpus
+    skill_corpus: list[tuple[str, list[str], str]] = [
+        (
+            skill.name,
+            sorted(claim.id for claim in skill.evidence if claim.state.value == "confirmed"),
+            skill.name,
+        )
+        for skill in skills
+    ]
+    general_corpus = claim_corpus + experience_corpus + education_corpus + skill_corpus
 
     assessments: list[dict[str, Any]] = []
     for requirement in sorted(opportunity.requirements, key=lambda item: item.id):
@@ -161,6 +201,21 @@ def calculate_match(
             }
         else:
             outcome = _text_assessment(requirement, general_corpus)
+
+        # A requirement filed under the wrong category must still find its evidence.
+        # Categories are assigned heuristically at extraction and are frequently wrong:
+        # a degree filed as a "skill" is searched only against the skill list, misses,
+        # and is reported unresolved while the education record sits in the same
+        # workspace. Widening the search is honest; reporting a false gap is not.
+        if outcome["status"] in {"unknown", "missing"}:
+            wider = _text_assessment(requirement, general_corpus)
+            if wider["status"] not in {"unknown", "missing"}:
+                wider["explanation"] = (
+                    f"{wider['explanation']} Filed as "
+                    f"'{requirement.category}', resolved from wider profile evidence."
+                )
+                outcome = wider
+
         assessments.append(
             {
                 "requirement_id": requirement.id,

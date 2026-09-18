@@ -123,6 +123,25 @@ def test_profile_interchange_and_json_resume_are_lossless_and_tenant_scoped(
         == 201
     )
 
+    assert (
+        client.post(
+            "/api/artifacts/accomplishments",
+            headers=csrf(token),
+            json={
+                "title": "Cut deployment incidents by a third",
+                "situation": "Releases were failing weekly.",
+                "task": "Make deploys boring.",
+                "action": "Introduced staged rollout with automated rollback.",
+                "result": "Incidents fell 30% over two quarters.",
+                "skills": ["Python"],
+                "metrics": [{"label": "incident reduction", "value": 0.3}],
+                "status": "confirmed",
+                "evidence_ids": [claim["id"]],
+            },
+        ).status_code
+        == 201
+    )
+
     original = client.get("/api/profile/interchange")
     assert original.status_code == 200, original.text
     document = original.json()
@@ -135,6 +154,7 @@ def test_profile_interchange_and_json_resume_are_lossless_and_tenant_scoped(
         "skills": 1,
         "experiences": 1,
         "education": 1,
+        "accomplishments": 1,
     }
     after = client.get("/api/profile/interchange").json()
     assert after["profile"] == document["profile"]
@@ -143,11 +163,22 @@ def test_profile_interchange_and_json_resume_are_lossless_and_tenant_scoped(
     ]
     assert after["skills"][0]["name"] == "Python"
     assert len(after["skills"][0]["evidence_refs"]) == 1
+    # The accomplishment bank is part of the profile. Before this was asserted, the
+    # interchange dropped it silently on every round trip and the test stayed green.
+    assert [item["title"] for item in after["accomplishments"]] == [
+        "Cut deployment incidents by a third"
+    ]
+    restored = after["accomplishments"][0]
+    assert restored["result"] == "Incidents fell 30% over two quarters."
+    assert restored["metrics"] == [{"label": "incident reduction", "value": 0.3}]
+    assert restored["status"] == "confirmed"
+    # Remapped onto the claim ids created by this import, not the originals.
+    assert restored["evidence_refs"] == [after["claims"][0]["ref"]]
 
     resume = client.get("/api/profile/json-resume")
     assert resume.status_code == 200, resume.text
     assert resume.json()["basics"]["label"] == "Evidence-first platform engineer"
-    assert resume.json()["x-careertwin"]["schema_version"] == "1.0"
+    assert resume.json()["x-careertwin"]["schema_version"] == "1.1"
     reimport = client.post(
         "/api/profile/json-resume/import", headers=csrf(token), json=resume.json()
     )
