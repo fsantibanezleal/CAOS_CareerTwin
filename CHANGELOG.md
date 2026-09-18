@@ -4,6 +4,47 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-09-18
+
+### Changed
+
+- Rebuild Today against ADR-0071 (#203), the last page of #187. Measured on v0.13.0 it overflowed
+  by 587px at 1280x800 and 461px at 1600x900, beneath a marketing headline and a 324px guided
+  workflow that was complete for the workspace. It now fits the viewport at every size.
+- The page's instrument is a map of the roles by fit and salary ask. Each role draws its ask as a
+  range, the market's central range behind it and its floor as a tick, coloured by its pipeline
+  stage and labelled by employer; roles at the same fit are set side by side and labels are placed
+  clear of every other mark. Selecting a role shows its stage, days in stage, fit with met and gaps,
+  and its compensation band, with links to the role and its application. No role's fit or ask
+  appeared on the page before.
+- Needs attention lists, from recorded facts only, overdue tasks, open applications by days in
+  their stage with the next legal step, tasks due within a week, evidence waiting for review and
+  skills without confirmed evidence, each opening the place to act. It replaces a task list that
+  was empty while three applications waited.
+- Key figures in one row: portfolio fit, roles, applications by stage drawn to scale, confirmed
+  claims and skills with evidence. "Profile completeness", which counted five filled text fields
+  and read 100% beside 41 unbacked skills, is no longer a headline figure.
+- Recent activity shows the latest stage changes and tasks. The guided workflow shows only while
+  something is left to set up.
+- Pipeline opens an application from a link (`?application=`); a linked application shows even
+  when the board's filters would hide it.
+- Stage colours are design tokens, shared by the pipeline and Today.
+
+### Removed
+
+- The stat card component and the rules for the old dashboard grid, guided-workflow card, stage
+  ribbon, pulse list and task list, which nothing renders any more.
+
+### Verification
+
+- The model behind the map and the attention list is tested directly: placement, round axis
+  ticks, side-by-side dodging, collision-free labels in the live cluster, attention order and the
+  next legal step. 58 frontend tests pass.
+- `scripts/workbench-gate.mjs` gains a Today phase: the key figures against the API, and every
+  role on the map read back through the drawn axis labels to its fit and ask. The portfolio
+  figure drawn one point high and ask ranges drawn 5% off each failed it. 195 checks pass across
+  the five workbenches.
+
 ## [0.13.0] - 2026-09-18
 
 ### Changed
