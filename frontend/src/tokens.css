@@ -172,6 +172,11 @@ body {
   line-height: var(--leading-base);
 }
 
+/* An unstyled <small> falls to the browser's "smaller", 11.7px under 14px text: the helper
+   lines in form labels rendered below the 12px floor. Element-level, so any class rule that
+   sizes a <small> deliberately still wins. */
+small { font-size: var(--text-xs); line-height: var(--leading-xs); }
+
 /* Headings carry the serif. This is the single most visible difference between a
    report and a dashboard, and it is why the display face exists. */
 h1, h2, .page-header h1, .login-copy h1 {

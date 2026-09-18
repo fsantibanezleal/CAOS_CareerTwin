@@ -4,6 +4,45 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-18
+
+### Changed
+
+- Rebuild the profile against ADR-0071. Measured at 1280x800, every tab overflowed, the overview by
+  4,740px, beneath a headline that wrapped to three lines at 39px. One bar now carries the title
+  and the tabs, and each tab is sized to the viewport.
+- The overview is read, not edited: headline, narrative and facts as text, with editing in a
+  dialog. It opened as an edit form.
+- One skill map replaces the capability cards and the 73-row evidence matrix, which drew the same
+  skills twice and led both with a level that sits between 90 and 98 for nearly every skill.
+  Skills are grouped by category in balanced columns, each row carrying years of use as its bar
+  and an evidence mark filled when a confirmed claim backs the skill. A filter isolates the 41 of
+  73 skills that no confirmed claim backs, and selecting a skill lists the claims behind it.
+- STAR stories become a list and a reading pane. Seven fully expanded stories stacked under a
+  creation form took 3,392px.
+- The career timeline keeps its content in compact rows; date labels sit inside a bar only when
+  it can hold them and move to the side with room, so recent roles no longer read "2025-3now" or
+  "2022-20". The experience and education editors open from Edit career.
+- Artifacts split into stories, resume versions, communication, and import and export.
+
+### Fixed
+
+- A skill's evidence count counts confirmed claims only, as the matcher and the endpoint's own
+  description always meant; the count used to include any linked claim. The skill API also returns
+  the confirmed claim identifiers, so a reader can see what backs a skill.
+- Unstyled small text fell to the browser's "smaller", 11.7px, below the 12px floor; it now has a
+  13px element default.
+- Remove em-dashes from product copy across five pages and both languages, and enforce ADR-0067
+  with a test that names any line that reintroduces one.
+- Remove the evidence matrix component and the rules for the old tabs, profile layout and matrix,
+  which nothing renders any more.
+
+### Verification
+
+- `scripts/workbench-gate.mjs` covers the profile: every tab and artifact sub-tab at 1280x800,
+  1600x900 and 2560x1440 in both themes, with the skill map's totals checked against the API and
+  its rows checked for being visible. 120 checks pass across the three workbenches.
+
 ## [0.11.0] - 2026-09-18
 
 ### Changed

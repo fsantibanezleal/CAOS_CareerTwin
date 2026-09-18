@@ -322,17 +322,6 @@ export function CareerRiver({ rows }: { rows: ProfileGraphData['river'] }) {
   })} /><details className="chart-data"><summary>{t('Read career timeline as a table')}</summary><div className="table-scroll"><table><thead><tr><th>{t('Type')}</th><th>{t('Role or credential')}</th><th>{t('Organization')}</th><th>{t('Start')}</th><th>{t('End')}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{t(row.kind)}</td><td>{row.title}</td><td>{String(row['organization'] ?? t('Not recorded'))}</td><td>{String(row['start'] ?? t('Unknown'))}</td><td>{String(row['end'] ?? t('present'))}</td></tr>)}</tbody></table></div></details></div>
 }
 
-export function EvidenceMatrix({ rows }: { rows: ProfileGraphData['matrix'] }) {
-  const { plural, t } = useI18n()
-  if (!rows.length) return <EmptyState title={t('No evidence matrix yet')} description={t('Link confirmed evidence to skills to distinguish supported capability from unverified claims.')} />
-  return (
-    <div className="evidence-matrix" role="table" aria-label={t('Skill evidence matrix')}>
-      <div className="matrix-head" role="row"><span>{t('Skill')}</span><span>{t('Level')}</span><span>{t('Confidence')}</span><span>{t('Evidence')}</span></div>
-      {rows.map((row) => <div className="matrix-row" role="row" key={row.skill_id}><strong>{row.skill}</strong><span><i style={{ width: `${row.level * 100}%` }} />{Math.round(row.level * 100)}%</span><span><i style={{ width: `${row.confidence * 100}%` }} />{Math.round(row.confidence * 100)}%</span><details><summary>{plural(row.evidence.length, '{count} linked claim', '{count} linked claims')}</summary>{row.evidence.map((item) => <p key={item.id}>{item.statement}</p>)}</details></div>)}
-    </div>
-  )
-}
-
 export function OpportunityLandscape({ data }: { data: Landscape }) {
   const { plural, t } = useI18n()
   const [lens, setLens] = useState<'skills' | 'seniority' | 'industries'>('skills')
