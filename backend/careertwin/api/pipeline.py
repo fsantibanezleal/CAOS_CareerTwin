@@ -158,6 +158,31 @@ def application_history(application_id: str, user: CurrentUser, db: Db) -> list[
     ]
 
 
+@router.get("/events")
+def stage_events(user: CurrentUser, db: Db) -> list[dict[str, object]]:
+    """Return every stage event in the workspace, oldest first.
+
+    The journeys and the calendar need the history of every application at once; reading it
+    per application cost one request for each.
+    """
+    events = db.scalars(
+        select(StageEvent)
+        .where(StageEvent.workspace_id == user.workspace.id)
+        .order_by(StageEvent.occurred_at, StageEvent.id)
+    ).all()
+    return [
+        {
+            "id": item.id,
+            "application_id": item.application_id,
+            "from_stage": item.from_stage,
+            "to_stage": item.to_stage,
+            "note": item.note,
+            "occurred_at": item.occurred_at,
+        }
+        for item in events
+    ]
+
+
 @router.get("/tasks", response_model=list[TaskRead])
 def list_tasks(user: CurrentUser, db: Db) -> list[TaskRead]:
     """List tasks, meetings and deadlines in time order."""
