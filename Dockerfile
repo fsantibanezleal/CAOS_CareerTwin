@@ -5,7 +5,7 @@ RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
-FROM cgr.dev/chainguard/python:latest-dev@sha256:6a2f9c5a2c2374c991f08eeed2ee1fa8fe2b61972b8a05c5a020f172c3513a5e AS python-build
+FROM cgr.dev/chainguard/python:latest-dev@sha256:8af5085c793a9b501253117ccceabff2340400f3ef92fb0e09df690dd1e961a4 AS python-build
 USER root
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /app
@@ -25,7 +25,7 @@ RUN /venv/bin/pip check \
         /venv/lib/python3.14/site-packages/pip-*.dist-info
 RUN mkdir -p /var/lib/careertwin/blobs && chown -R 65532:65532 /var/lib/careertwin
 
-FROM cgr.dev/chainguard/python:latest@sha256:c8e464ca00c86bd80498e0e509120b0d2dadcd9655dcc31b0efd0caf86465253 AS runtime
+FROM cgr.dev/chainguard/python:latest@sha256:1206ffee8644e6338b3fc8b6e5dc384b03d91ad1df1d6b74fa4255544ac51ad2 AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/venv/bin:$PATH"
 WORKDIR /app
 COPY --from=python-build --chown=65532:65532 /venv /venv
