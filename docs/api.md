@@ -27,4 +27,4 @@ Login sets an HttpOnly opaque session cookie and a readable CSRF cookie. Every m
 
 ## Errors and privacy
 
-Errors are bounded and sanitized. Connector/provider errors report class/category without credentials or upstream response bodies. Source list/profile interchange excludes storage keys, uploaded bytes and extracted document contents. Full data export is CSRF-protected and returned as a private ZIP. Durable-run reads expose visible checkpoints, digests, counts and error classes—never prompts, evidence bodies, outputs or hidden reasoning.
+Errors are bounded and sanitized. Connector/provider errors report class/category without credentials or upstream response bodies. Source list/profile interchange excludes storage keys, uploaded bytes and extracted document contents. Full data export is CSRF-protected and returned as a private ZIP. Durable-run reads expose visible checkpoints, digests, counts and error classes, never prompts, evidence bodies, outputs or hidden reasoning.
