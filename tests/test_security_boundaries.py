@@ -165,7 +165,7 @@ def test_postgres_image_preserves_verifiable_collation_provenance() -> None:
     dockerfile = (repository_root / "docker" / "postgres" / "Dockerfile").read_text()
     assert (
         "cgr.dev/chainguard/wolfi-base:latest@sha256:"
-        "1d95114038f76513a9ace6fca107d5582b08c65981f81f61cb56bf7fd2ef216d"
+        "08df5982c3d27e70a4ce1607e3bb9af09d746f8722cf135a7694afef879fc5a2"
         in dockerfile
     )
     assert "POSTGRES_VERSION=17.11" in dockerfile
