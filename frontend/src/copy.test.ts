@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
  * Product copy rules (ADR-0067): no em-dash and no arrow in anything a person reads.
  *
  * Fifteen em-dashes had reached the interface across five pages, in both languages, among
- * them "Unlinked — add evidence" on every unevidenced skill card. The rule existed and was
+ * them "Unlinked, add evidence" on every unevidenced skill card. The rule existed and was
  * not enforced in this repository, so it was followed by memory, which is to say not.
  *
  * Comments are exempt: they are for maintainers, not users.
@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest'
 
 const SRC = join(__dirname)
 const FORBIDDEN: Array<[string, string]> = [
-  ['—', 'em-dash'],
+  ['\u2014', 'em-dash'],
   ['→', 'arrow'],
 ]
 

@@ -1,6 +1,6 @@
 # CareerTwin
 
-Release `0.14.3`. See [`CHANGELOG.md`](CHANGELOG.md).
+Release `0.14.4`. See [`CHANGELOG.md`](CHANGELOG.md).
 
 CareerTwin is an evidence-first career-research system for one professional per account and many
 job opportunities. The product is this public repository: domain modules, graph projections,
@@ -28,7 +28,7 @@ deployment credentials never belong in Git.
 - Deterministic versioned matching with separate eligibility, coverage, uncertainty, and evidence bridges; scores are never hiring probabilities.
 - Evidence-linked readiness plans, STAR accomplishment bank, immutable tailored career artifacts, and candidate-owned pipeline/calendar.
 - Typed xAI/Grok, OpenAI, Anthropic, and Google adapters. No local inference service or silent provider fallback. Grok Voice streams browser-to-xAI using a short-lived credential.
-- Database-backed source/agent worker with durable queue, poll, cancel, retry, and conservative interruption recovery—no Redis or ARQ.
+- Database-backed source/agent worker with durable queue, poll, cancel, retry, and conservative interruption recovery, no Redis or ARQ.
 - Eight validated repository-local Codex skills and a credential-safe local API harness.
 
 ## Native quick start
