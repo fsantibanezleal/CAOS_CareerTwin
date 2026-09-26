@@ -4,6 +4,39 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-09-26
+
+### Added
+
+- A `guards` job in CI: the base-integrity checks (no tracked `.env`, no leaked local path), the
+  ADR-0067 content standard (no em-dash, no emoji) and the ADR-0074 CI budget gate, run with the same
+  scripts the product archetype ships.
+
+### Changed
+
+- Base images re-pinned to their current digests: `cgr.dev/chainguard/python:latest` and
+  `:latest-dev`, `cgr.dev/chainguard/wolfi-base:latest`, and `node:24.21-alpine` (Dependabot #128).
+- Dependabot routine groups: frontend (11 updates, #213), Python (10 updates, #214), GitHub Actions
+  (7 updates, #215). These four Dependabot pull requests landed on `main` directly on 2026-09-26: the
+  repository default branch had just been changed from `develop` to `main` and Dependabot retargeted
+  them on rebase. `develop` was fast-forwarded to `main` afterwards, and `.github/dependabot.yml` now
+  pins `target-branch: develop` for every ecosystem so it cannot recur.
+- `js-yaml` 4.3.2 in the frontend (Dependabot alert 7, high).
+- CI and CD follow the ADR-0074 budget rules: push triggers only on `develop` and `main`, no
+  `pull_request` or `schedule` triggers, a concurrency group and a timeout on every job.
+
+### Removed
+
+- The `dependency-review` job in the Security workflow, which was gated on `pull_request` and so could
+  never run under those triggers.
+
+### Security
+
+- CVE-2026-19499 (`glibc-2.44 2.44-r6`, High) no longer blocks the container gate: on 2026-09-26 the
+  refreshed Grype database stopped matching it and code scanning marks both alerts fixed. The package
+  is unchanged and `security/openvex.json` still holds no statements; see
+  `docs/security/container-vulnerability-assessments.md`.
+
 ## [0.14.3] - 2026-09-18
 
 ### Removed
@@ -681,7 +714,7 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ### Changed
 
-- Make the repository—not the hosted web app—the product boundary. Docker is optional deployment
+- Make the repository, not the hosted web app, the product boundary. Docker is optional deployment
   packaging; SQLite is the native local profile and PostgreSQL the hosted multi-user profile.
 - Replace Redis/ARQ with durable database row claiming and conservative interruption recovery.
 - Replace local Ollama/Docling/embedding inference with explicitly configured managed xAI, OpenAI,
