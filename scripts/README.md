@@ -21,7 +21,7 @@ password argument or an absolute URL.
 
 Backup/restore and superuser scripts retain explicit Compose switches because Compose is a supported
 optional VPS packaging profile. Those scripts are not required for local use. The hosted topology
-contains PostgreSQL, app, database worker, encrypted blobs, and malware scanning—no Redis, Ollama,
+contains PostgreSQL, app, database worker, encrypted blobs, and malware scanning, no Redis, Ollama,
 Docling, embedding service, or model volume.
 
 `release-smoke.py` runs a synthetic self-cleaning live journey. Supply disposable credentials only

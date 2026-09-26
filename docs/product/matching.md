@@ -21,7 +21,7 @@ The lower bound treats unresolved weight as zero; the upper bound treats it as f
 
 ## Portfolio alignment
 
-Only the latest run for each saved opportunity is included. The aggregate is coverage-weighted and always reports average coverage plus known-score count. It is a summary of the user's chosen opportunity set—not a labor-market statistic.
+Only the latest run for each saved opportunity is included. The aggregate is coverage-weighted and always reports average coverage plus known-score count. It is a summary of the user's chosen opportunity set, not a labor-market statistic.
 
 ## Evaluation invariants
 
