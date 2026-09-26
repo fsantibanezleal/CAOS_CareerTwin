@@ -1,7 +1,7 @@
 {
   "name": "careertwin-web",
   "private": true,
-  "version": "0.14.4",
+  "version": "0.14.5",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "engines": {
@@ -18,7 +18,7 @@
   "dependencies": {
     "@fasl-work/caos-app-shell": "0.6.8",
     "@react-sigma/core": "^5.0.0",
-    "@tanstack/react-query": "^5.103.1",
+    "@tanstack/react-query": "^5.103.2",
     "@xyflow/react": "^12.11.6",
     "echarts": "^6.0.0",
     "graphology": "^0.26.0",
@@ -33,7 +33,7 @@
     "@eslint/js": "^9.38.0",
     "@testing-library/jest-dom": "^6.9.0",
     "@testing-library/react": "^16.3.3",
-    "@types/node": "^24.13.5",
+    "@types/node": "^24.13.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.0.4",
@@ -44,7 +44,7 @@
     "globals": "^16.4.0",
     "jsdom": "^27.0.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.70.0",
+    "typescript-eslint": "^8.70.1",
     "vite": "^7.1.12",
     "vitest": "^4.1.11"
   }
