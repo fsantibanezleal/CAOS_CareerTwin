@@ -4,6 +4,16 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.14.5] - 2026-09-26
+
+### Changed
+
+- Dependabot routine groups, now targeting `develop` as pinned in 0.14.4 and promoted through it:
+  frontend (`@tanstack/react-query` 5.103.2, `@types/node` 24.13.6, `typescript-eslint` 8.70.1; #226),
+  Python (`langgraph` 1.2.12, `psycopg` 3.3.6; #227), GitHub Actions (`github/codeql-action` 4.38.1;
+  #228) and the `node:24.21-alpine` digest (#225). All four workflows passed on `develop` before the
+  release.
+
 ## [0.14.4] - 2026-09-26
 
 ### Added
