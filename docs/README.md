@@ -21,6 +21,7 @@
 
 - [Local development](runbooks/local-development.md)
 - [VPS deployment](runbooks/vps-deployment.md)
+- [Bounded image retention and rollback](runbooks/image-retention.md)
 - [Providers and Grok](runbooks/providers.md)
 - [Personal connectors](runbooks/connectors.md)
 - [Occupational taxonomies](runbooks/taxonomy.md)

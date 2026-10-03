@@ -6,6 +6,9 @@ Ollama, Docling, an embedding service, an audio model, Redis, or ARQ.
 
 ## Release preparation
 
+0. Run `python3 scripts/vps-images.py preflight` before building: at least 10 GiB free and less
+   than 80% filesystem use. Initialize and preserve the private three-release checkpoint described
+   in [bounded image retention](image-retention.md). Serialize deploys and maintenance.
 1. Deploy only a reviewed tag or exact commit from a clean worktree.
 2. Create/verify an encrypted off-host database/blob backup and isolated restore before schema changes.
 3. Create private runtime `.env` outside Git with `APP_ENV=production`, public HTTPS origin, explicit `ALLOWED_ORIGINS`, secure cookies, unique app/CSRF/PostgreSQL secrets, and unique 32-byte blob/connector AES keys.
@@ -44,6 +47,12 @@ Run `scripts/release-smoke.py` with disposable account values supplied only thro
 `CAREERTWIN_SMOKE_*` process environment. It purges the temporary seeker in `finally` and never
 prints credentials. Record commit/image digest, migration revision, configured provider name (not
 key), dataset releases, health/test evidence, backup/restore identifiers, and rollback criteria.
+
+After all release checks pass, run `bash scripts/finish-vps-release.sh --apply`. This records the
+healthy release, rotates two reviewed schema-identical rollback pairs, removes only obsolete
+CareerTwin image tags and bounds unused default-builder cache to 2 GB. Acceptance fails closed on
+schema drift or stale pins. Record physical disk before/after, unchanged container identities and
+public readiness. This explicit deployment step is mandatory; no cleanup scheduler is installed.
 
 ## Rollback and incidents
 
