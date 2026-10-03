@@ -19,6 +19,13 @@ password argument or an absolute URL.
 
 ## Hosted operations
 
+`vps-images.py` is a POSIX server-only, standard-library retention operator. It provides `preflight`,
+`checkpoint`, `plan`, and explicit `clean --apply`; the default is non-destructive. It retains the
+running release and two reviewed rollback pairs, protects container references, never deletes
+persistent data, and writes owner-only ignored journals. `finish-vps-release.sh --apply` is the
+mandatory explicit acceptance/retention step after verified deployments, not a scheduled job.
+See [bounded VPS rollback](../docs/runbooks/image-retention.md) for initial pins and rollback gates.
+
 Backup/restore and superuser scripts retain explicit Compose switches because Compose is a supported
 optional VPS packaging profile. Those scripts are not required for local use. The hosted topology
 contains PostgreSQL, app, database worker, encrypted blobs, and malware scanning, no Redis, Ollama,
