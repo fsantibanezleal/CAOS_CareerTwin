@@ -4,6 +4,13 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+### Fixed
+
+- Hosted rollback image retention: explicit three-release checkpoints, exact-tag cleanup,
+  container/identity/migration guards, 2 GB unused-builder-cache budget, disk capacity preflight
+  and private audit journals. No account data, documents, persistent volumes or backups are deleted.
+  The operator tools deploy independently; the running application remains on its reviewed release.
+
 ## [0.14.5] - 2026-09-26
 
 ### Changed
