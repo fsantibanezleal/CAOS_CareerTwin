@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 from types import ModuleType
 
@@ -211,3 +212,52 @@ def test_private_checkpoint_rejects_symlink(tool: ModuleType, tmp_path: Path) ->
         pytest.skip("Symlink creation not available on this Windows host")
     with pytest.raises(RuntimeError, match="symlink"):
         tool.save_json(link / "rollback.json", {})
+
+
+def test_inventory_requests_identity_fields_not_environment(
+    tool: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = []
+
+    def command(*args: str) -> str:
+        calls.append(args)
+        if args[:3] == ("docker", "image", "ls"):
+            return json.dumps({"Repository": "careertwin-app", "Tag": "v0.14.5"})
+        if args[:3] == ("docker", "image", "inspect"):
+            return json.dumps("sha256:app")
+        if args[:2] == ("docker", "ps"):
+            return "container"
+        return json.dumps(
+            {
+                "name": "/careertwin-app-1",
+                "id": "container",
+                "image": "sha256:app",
+                "ref": "careertwin-app:v0.14.5",
+                "running": True,
+            }
+        )
+
+    monkeypatch.setattr(tool, "command", command)
+    result = tool.inventory()
+    assert result["containers"][0]["name"] == "careertwin-app-1"
+    assert result["images"] == {"careertwin-app:v0.14.5": "sha256:app"}
+    inspections = [args for args in calls if "inspect" in args]
+    assert all("--format" in args for args in inspections)
+    assert all(".Env" not in " ".join(args) for args in inspections)
+
+
+def test_disk_percent_excludes_reserved_root_blocks(
+    tool: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        tool.shutil, "disk_usage", lambda _repo: SimpleNamespace(total=100, used=70, free=25)
+    )
+    # Restore the real function, because the general fixture stubs filesystem reads.
+    path = Path(__file__).resolve().parents[1] / "scripts" / "vps-images.py"
+    spec = importlib.util.spec_from_file_location("disk_report", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.disk(Path("."))["used_percent"] == 73.68
