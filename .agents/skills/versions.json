@@ -2,7 +2,7 @@
   "schema_version": 1,
   "skills": {
     "manage-career-profile": "2.0.0",
-    "ingest-job-opportunity": "2.2.0",
+    "ingest-job-opportunity": "2.2.1",
     "review-github-portfolio": "2.0.0",
     "analyze-career-match": "2.0.0",
     "improve-career-readiness": "2.0.0",
