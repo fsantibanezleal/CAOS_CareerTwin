@@ -27,12 +27,16 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from careertwin.services.opportunity_ingestion import _resolve_public_target
 
-Provider = Literal["himalayas", "jobicy"]
-HOSTS = {"himalayas": "himalayas.app", "jobicy": "jobicy.com"}
-PATHS = {"himalayas": "/jobs/api/search", "jobicy": "/api/v2/remote-jobs"}
+Provider = Literal["himalayas", "jobicy", "getonbrd"]
+HOSTS = {"himalayas": "himalayas.app", "jobicy": "jobicy.com", "getonbrd": "www.getonbrd.com"}
+PATHS = {
+    "himalayas": "/jobs/api/search",
+    "jobicy": "/api/v2/remote-jobs",
+    "getonbrd": "/api/v0/search/jobs",
+}
 MAX_BYTES = 2 * 1024 * 1024
 TTL = 900
-MAX_PAGES = 32
+MAX_PAGES = 64
 SENIORITY = ("Entry-level", "Mid-level", "Senior", "Manager", "Director", "Executive")
 EMPLOYMENT = ("Full Time", "Part Time", "Contractor", "Temporary", "Intern", "Volunteer", "Other")
 
@@ -74,6 +78,16 @@ class SearchRequest(BaseModel):
                 raise ValueError("Unsupported seniority")
             if self.employment_type and self.employment_type not in EMPLOYMENT:
                 raise ValueError("Unsupported employment type")
+        elif self.provider == "getonbrd":
+            if (
+                self.geo
+                or self.cursor
+                or self.worldwide
+                or self.seniority
+                or self.employment_type
+                or self.sort != "recent"
+            ):
+                raise ValueError("Get on Board uses country filters and numbered pages")
         elif (
             self.country
             or self.worldwide
@@ -96,6 +110,23 @@ class SearchRequest(BaseModel):
                 "employment_type": self.employment_type,
                 "sort": self.sort,
                 "page": str(self.page),
+            }
+        elif self.provider == "getonbrd":
+            values = {
+                "query": self.query,
+                "country_code": self.country.lower(),
+                "page": str(self.page),
+                "per_page": "20",
+                "expand": json.dumps(
+                    [
+                        "company",
+                        "location_cities",
+                        "location_tenants",
+                        "location_regions",
+                        "seniority",
+                        "modality",
+                    ]
+                ),
             }
         else:
             values = {"count": "20", "tag": self.query, "geo": self.geo, "cursor": self.cursor}
@@ -122,6 +153,8 @@ class DiscoveredJob(BaseModel):
     salary_max: float | None = None
     currency: str = ""
     salary_period: str = ""
+    salary_basis: str = ""
+    remote_mode: Literal["remote", "hybrid", "onsite", "unspecified"] = "remote"
     published_at: datetime | None = None
     expires_at: datetime | None = None
     retrieved_at: datetime
@@ -231,6 +264,8 @@ def listing_url(value: object, provider: Provider) -> str:
 
 def normalize(raw: dict[str, Any], provider: Provider, retrieved: datetime) -> DiscoveredJob:
     """Convert observed provider shapes; missing restrictions never become worldwide."""
+    if provider == "getonbrd":
+        return normalize_getonbrd(raw, retrieved)
     him = provider == "himalayas"
     try:
         url = listing_url(raw.get("guid") if him else raw.get("url"), provider)
@@ -273,6 +308,88 @@ def normalize(raw: dict[str, Any], provider: Provider, retrieved: datetime) -> D
         published_at=_date(raw.get("pubDate")),
         expires_at=expires,
         retrieved_at=retrieved,
+    )
+
+
+def normalize_getonbrd(raw: dict[str, Any], retrieved: datetime) -> DiscoveredJob:
+    """Read expanded public JSON:API relations; never guess missing salary period or authority."""
+    attributes, links = raw.get("attributes"), raw.get("links")
+    identifier = raw.get("id")
+    if (
+        not isinstance(attributes, dict)
+        or not isinstance(links, dict)
+        or not isinstance(identifier, str)
+    ):
+        raise ValueError("Invalid Get on Board record")
+    if attributes.get("rejected_reasons"):
+        raise ValueError("Source moderation rejected this listing")
+    url = listing_url(links.get("public_url"), "getonbrd")
+    title = plain_text(attributes.get("title"), 300)
+    parts = [
+        plain_text(attributes.get(field))
+        for field in ("projects", "functions", "description", "desirable", "benefits")
+    ]
+    description = "\n\n".join(part for part in parts if part)[:40_000]
+    if not title or not description:
+        raise ValueError("Incomplete listing")
+
+    def relation(field: str) -> list[dict[str, Any]]:
+        value = attributes.get(field)
+        data = value.get("data") if isinstance(value, dict) else None
+        values = data if isinstance(data, list) else [data] if isinstance(data, dict) else []
+        return [
+            item["attributes"]
+            for item in values[:100]
+            if isinstance(item, dict) and isinstance(item.get("attributes"), dict)
+        ]
+
+    company = relation("company")
+    locations = []
+    for field in ("location_cities", "location_tenants", "location_regions"):
+        for location in relation(field):
+            label = ", ".join(
+                plain_text(location.get(key), 160)
+                for key in ("name", "country")
+                if location.get(key)
+            )
+            if label and label not in locations:
+                locations.append(label)
+    modes: dict[str, Literal["remote", "hybrid", "onsite", "unspecified"]] = {
+        "no_remote": "onsite",
+        "hybrid": "hybrid",
+        "remote_local": "remote",
+        "fully_remote": "remote",
+    }
+    modality = attributes.get("remote_modality")
+    mode = modes.get(modality, "unspecified") if isinstance(modality, str) else "unspecified"
+    if attributes.get("remote_modality") == "fully_remote":
+        locations = ["Worldwide"]
+    if not locations:
+        locations = [
+            value for value in _labels(attributes.get("countries")) if value.casefold() != "remote"
+        ]
+    return DiscoveredJob(
+        key=hashlib.sha256(f"getonbrd:{identifier}".encode()).hexdigest(),
+        provider="getonbrd",
+        provider_id=identifier[:2000],
+        source_url=url,
+        title=title,
+        employer=plain_text(company[0].get("name"), 300) if company else "",
+        excerpt=description[:1200],
+        description=description,
+        locations=locations,
+        timezones=[],
+        seniority=[plain_text(item.get("name"), 80) for item in relation("seniority")],
+        employment_type=[plain_text(item.get("name"), 80) for item in relation("modality")],
+        categories=_labels(attributes.get("category_name")),
+        salary_min=_salary(attributes.get("min_salary")),
+        salary_max=_salary(attributes.get("max_salary")),
+        currency="USD",
+        salary_period="",
+        salary_basis="",
+        published_at=_date(attributes.get("published_at")),
+        retrieved_at=retrieved,
+        remote_mode=mode,
     )
 
 
@@ -343,6 +460,7 @@ class DiscoveryCache:
         self.lock = threading.RLock()
         self.provider_locks = {name: threading.Lock() for name in HOSTS}
         self.last_fetch: dict[str, float] = {}
+        self.source_errors: dict[str, tuple[float, str, int]] = {}
         self.locations: tuple[float, list[dict[str, str]]] | None = None
         self.location_error: tuple[float, str, int] | None = None
 
@@ -351,6 +469,7 @@ class DiscoveryCache:
         with self.lock:
             self.pages.clear()
             self.last_fetch.clear()
+            self.source_errors.clear()
             self.locations = None
             self.location_error = None
 
@@ -364,7 +483,9 @@ class DiscoveryCache:
             self.pages.move_to_end(key)
             return self.pages[key][1].model_copy(deep=True)
 
-    def search(self, request: SearchRequest) -> tuple[str, SearchPage]:
+    def search(
+        self, request: SearchRequest, *, wait_for_cooldown: bool = False
+    ) -> tuple[str, SearchPage]:
         """Coalesce identical searches; preserve each provider's continuation semantics."""
         if request.provider == "jobicy" and request.geo:
             if request.geo not in {item["value"] for item in self.jobicy_locations()}:
@@ -376,12 +497,24 @@ class DiscoveryCache:
                 cached.cached = True
                 return key, cached
             now = time.monotonic()
+            blocked = self.source_errors.get(request.provider)
+            if blocked and blocked[0] > now:
+                raise DiscoveryError(blocked[1], blocked[2])
             with self.lock:
-                if now - self.last_fetch.get(request.provider, -10) < 1:
+                delay = 1 - (now - self.last_fetch.get(request.provider, -10))
+            # Hold only the source lock while pacing, so other providers/cache reads stay responsive.
+            if delay > 0:
+                if not wait_for_cooldown:
                     raise DiscoveryError("Please wait a moment before another job search.", 429)
-                self.last_fetch[request.provider] = now
-            raw = fetch_json(request.provider, request.parameters())
-            records = raw.get("jobs")
+                time.sleep(delay)
+            with self.lock:
+                self.last_fetch[request.provider] = time.monotonic()
+            try:
+                raw = fetch_json(request.provider, request.parameters())
+            except DiscoveryError as exc:
+                self.source_errors[request.provider] = (time.monotonic() + 30, str(exc), exc.status)
+                raise
+            records = raw.get("data" if request.provider == "getonbrd" else "jobs")
             if not isinstance(records, list) or len(records) > 200:
                 raise DiscoveryError("Job source returned an unsupported response.")
             retrieved = datetime.now(UTC)
@@ -425,13 +558,26 @@ class DiscoveryCache:
                 ):
                     raise DiscoveryError("Job source returned an unsupported response.")
                 more = offset + limit < total and request.page < 100
+            elif request.provider == "getonbrd":
+                metadata = raw.get("meta")
+                if not isinstance(metadata, dict):
+                    raise DiscoveryError("Job source returned an unsupported response.")
+                source_page, total_pages = metadata.get("page"), metadata.get("total_pages")
+                if (
+                    type(source_page) is not int
+                    or type(total_pages) is not int
+                    or source_page != request.page
+                    or total_pages < 0
+                ):
+                    raise DiscoveryError("Job source returned an unsupported response.")
+                more = request.page < total_pages and request.page < 100
             page = SearchPage(
                 provider=request.provider,
                 jobs=jobs,
                 retrieved_at=retrieved,
                 skipped_records=skipped,
                 has_more=more,
-                next_page=request.page + 1 if more and request.provider == "himalayas" else None,
+                next_page=request.page + 1 if more and request.provider != "jobicy" else None,
                 next_cursor=next_cursor,
             )
             with self.lock:

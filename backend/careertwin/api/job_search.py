@@ -15,6 +15,7 @@ from careertwin.api.opportunities import _save_snapshot
 from careertwin.models import Opportunity, ProfessionalProfile
 from careertwin.schemas import OpportunityRead
 from careertwin.services.audit import record_audit
+from careertwin.services.career_strategy import CareerStrategy, SalaryOffer, move_comparison
 from careertwin.services.job_discovery import (
     DiscoveryError,
     SearchPage,
@@ -23,8 +24,164 @@ from careertwin.services.job_discovery import (
     issue_ticket,
     resolve_ticket,
 )
+from careertwin.services.search_battery import (
+    BatteryPage,
+    BatteryRequest,
+    execute_battery,
+    research_links,
+)
 
 router = APIRouter(prefix="/api/job-search", tags=["job discovery"])
+
+
+class NamedBattery(BaseModel):
+    """Private reusable search configuration, never an automatic alert."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    name: str = Field(min_length=1, max_length=80)
+    battery: BatteryRequest
+
+
+class NamedBatteryRead(NamedBattery):
+    id: uuid.UUID
+
+
+class StrategyUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    strategy: CareerStrategy
+    revision: int = Field(ge=1)
+
+
+class StrategyComparison(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    strategy: CareerStrategy
+    offer: SalaryOffer
+
+
+@router.get("/strategy")
+def get_strategy(user: CurrentUser, db: Db) -> dict[str, Any]:
+    profile = _profile(user, db)
+    try:
+        strategy = CareerStrategy.model_validate(profile.preferences.get("career_strategy", {}))
+    except ValidationError:
+        strategy = CareerStrategy()
+    return {
+        "strategy": strategy.model_dump(mode="json"),
+        "revision": profile.revision,
+        "comparison": move_comparison(strategy),
+    }
+
+
+@router.put("/strategy")
+def save_strategy(payload: StrategyUpdate, user: CsrfUser, db: Db) -> dict[str, Any]:
+    """Update only the current seeker's strategy; reject concurrent profile modifications."""
+    profile = _profile(user, db, lock=True)
+    if profile.revision != payload.revision:
+        raise HTTPException(
+            status_code=409, detail="Profile changed. Reload before saving career strategy."
+        )
+    profile.preferences = {
+        **profile.preferences,
+        "career_strategy": payload.strategy.model_dump(mode="json"),
+    }
+    profile.revision += 1
+    record_audit(db, user, "career_strategy.updated", "professional_profile", profile.id)
+    return {
+        "strategy": payload.strategy.model_dump(mode="json"),
+        "revision": profile.revision,
+        "comparison": move_comparison(payload.strategy),
+    }
+
+
+@router.post("/strategy/compare")
+def compare_strategy(payload: StrategyComparison, user: CsrfUser) -> dict[str, Any]:
+    """Pure private arithmetic; comparison does not persist pay or modify a match run."""
+    return move_comparison(payload.strategy, payload.offer)
+
+
+def _batteries(profile: ProfessionalProfile) -> list[dict[str, Any]]:
+    raw = profile.preferences.get("job_search_batteries", [])
+    if not isinstance(raw, list):
+        return []
+    result = []
+    for item in raw[:12]:
+        try:
+            value = NamedBatteryRead.model_validate(item)
+            if all(search.page == 1 and not search.cursor for search in value.battery.searches):
+                result.append(value.model_dump(mode="json"))
+        except ValidationError:
+            continue
+    return result
+
+
+@router.get("/batteries")
+def list_batteries(user: CurrentUser, db: Db) -> list[dict[str, Any]]:
+    return _batteries(_profile(user, db))
+
+
+@router.post("/batteries", status_code=201)
+def save_battery(payload: NamedBattery, user: CsrfUser, db: Db) -> dict[str, Any]:
+    """Save first-page queries under the profile lock, preserving unrelated preferences."""
+    if any(search.page != 1 or search.cursor for search in payload.battery.searches):
+        raise HTTPException(status_code=422, detail="Save initial searches, not continuation pages")
+    profile = _profile(user, db, lock=True)
+    batteries = _batteries(profile)
+    if len(batteries) >= 12:
+        raise HTTPException(
+            status_code=409, detail="Remove a battery before adding another (maximum 12)"
+        )
+    value = {"id": str(uuid.uuid4()), **payload.model_dump(mode="json")}
+    profile.preferences = {**profile.preferences, "job_search_batteries": [*batteries, value]}
+    profile.revision += 1
+    record_audit(db, user, "job_search.battery_saved", "professional_profile", profile.id)
+    return value
+
+
+@router.delete("/batteries/{battery_id}", status_code=204)
+def delete_battery(battery_id: str, user: CsrfUser, db: Db) -> None:
+    profile = _profile(user, db, lock=True)
+    values = _batteries(profile)
+    remaining = [item for item in values if str(item["id"]) != battery_id]
+    if len(remaining) == len(values):
+        raise HTTPException(status_code=404, detail="Search battery not found")
+    profile.preferences = {**profile.preferences, "job_search_batteries": remaining}
+    profile.revision += 1
+    record_audit(db, user, "job_search.battery_deleted", "professional_profile", profile.id)
+
+
+@router.post("/battery", response_model=BatteryPage)
+def search_battery(
+    payload: BatteryRequest, user: CsrfUser, db: Db, settings: Config
+) -> BatteryPage:
+    """Assemble public results before private ticket issuance; never share a DB session across workers."""
+    try:
+        page, keys = execute_battery(payload)
+    except DiscoveryError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+    saved = {
+        item.source_url: item.id
+        for item in db.scalars(
+            select(Opportunity).where(
+                Opportunity.workspace_id == user.workspace.id,
+                Opportunity.source_url.in_([job.source_url for job in page.jobs]),
+            )
+        )
+    }
+    for job in page.jobs:
+        job.import_ticket = issue_ticket(
+            user.workspace.id, keys[job.key], job.key, settings.app_secret_key.get_secret_value()
+        )
+        job.saved_opportunity_id = saved.get(job.source_url)
+    return page
+
+
+@router.get("/research-links")
+def external_research(
+    user: CurrentUser, query: str = "", location: str = ""
+) -> list[dict[str, str]]:
+    if len(query) > 160 or len(location) > 160 or any(ord(char) < 32 for char in query + location):
+        raise HTTPException(status_code=422, detail="Invalid public research terms")
+    return research_links(query, location)
 
 
 class ImportRequest(BaseModel):
@@ -126,6 +283,11 @@ def catalog(user: CurrentUser) -> dict[str, Any]:
         "providers": [
             {"id": "himalayas", "name": "Himalayas", "docs_url": "https://himalayas.app/api"},
             {"id": "jobicy", "name": "Jobicy", "docs_url": "https://jobicy.com/jobs-rss-feed"},
+            {
+                "id": "getonbrd",
+                "name": "Get on Board",
+                "docs_url": "https://www.getonbrd.cl/user-manual/api-de-get-on-board",
+            },
         ],
         "jobicy_locations": locations,
         "jobicy_locations_error": error,
@@ -190,7 +352,7 @@ def import_preview(
         location=", ".join(job.locations)[:240],
         seniority=", ".join(job.seniority)[:80],
         industry=", ".join(job.categories)[:160],
-        remote_mode="remote",
+        remote_mode=job.remote_mode,
         published_at=job.published_at,
         deadline_at=None,
         compensation={
@@ -198,6 +360,7 @@ def import_preview(
             "period": job.salary_period,
             "source_min": job.salary_min,
             "source_max": job.salary_max,
+            "basis": job.salary_basis,
         },
         structured_data={
             "capture_status": "ready",

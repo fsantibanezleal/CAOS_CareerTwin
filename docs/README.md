@@ -22,6 +22,7 @@
 
 - [Local development](runbooks/local-development.md)
 - [Job discovery](runbooks/job-discovery.md)
+- [Career strategy and compensation scenarios](runbooks/career-strategy.md)
 - [VPS deployment](runbooks/vps-deployment.md)
 - [Bounded image retention and rollback](runbooks/image-retention.md)
 - [Providers and Grok](runbooks/providers.md)
