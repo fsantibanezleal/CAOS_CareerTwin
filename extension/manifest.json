@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "CareerTwin Opportunity Capture",
   "description": "Capture the job page you are viewing into your private CareerTwin workspace.",
-  "version": "0.15.0",
-  "version_name": "0.15.000",
+  "version": "0.15.1",
+  "version_name": "0.15.001",
   "minimum_chrome_version": "114",
   "permissions": [
     "activeTab",

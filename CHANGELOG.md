@@ -4,6 +4,17 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.15.001] - 2026-10-03
+
+### Fixed
+
+- SPA entry responses are not cached across releases, preventing stale HTML from requesting removed chunks.
+- Route-render failures retain navigation and show bilingual, user-controlled recovery instead of a blank screen.
+
+### Changed
+
+- Removed internal release-task coordination from the public product wiki; operational verification remains documented.
+
 ## [0.15.000] - 2026-10-03
 
 ### Added
