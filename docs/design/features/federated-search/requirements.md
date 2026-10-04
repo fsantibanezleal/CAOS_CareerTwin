@@ -1,6 +1,6 @@
 # Federated search and private career strategy requirements
 
-Status: planned
+Status: accepted
 
 R-001 WHEN a seeker explicitly runs a battery, THE service SHALL search validated fixed-host sources
 with at most six unique terms, three providers, two concurrent batteries and provider rate spacing.
@@ -30,6 +30,7 @@ Gate: tests/test_career_strategy.py::test_move_comparison_requires_compatible_in
 R-007 WHEN filters, battery or strategy values change, THE UI SHALL react, expose actionable source
 coverage, preserve explicit import and render EN/ES light/dark with bounded responsive scrolling.
 Gate: frontend/src/components/JobDiscovery.test.tsx
+Gate: frontend/src/components/FederatedSearch.test.tsx
 Gate: frontend/src/components/CareerStrategy.test.tsx
 
 R-008 WHEN external research links are offered, THE UI SHALL distinguish them from queried API

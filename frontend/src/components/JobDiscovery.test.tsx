@@ -4,7 +4,7 @@ import axe from 'axe-core'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { api } from '../api'
 import { I18nProvider } from '../i18n'
-import { JobDiscovery, type JobSearchPage } from './JobDiscovery'
+import { SingleSourceSearch, type JobSearchPage } from './JobDiscovery'
 
 vi.mock('../api', () => ({ api: vi.fn(), json: (method: string, value: unknown) => ({ method, body: JSON.stringify(value) }) }))
 const mocked = vi.mocked(api)
@@ -33,7 +33,7 @@ beforeEach(() => {
 function mount(locale: 'en' | 'es' = 'en') {
   const onImported = vi.fn()
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return { onImported, ...render(<QueryClientProvider client={client}><I18nProvider initial={locale}><JobDiscovery onImported={onImported} /></I18nProvider></QueryClientProvider>) }
+  return { onImported, ...render(<QueryClientProvider client={client}><I18nProvider initial={locale}><SingleSourceSearch onImported={onImported} /></I18nProvider></QueryClientProvider>) }
 }
 
 it('searches only on explicit action, previews attribution, and saves only the signed reference', async () => {
