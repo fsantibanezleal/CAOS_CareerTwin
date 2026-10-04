@@ -1,7 +1,7 @@
 {
   "name": "careertwin-web",
   "private": true,
-  "version": "0.14.5",
+  "version": "0.15.0",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "engines": {
@@ -19,7 +19,7 @@
     "@fasl-work/caos-app-shell": "0.6.8",
     "@react-sigma/core": "^5.0.0",
     "@tanstack/react-query": "^5.103.2",
-    "@xyflow/react": "^12.11.6",
+    "@xyflow/react": "12.12.0",
     "echarts": "^6.0.0",
     "graphology": "^0.26.0",
     "graphology-layout-forceatlas2": "^0.10.1",

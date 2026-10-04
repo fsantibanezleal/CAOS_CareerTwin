@@ -9,6 +9,7 @@
 ## Architecture and assurance
 
 - [Architecture](architecture/README.md): six diagrams and component boundaries.
+- [Software design description](design/SDD.md): domain, execution, experience and delivery contracts.
 - [Agent harness](agents/README.md): router, providers, state, approval, and evaluation contract.
 - [Visualization system](visualization.md): Atalaya lessons, selected engines, accessibility, and honest graphics.
 - [Security threat model](security/threat-model.md) and [privacy model](security/privacy.md).
@@ -20,6 +21,7 @@
 ## Runbooks
 
 - [Local development](runbooks/local-development.md)
+- [Job discovery](runbooks/job-discovery.md)
 - [VPS deployment](runbooks/vps-deployment.md)
 - [Bounded image retention and rollback](runbooks/image-retention.md)
 - [Providers and Grok](runbooks/providers.md)

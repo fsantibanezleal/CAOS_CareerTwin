@@ -6,6 +6,7 @@ import { api, json } from '../api'
 import { OpportunityLandscape, OpportunityNetwork } from '../components/Visualizations'
 import { EmptyState, ErrorState, ExternalLink, Loading, Panel } from '../components/Primitives'
 import { OpportunityBrief } from '../components/OpportunityBrief'
+import { JobDiscovery } from '../components/JobDiscovery'
 import type { Compensation } from '../components/SalaryBand'
 import { compact } from '../money'
 import { useI18n } from '../i18n'
@@ -110,7 +111,7 @@ export function OpportunitiesPage() {
   const [captureOpen, setCaptureOpen] = useState(false)
   // A secondary tool: reachable from the toolbar, never occupying the working surface.
   const [portfoliosOpen, setPortfoliosOpen] = useState(false)
-  const [view, setView] = useState<'cards' | 'landscape' | 'network'>('cards')
+  const [view, setView] = useState<'cards' | 'landscape' | 'network' | 'discover'>('cards')
   const [queryText, setQueryText] = useState('')
   // `?role=<id>` opens a role directly, as the pipeline's Open role link does.
   const [params] = useSearchParams()
@@ -143,19 +144,29 @@ export function OpportunitiesPage() {
     <div className="page-contained workbench">
       <header className="workbench-bar">
         <h1>{t('Opportunities')}</h1>
-        <label className="search-field">
+        {view !== 'discover' && <label className="search-field">
           <Search />
           <input placeholder={t('Search roles, employers, industries…')} value={queryText} onChange={(event) => setQueryText(event.target.value)} />
-        </label>
-        <div className="segmented" role="tablist" aria-label={t('View')}>
-          <button role="tab" aria-selected={view === 'cards'} className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Roles')}</button>
-          <button role="tab" aria-selected={view === 'network'} className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Graph')}</button>
-          <button role="tab" aria-selected={view === 'landscape'} className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button>
+        </label>}
+        <div className="segmented opportunity-views" role="tablist" aria-label={t('View')} onKeyDown={(event) => {
+          const views = ['discover', 'cards', 'network', 'landscape'] as const
+          const index = views.indexOf(view)
+          const next = event.key === 'ArrowRight' ? (index + 1) % 4 : event.key === 'ArrowLeft' ? (index + 3) % 4 : event.key === 'Home' ? 0 : event.key === 'End' ? 3 : null
+          if (next === null) return
+          event.preventDefault()
+          const target = views[next]
+          if (target) setView(target)
+          event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus()
+        }}>
+          <button role="tab" tabIndex={view === 'discover' ? 0 : -1} aria-selected={view === 'discover'} className={view === 'discover' ? 'active' : ''} onClick={() => setView('discover')}><Search /> {t('Discover')}</button>
+          <button role="tab" tabIndex={view === 'cards' ? 0 : -1} aria-selected={view === 'cards'} className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}><LayoutGrid /> {t('Roles')}</button>
+          <button role="tab" tabIndex={view === 'network' ? 0 : -1} aria-selected={view === 'network'} className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Graph')}</button>
+          <button role="tab" tabIndex={view === 'landscape' ? 0 : -1} aria-selected={view === 'landscape'} className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button>
         </div>
         <button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Portfolios')}</button>
         <button type="button" className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>
       </header>
-      {view === 'landscape' ? (
+      {view === 'discover' ? <JobDiscovery onImported={(id) => { setSelectedId(id); setView('cards') }} /> : view === 'landscape' ? (
         <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles, not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel>
       ) : view === 'network' ? (
         <Panel className="workbench-panel" title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel>
