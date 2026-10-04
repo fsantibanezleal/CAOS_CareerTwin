@@ -1,5 +1,5 @@
 import { ArchitectureModal as SharedArchitectureModal, useLangStore, type ArchitectureConfig } from '@fasl-work/caos-app-shell'
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { translate, useI18n } from '../i18n'
 
 const diagrams = {
@@ -83,7 +83,7 @@ function diagramSvg(graph: typeof diagrams[keyof typeof diagrams]): string {
     for (const word of words) { const last = lines.length - 1; if (last < 0 || (lines[last]?.length ?? 0) + word.length > 23) lines.push(word); else lines[last] += ` ${word}` }
     return `<text class="l-${lang}" x="${x + 100}" y="${y + 22}" text-anchor="middle" fill="var(--text)" font-size="14" font-family="sans-serif">${lines.map((line, index) => `<tspan x="${x + 100}" dy="${index ? 19 : 0}">${escapeXml(line)}</tspan>`).join('')}</text>`
   }).join('')}</g>`).join('')
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 430" role="img"><title>${escapeXml(graph.label)}</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>${edges}${nodes}<a href="https://github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr" target="_blank" rel="noopener noreferrer"><text class="l-en" x="30" y="416" fill="var(--text)" font-size="16" text-decoration="underline">Read all architecture decisions</text><text class="l-es" x="30" y="416" fill="var(--text)" font-size="16" text-decoration="underline">Leer todas las decisiones de arquitectura</text></a></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 430" role="img" style="width:100%;height:auto;display:block"><title>${escapeXml(graph.label)}</title><style>[data-arch-lang="en"] .l-es{display:none}[data-arch-lang="es"] .l-en{display:none}</style><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>${edges}${nodes}<a href="https://github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr" target="_blank" rel="noopener noreferrer"><text class="l-en" x="30" y="416" fill="var(--text)" font-size="16" text-decoration="underline">Read all architecture decisions</text><text class="l-es" x="30" y="416" fill="var(--text)" font-size="16" text-decoration="underline">Leer todas las decisiones de arquitectura</text></a></svg>`
 }
 
 const architectureConfig: ArchitectureConfig = {
@@ -98,6 +98,24 @@ export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: (
   const { locale } = useI18n()
   const setLang = useLangStore((state) => state.setLang)
   useEffect(() => { setLang(locale) }, [locale, setLang])
+  useLayoutEffect(() => {
+    if (!open) return
+    const opener = document.activeElement as HTMLElement | null
+    const trap = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]')
+      if (!dialog) return
+      const controls = [...dialog.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')].filter((node) => node.getClientRects().length)
+      const first = controls[0], last = controls.at(-1)
+      if (!first || !last) return
+      if (!dialog.contains(document.activeElement) || (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+        event.preventDefault()
+        ;(event.shiftKey ? last : first).focus()
+      }
+    }
+    document.addEventListener('keydown', trap)
+    return () => { document.removeEventListener('keydown', trap); opener?.focus() }
+  }, [open])
   if (!open) return null
   return <SharedArchitectureModal config={architectureConfig} onClose={onClose} />
 }
