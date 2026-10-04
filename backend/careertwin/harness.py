@@ -143,6 +143,18 @@ def execute(args: argparse.Namespace) -> Any:
             return client.request("GET", "/api/profile/graph")
         if args.command == "opportunity-graph":
             return client.request("GET", "/api/opportunities/visualization/graph")
+        if args.command == "job-search":
+            return client.request("POST", "/api/job-search", json=_payload(args.json_file))
+        if args.command == "job-import":
+            page = _payload(args.preview_file)
+            jobs = page.get("jobs") if isinstance(page, dict) else None
+            if not isinstance(jobs, list) or not 0 <= args.index < len(jobs):
+                raise HarnessError("Choose a valid zero-based index from the private search preview")
+            selected = jobs[args.index]
+            ticket = selected.get("import_ticket") if isinstance(selected, dict) else None
+            if not isinstance(ticket, str) or not ticket:
+                raise HarnessError("Selected result has no import ticket; search again")
+            return client.request("POST", "/api/job-search/import", json={"ticket": ticket})
         if args.command == "profile-upload":
             file_path = Path(args.file).resolve()
             with file_path.open("rb") as stream:
@@ -203,6 +215,11 @@ def parser() -> argparse.ArgumentParser:
     upload.add_argument("--media-type")
     commands.add_parser("profile-graph", help="Read the rich professional graph projection")
     commands.add_parser("opportunity-graph", help="Read the typed opportunity research graph")
+    search = commands.add_parser("job-search", help="Explicit public-source search; no profile export or application")
+    search.add_argument("--json-file", required=True, help="Private SearchRequest JSON file, or - for stdin")
+    job_import = commands.add_parser("job-import", help="Save exactly one selected, unexpired preview privately")
+    job_import.add_argument("--preview-file", required=True, help="Private JSON result from job-search")
+    job_import.add_argument("--index", required=True, type=int, help="Explicit zero-based result index")
     profile_upload = commands.add_parser("profile-upload", help="Stage a CV or evidence document")
     profile_upload.add_argument("--file", required=True)
     profile_upload.add_argument("--label")

@@ -129,6 +129,7 @@ class SourceRead(ApiModel):
     source_metadata: dict[str, Any]
     error: str | None
     created_at: datetime
+    text_available: bool = False
 
 
 class ClaimProposal(BaseModel):
