@@ -35,6 +35,10 @@ do not contribute result counts, and never receive private profile, documents or
 An application button or repost date does not establish an active requisition. Verify actual
 employer status, leadership authority, contract and compensation before accepting a worthwhile
 move. Saving is only reviewable capture, not a move approval. See [career strategy](career-strategy.md).
+Unknown employer compensation does not prevent saving a relevant lead for user-authorized
+research. Keep it in `watching` with explicit validation actions rather than treating missing pay
+as rejection. Use named target portfolios to keep priority candidates, holds and alternatives
+separate; do not silently exclude relevant shared postings from a requested comparison.
 
 Saved searches contain only explicitly supplied query/filter values, are private to the seeker,
 and run only after pressing Search. No periodic polling, inferred-profile submission or external
@@ -61,7 +65,7 @@ three objects with the same explicit term and providers `getonbrd`, `himalayas` 
 Use `country: "CL"` for the first two and optional `geo: "latam"` for Jobicy.
 Continuation submits the exact returned `next_search` in a new battery. Sessions stay in memory.
 Never put private searches,
-results, preview tickets or credentials in a commit. The `ingest-job-opportunity` skill v2.2.0
+results, preview tickets or credentials in a commit. The `ingest-job-opportunity` skill v2.2.1
 documents the same approval boundary. The harness refuses to import arbitrary client URLs/bodies.
 
 ## Failure handling
