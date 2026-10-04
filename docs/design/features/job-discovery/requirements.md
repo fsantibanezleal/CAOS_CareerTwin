@@ -1,6 +1,6 @@
 # Job discovery requirements
 
-Status: planned
+Executable product specification
 
 Functional scope authorized by the user's request to add a job-offer search tool and deploy fixes.
 The technical design is in [design.md](design.md); research precedes implementation.
@@ -39,7 +39,7 @@ Gate: tests/test_harness.py
 
 R-009 THE release SHALL pass native verification, final-image security scanning, live provider
 search/import and viewport checks before it is reported deployed.
-Gate: docs/design/features/job-discovery/tasks.md
+Gate: docs/runbooks/release-verification.md
 
 R-010 WHEN a seeker explicitly saves a named query, THE API SHALL persist at most 12 validated
 first-page presets privately, preserve other preferences, and never execute them automatically.
