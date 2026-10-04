@@ -31,6 +31,7 @@ def test_harness_exposes_native_core_workflows() -> None:
         "profile-graph": ["profile-graph"],
         "opportunity-graph": ["opportunity-graph"],
         "job-search": ["job-search", "--json-file", "private-query.json"],
+        "job-battery": ["job-battery", "--json-file", "private-battery.json"],
         "job-import": ["job-import", "--preview-file", "private-preview.json", "--index", "0"],
         "profile-upload": ["profile-upload", "--file", "resume.pdf"],
         "claim-decision": ["claim-decision", "claim-id", "confirmed"],
