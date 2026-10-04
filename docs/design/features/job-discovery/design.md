@@ -52,6 +52,10 @@ control characters or fragments. Unknown geography stays unknown, never silently
 
 ## UX and deployment
 
+The architecture overlay uses the shared shell modal with six bilingual, theme-aware SVG views
+and explanatory bodies. System/data views describe public discovery separately from private storage;
+the decision register links every public ADR without bundling personal material into the client.
+
 Discovery is a fourth view under the existing Opportunities workbench, not a sixth top-level route
 or another persistent toolbar. Provider-specific filters precede a list/detail instrument; content
 scrolls internally and mobile switches between list and detail. Dates, salary units and the original
