@@ -25,10 +25,20 @@ the actual HTTPS UI through clicks. Check EN/ES, light/dark, desktop and phone l
 navigation, internal scrolling and all changed panels. Record actual failures rather than
 substituting successful route fetches for rendered verification.
 
-For job discovery, search both documented public feeds, inspect source attribution and restrictions,
+For job discovery, search all three documented public sources in a combined battery, inspect independent
+coverage, partial failures, source attribution and restrictions,
 save only into the disposable workspace, repeat import and assert duplicate prevention, verify
 workspace-bound ticket denial and private named queries. No search implicitly applies for a job.
 Verify authenticated plain-text source access, `no-store`/`nosniff` and foreign-workspace denial.
+
+`scripts/discovery-gate.mjs` exercises real combined search, private battery save/delete, labelled
+career strategy and employer-versus-benchmark comparisons, EN/ES and desktop/phone in both themes.
+Supply `CAREERTWIN_GATE_BASE`, `CAREERTWIN_GATE_EMAIL`, `CAREERTWIN_GATE_PASSWORD` and
+`CAREERTWIN_GATE_DISPOSABLE=1` only for an isolated test account. Optional
+`CAREERTWIN_GATE_PLAYWRIGHT` selects an installed Playwright resolution anchor and
+`CAREERTWIN_GATE_BROWSER_CHANNEL` selects an installed browser channel. Screenshots go to ignored
+`.run/discovery-gate/`. Purge only the disposable account afterward; never point this mutating gate
+at the owner's career workspace. Passing this gate does not replace the remaining release checks.
 
 Exercise malware-scanned upload through the durable worker, matching with evidence/unknown
 semantics, recommendations, artifact generation and application/calendar operations. Remove only
