@@ -51,6 +51,10 @@
   scrollbar-gutter: stable;
 }
 .profile-scroll > .panel { margin: 0; }
+/* Long strategy forms must leave the fixed phone navigation clear at their final explanation. */
+@media (max-width: 900px) {
+  .profile-scroll:has(.career-strategy) { padding-bottom: calc(96px + env(safe-area-inset-bottom)); scroll-padding-bottom: 96px; }
+}
 
 .profile-section-head {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
