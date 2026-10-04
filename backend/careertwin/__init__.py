@@ -1,3 +1,3 @@
 """CareerTwin application package."""
 
-__version__ = "0.15.000"
+__version__ = "0.15.001"

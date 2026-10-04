@@ -50,6 +50,10 @@ export const spanishMessages: Record<string, string> = {
   'Change it before adding private documents.': 'Cámbiala antes de agregar documentos privados.',
   'Opening CareerTwin': 'Abriendo CareerTwin',
   'Opening this workspace view': 'Abriendo esta vista del espacio de trabajo',
+  'This workspace view could not load': 'No se pudo cargar esta vista',
+  'A new release or a network problem may have interrupted this view. Reload to reconnect.': 'Una nueva versión o un problema de red pudo interrumpir esta vista. Recarga para volver a conectar.',
+  'Saved records are preserved. Unsaved edits may be lost when you reload.': 'Los registros guardados se conservan. Las ediciones sin guardar pueden perderse al recargar.',
+  'Reload workspace': 'Recargar el espacio de trabajo',
   'Skip to main content': 'Ir al contenido principal',
 
   'Your professional evidence, connected': 'Tu evidencia profesional, conectada',
