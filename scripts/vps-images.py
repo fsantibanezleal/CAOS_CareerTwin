@@ -47,23 +47,22 @@ def inventory() -> dict:
     )
     images = {}
     if tags:
-        for ref, item in zip(
-            tags, json.loads(command("docker", "image", "inspect", *tags)), strict=True
-        ):
-            images[ref] = item["Id"]
+        image_ids = command("docker", "image", "inspect", "--format", "{{json .Id}}", *tags)
+        for ref, item in zip(tags, image_ids.splitlines(), strict=True):
+            images[ref] = json.loads(item)
     ids = command("docker", "ps", "-aq", "--no-trunc").split()
     containers = []
     if ids:
-        for item in json.loads(command("docker", "container", "inspect", *ids)):
-            containers.append(
-                {
-                    "name": item["Name"].lstrip("/"),
-                    "id": item["Id"],
-                    "image": item["Image"],
-                    "ref": item["Config"]["Image"],
-                    "running": item["State"]["Running"],
-                }
-            )
+        fields = (
+            '{"name":{{json .Name}},"id":{{json .Id}},"image":{{json .Image}},'
+            '"ref":{{json .Config.Image}},"running":{{json .State.Running}}}'
+        )
+        for line in command(
+            "docker", "container", "inspect", "--format", fields, *ids
+        ).splitlines():
+            item = json.loads(line)
+            item["name"] = item["name"].lstrip("/")
+            containers.append(item)
     return {"images": images, "containers": sorted(containers, key=lambda c: c["name"])}
 
 
@@ -142,7 +141,7 @@ def disk(repo: Path) -> dict:
         "total_bytes": space.total,
         "used_bytes": space.used,
         "free_bytes": space.free,
-        "used_percent": round(space.used / space.total * 100, 2),
+        "used_percent": round(space.used / (space.used + space.free) * 100, 2),
     }
 
 
