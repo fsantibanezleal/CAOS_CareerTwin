@@ -41,3 +41,15 @@ Use the `.sh` wrapper on POSIX. The harness keeps the login cookie and CSRF toke
 - Landscape: `GET /api/opportunities/visualization/landscape`.
 
 File and browser captures are database-backed asynchronous work. Poll through `pending` and `processing`. The source hash and immutable opportunity version make later matching reproducible; every extracted requirement remains editable.
+
+## Research inclusion and move approval
+
+User-authorized relevant leads can be saved as `watching` with unknown compensation. Keep a dated,
+attributed assessment and next validation actions; do not convert estimates into employer budgets.
+Use named target portfolios to separate priority/conditional screening, holds, and alternatives.
+Atomic requirements come from the employer posting, never from analyst opinions about the seeker.
+Run deterministic matching against the full confirmed profile only after reviewing those conditions.
+Record coverage and hard eligibility separately from the independent career assessment.
+
+Saving does not create an application or approve a career move. Active requisition, actual mandate,
+contract and comparable compensation still require validation before recommending a move.
