@@ -16,13 +16,15 @@ def test_canonical_release_versions_match() -> None:
     project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
     frontend = json.loads((root / "frontend/package.json").read_text(encoding="utf-8"))
     extension = json.loads((root / "extension/manifest.json").read_text(encoding="utf-8"))
+    packaged = ".".join(str(int(part)) for part in canonical.split("."))
+    assert __version__ == canonical
+    assert extension["version_name"] == canonical
 
     assert {
         project["project"]["version"],
-        __version__,
         frontend["version"],
         extension["version"],
-    } == {canonical}
+    } == {packaged}
     assert f"## [{canonical}]" in (root / "CHANGELOG.md").read_text(encoding="utf-8")
     assert f"`{canonical}`" in (root / "README.md").read_text(encoding="utf-8")
 

@@ -28,6 +28,12 @@ PACKAGE = REPO_ROOT / "frontend" / "package.json"
 GENUINE_VERSION_COINCIDENCES: frozenset[tuple[str, str, str]] = frozenset(
     {
         (
+            # npm view @humanfs/types@0.15.0 dist.integrity, 2026-10-03.
+            "node_modules/@humanfs/types",
+            "0.15.0",
+            "sha512-ZZ1w0aoQkwuUuC7Yf+7sdeaNfqQiiLcSRbfI08oAxqLtpXQr9AIVX7Ay7HLDuiLYAaFPu8oBYNq/QIi9URHJ3Q==",
+        ),
+        (
             # npm view graphology-layout-forceatlas2@0.10.1 dist.integrity, 2026-09-17;
             # a dependency since "feat: make career insights decision-grade".
             "node_modules/graphology-layout-forceatlas2",
@@ -39,7 +45,8 @@ GENUINE_VERSION_COINCIDENCES: frozenset[tuple[str, str, str]] = frozenset(
 
 
 def _version() -> str:
-    return (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    raw = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    return ".".join(str(int(part)) for part in raw.split("."))
 
 
 def _lock() -> dict:

@@ -34,3 +34,5 @@ Records are active from the release in which they were accepted unless supersede
 | [0028](0028-postgresql-collation-runtime.md) | Match the PostgreSQL runtime libc to persisted collation provenance |
 | [0029](0029-decision-grade-experience-contract.md) | Guided work, explainable dynamic views, and accessible analytical fallbacks |
 | [0030](0030-viewport-owned-workbench-scrolling.md) | Fixed document viewport with one workbench content scroll owner |
+| [0031](0031-attributed-explicit-job-discovery.md) | Explicit attributed public discovery with private reviewed imports |
+| [0032](0032-display-and-package-release-versions.md) | Exact padded display releases with standards-compatible package versions |
