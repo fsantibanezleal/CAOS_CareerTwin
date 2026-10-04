@@ -13,6 +13,17 @@
 
 :root {
   color-scheme: light;
+  /* Shared architecture component consumes aliases of this product-owned palette. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--line);
+  --color-fg: var(--text);
+  --color-fg-subtle: var(--muted);
+  --color-fg-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-contrast);
+  --color-warn: var(--red);
 
   /* Type. Display is a serif for authority; the UI stays on a grotesque for
      density. Base 16px, Major Third 1.25, line heights on the 4pt baseline. */
