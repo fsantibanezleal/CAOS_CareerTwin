@@ -4,6 +4,22 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.16.000] - 2026-10-04
+
+### Added
+
+- Default combined Get on Board, Himalayas and Jobicy search, bounded multi-query batteries,
+  independent coverage/failures, exact-listing deduplication and single-query continuation.
+- Private saved batteries and career strategy with optimistic revisions, evidence-aware positioning,
+  attributed salary research forms and transparent compatible fixed-pay comparisons.
+- Explicit assisted research links, native job-battery harness, ingestion skill v2.2.0 and ADR 0033.
+
+### Fixed
+
+- Provider pacing no longer holds the global public-cache lock while sleeping.
+- Unknown salary basis/period, source outages and research benchmarks remain distinct from offers.
+- Update indirect development dependency brace-expansion to 1.1.21 for published denial-of-service fixes.
+
 ## [0.15.001] - 2026-10-03
 
 ### Fixed
