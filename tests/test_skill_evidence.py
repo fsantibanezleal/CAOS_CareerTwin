@@ -8,10 +8,12 @@ shows which claims back a skill, so the identifiers are part of the contract as 
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from careertwin.database import SessionLocal
-from careertwin.models import ClaimState, EvidenceClaim
+from careertwin.models import ClaimState, EvidenceClaim, ProfessionalProfile, Skill
+from careertwin.services.graph import build_profile_graph
 from tests.conftest import create_account, csrf, login
 
 
@@ -52,6 +54,10 @@ def test_skill_reports_only_its_confirmed_evidence(client: TestClient) -> None:
     skill = client.get("/api/profile/skills").json()[0]
     assert skill["evidence_count"] == 1
     assert skill["evidence_ids"] == [confirmed]
+    projection = client.get("/api/profile/graph").json()
+    skill_node = next(n for n in projection["graph"]["nodes"] if n["type"] == "skill")
+    assert skill_node["evidence_count"] == 1
+    assert projection["matrix"][0]["evidence"][0]["id"] == confirmed
 
 
 def test_unevidenced_skill_reports_nothing(client: TestClient) -> None:
@@ -68,8 +74,15 @@ def test_unevidenced_skill_reports_nothing(client: TestClient) -> None:
     assert skill["evidence_count"] == 0
     assert skill["evidence_ids"] == []
 
+    projection = client.get("/api/profile/graph").json()
+    assert projection["matrix"][0]["evidence"] == []
+    assert next(n for n in projection["graph"]["nodes"] if n["type"] == "skill")["evidence_count"] == 0
 
-def test_a_linked_claim_that_leaves_confirmed_stops_counting(client: TestClient) -> None:
+
+@pytest.mark.parametrize("withdrawn_state", [ClaimState.SUPERSEDED, ClaimState.REJECTED, ClaimState.PROPOSED])
+def test_a_linked_claim_that_leaves_confirmed_stops_counting(
+    client: TestClient, withdrawn_state: ClaimState
+) -> None:
     """The case the old count got wrong: evidence that was linked, then stopped being confirmed.
 
     No API path produces this today: a decided claim cannot be re-decided, and the
@@ -90,9 +103,33 @@ def test_a_linked_claim_that_leaves_confirmed_stops_counting(client: TestClient)
     with SessionLocal() as db:
         record = db.get(EvidenceClaim, claim)
         assert record is not None
-        record.state = ClaimState.SUPERSEDED
+        record.state = withdrawn_state
         db.commit()
 
     skill = client.get("/api/profile/skills").json()[0]
     assert skill["evidence_count"] == 0
     assert skill["evidence_ids"] == []
+    projection = client.get("/api/profile/graph").json()
+    assert projection["matrix"][0]["evidence"] == []
+    assert next(n for n in projection["graph"]["nodes"] if n["type"] == "skill")["evidence_count"] == 0
+    assert all(n["id"] != f"claim:{claim}" for n in projection["graph"]["nodes"])
+    assert all(e["target"] != f"claim:{claim}" for e in projection["graph"]["edges"])
+
+
+def test_graph_service_does_not_project_foreign_or_unconfirmed_support() -> None:
+    """Even direct callers cannot turn a foreign or proposed claim into a support edge."""
+    profile = ProfessionalProfile(id="profile", workspace_id="ours", headline="Synthetic profile")
+    claims = [
+        EvidenceClaim(id="confirmed", workspace_id="ours", state=ClaimState.CONFIRMED,
+                      statement="Confirmed synthetic evidence", confidence=0.9),
+        EvidenceClaim(id="proposed", workspace_id="ours", state=ClaimState.PROPOSED,
+                      statement="Unconfirmed synthetic evidence", confidence=0.9),
+        EvidenceClaim(id="foreign", workspace_id="theirs", state=ClaimState.CONFIRMED,
+                      statement="Foreign synthetic evidence", confidence=0.9),
+    ]
+    skill = Skill(id="skill", workspace_id="ours", name="Python", level=0.8, confidence=0.9,
+                  evidence=claims)
+    graph = build_profile_graph(profile, [skill], [], [], claims)
+    assert next(n for n in graph["nodes"] if n["type"] == "skill")["evidence_count"] == 1
+    evidence_nodes = {n["id"] for n in graph["nodes"] if n["type"] == "evidence"}
+    assert evidence_nodes == {"claim:confirmed"}

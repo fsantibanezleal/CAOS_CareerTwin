@@ -552,6 +552,8 @@ def profile_graph(user: CurrentUser, db: Db) -> dict[str, object]:
             "evidence": [
                 {"id": claim.id, "statement": claim.statement, "source_id": claim.source_id}
                 for claim in skill.evidence
+                if claim.state == ClaimState.CONFIRMED
+                and claim.workspace_id == user.workspace.id
             ],
         }
         for skill in skills
