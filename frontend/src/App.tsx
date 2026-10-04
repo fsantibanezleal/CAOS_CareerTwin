@@ -5,6 +5,7 @@ import { api } from './api'
 import { Login } from './components/Login'
 import { Loading } from './components/Primitives'
 import { Shell } from './components/Shell'
+import { WorkspaceViewBoundary } from './components/WorkspaceViewBoundary'
 import { I18nProvider, useI18n } from './i18n'
 import type { User } from './types'
 
@@ -30,7 +31,7 @@ export default function App() {
     <I18nProvider key={`account-${user.id}`} initial={user.locale}>
       <AccessibleSurface>
         <Shell user={user} onLogout={() => client.setQueryData(['session'], undefined)}>
-          <Suspense fallback={<Loading label="Opening this workspace view" />}><Routes>
+          <WorkspaceViewBoundary><Suspense fallback={<Loading label="Opening this workspace view" />}><Routes>
             <Route path="/" element={<TodayPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/opportunities" element={<OpportunitiesPage />} />
@@ -38,7 +39,7 @@ export default function App() {
             <Route path="/pipeline" element={<PipelinePage />} />
             <Route path="/admin" element={user.is_superuser ? <AdminPage currentUserId={user.id} /> : <Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes></Suspense>
+          </Routes></Suspense></WorkspaceViewBoundary>
         </Shell>
       </AccessibleSurface>
     </I18nProvider>

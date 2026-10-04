@@ -72,4 +72,4 @@ sets must be restored and checked off-host before private reconciliation. Disk p
 release finishing retain the current image pair and two reviewed compatible rollback pairs. Unknown
 resources, user volumes and backups are not generic-pruned. A passing build or HTTP 200 alone is not
 release convergence. See the [ADR register](../adr/README.md) and
-[feature convergence](features/job-discovery/tasks.md) for current evidence and remaining gates.
+[release verification procedure](../runbooks/release-verification.md) for operational acceptance gates.

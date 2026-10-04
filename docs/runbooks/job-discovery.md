@@ -51,4 +51,4 @@ authentication, robots, CAPTCHA or scrape unsupported search endpoints.
 
 See the [source research](../research/job-discovery-2026-10-03.md),
 [requirements](../design/features/job-discovery/requirements.md) and
-[release convergence](../design/features/job-discovery/tasks.md).
+[release verification procedure](release-verification.md).
