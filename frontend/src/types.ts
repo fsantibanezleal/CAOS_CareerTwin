@@ -52,6 +52,7 @@ export type Claim = {
 }
 
 export type Source = {
+  text_available?: boolean
   id: string
   kind: string
   label: string

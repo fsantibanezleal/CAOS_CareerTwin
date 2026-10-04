@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import PlainTextResponse
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
@@ -320,7 +321,36 @@ def list_sources(user: CurrentUser, db: Db) -> list[SourceRead]:
         .where(Source.workspace_id == user.workspace.id)
         .order_by(Source.created_at.desc())
     ).all()
-    return [SourceRead.model_validate(item) for item in items]
+    return [
+        SourceRead.model_validate(item).model_copy(
+            update={
+                "text_available": bool(item.extracted_text) and item.status == SourceStatus.READY
+            }
+        )
+        for item in items
+    ]
+
+
+@router.get("/sources/{source_id}/text", response_class=PlainTextResponse)
+def source_text(source_id: str, user: CurrentUser, db: Db) -> PlainTextResponse:
+    """Expose only tenant-owned ready extracted text, never a blob key or executable markup."""
+    source = db.scalar(
+        select(Source).where(Source.id == source_id, Source.workspace_id == user.workspace.id)
+    )
+    if source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    if source.status != SourceStatus.READY or not source.extracted_text:
+        raise HTTPException(
+            status_code=409,
+            detail="Source text is not available; attach or extract the original document",
+        )
+    return PlainTextResponse(
+        source.extracted_text,
+        headers={
+            "Content-Disposition": 'inline; filename="source.txt"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/interchange")
@@ -507,9 +537,7 @@ def profile_graph(user: CurrentUser, db: Db) -> dict[str, object]:
             )
         ).all()
     )
-    sources = list(
-        db.scalars(select(Source).where(Source.workspace_id == user.workspace.id)).all()
-    )
+    sources = list(db.scalars(select(Source).where(Source.workspace_id == user.workspace.id)).all())
     accomplishments = list(
         db.scalars(
             select(Accomplishment).where(Accomplishment.workspace_id == user.workspace.id)
