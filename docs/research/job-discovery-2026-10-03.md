@@ -56,6 +56,21 @@ rank-by-compensation claim is added. A source's publication/expiry time is not a
 application deadline. Missing restrictions/dates/salary remain unknown; "remote" does not prove
 worldwide eligibility. Search provider relevance is not CareerTwin alignment or hiring probability.
 
+## Additional local-market source (2026-10-04)
+
+[Get on Board's official API guide](https://www.getonbrd.cl/user-manual/api-de-get-on-board)
+distinguishes unauthenticated public free-text job search from its employer-only private API.
+The public contract supports fixed-host query, country code, page/per-page and expanded relations.
+Observed responses supply local/hybrid/remote modality, employer/city relations and numbered-page
+metadata. USD salary fields do not themselves declare gross/net basis or a pay period; both remain
+unknown. Moderation-rejected records must be excluded. No private employer API or credential is used.
+
+Federation combines these three documented sources, not the entire market. LinkedIn, ChileTrabajos,
+selected employer ATS and local recruiters remain explicitly separate assisted research links;
+no protected endpoints, automated application or credential-forwarding scraper is introduced.
+The separate career-strategy calculator supports explicit compatible monthly/annual scenarios;
+it does not reinterpret unknown source salary units or promote benchmarks into employer budgets.
+
 ## Verification oracle
 
 Adapter fixtures exercise real observed shapes, but are unit-test data only. Release acceptance

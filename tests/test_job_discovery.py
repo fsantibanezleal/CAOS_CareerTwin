@@ -273,7 +273,7 @@ def test_cache_and_cooldown(monkeypatch):
     with pytest.raises(DiscoveryError) as failure:
         service.cache.search(SearchRequest(query="different"))
     assert failure.value.status == 429
-    for index in range(40):
+    for index in range(service.MAX_PAGES + 5):
         clock[0] += 2
         service.cache.search(SearchRequest(query=str(index)))
     assert len(service.cache.pages) == service.MAX_PAGES
