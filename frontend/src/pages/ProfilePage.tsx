@@ -3,6 +3,7 @@ import { BookOpenCheck, Check, CircleUserRound, Code2, Download, FileStack, File
 import { useRef, useState } from 'react'
 import { api, json } from '../api'
 import { CareerTimeline } from '../components/CareerTimeline'
+import { CareerStrategy } from '../components/CareerStrategy'
 import { Dialog } from '../components/Dialog'
 import { SkillMap } from '../components/SkillMap'
 import { StarStories } from '../components/StarStories'
@@ -10,7 +11,7 @@ import { EmptyState, ErrorState, ExternalLink, Loading, Panel } from '../compone
 import { useI18n } from '../i18n'
 import type { Accomplishment, Artifact, Claim, Education, Experience, Opportunity, Profile, ResumeVariant, Skill, Source } from '../types'
 
-type ProfileTab = 'overview' | 'evidence' | 'graph' | 'river' | 'github' | 'artifacts'
+type ProfileTab = 'overview' | 'evidence' | 'strategy' | 'river' | 'github' | 'artifacts'
 
 function ProfileEditor({ profile }: { profile: Profile }) {
   const { t } = useI18n()
@@ -298,6 +299,7 @@ export function ProfilePage() {
     ['river', t('Career'), <Sparkles />],
     ['artifacts', t('Artifacts'), <FileStack />],
     ['github', t('GitHub'), <GitBranch />],
+    ['strategy', t('Career strategy'), <ShieldCheck />],
   ]
   const artifactTabs: Array<[ArtifactTab, string]> = [
     ['stories', t('Stories')],
@@ -362,6 +364,7 @@ export function ProfilePage() {
       )}
 
       {tab === 'github' && <div className="profile-scroll"><GithubImporter /></div>}
+      {tab === 'strategy' && <div className="profile-scroll"><CareerStrategy /></div>}
 
       {dialog === 'profile' && (
         <Dialog label={t('Edit profile')} onClose={() => setDialog(null)} wide>

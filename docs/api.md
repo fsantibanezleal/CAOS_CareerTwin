@@ -8,6 +8,7 @@ The authoritative machine-readable contract is `/api/openapi.json`; interactive 
 | Administration | `/api/admin` | account metadata and lifecycle only |
 | Profile/evidence | `/api/profile` | canonical profile, skills, chronology, sources, decisions, graph, CareerTwin/JSON Resume exchange |
 | Opportunities | `/api/opportunities` | capture, edit, immutable revisions, requirements, target portfolios, landscape and typed knowledge graph |
+| Discovery/strategy | `/api/job-search` | public-source search, combined batteries, private named searches, attributed explicit import and compatible fixed-pay scenarios |
 | Matching/readiness | `/api/matches` | immutable runs, named/global alignment, shared-gap matrix, editable recommendations |
 | Artifacts | `/api/artifacts` | evidence-grounded drafts, STAR accomplishments, immutable résumé variants |
 | Pipeline | `/api/pipeline` | application stages/history (per application, and every stage event in the workspace at `/events`), contacts, tasks, calendar import/export, analytics |
@@ -22,6 +23,15 @@ retains cookies and CSRF only in process memory, rejects absolute/non-API paths,
 commands for both graphs, ingestion, matching, recommendations, GitHub, and durable chat.
 
 ## Browser contract
+
+Discovery uses `POST /api/job-search/battery` with a strict `searches` array and `title_only`.
+Each coverage entry carries its validated search, status, counts and optional `next_search`.
+`GET/POST /api/job-search/batteries` and `DELETE /api/job-search/batteries/{id}` manage at most
+12 private first-page batteries. `GET /api/job-search/research-links` prepares external links only.
+`GET/PUT /api/job-search/strategy` reads/saves a validated strategy with profile `revision`
+(409 means reload and reconcile concurrent edits). `POST /api/job-search/strategy/compare` is a
+pure calculation over explicitly supplied strategy and offer; it never approves a move or writes
+canonical evidence. All operations require a session; mutations also require CSRF.
 
 Login sets an HttpOnly opaque session cookie and a readable CSRF cookie. Every mutating request must include the CSRF value in `X-CSRF-Token`; requests include credentials. Production cookies are secure and same-site lax. CORS uses an explicit allowlist.
 

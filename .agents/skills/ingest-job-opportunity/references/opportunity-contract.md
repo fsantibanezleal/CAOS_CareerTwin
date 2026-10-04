@@ -19,6 +19,12 @@ Use the `.sh` wrapper on POSIX. The harness keeps the login cookie and CSRF toke
 ## API
 
 - Discovery: `POST /api/job-search`; provider restrictions and continuation are strict.
+- Combined discovery: `POST /api/job-search/battery`; native `job-battery --json-file <ignored-json>`.
+  At most six distinct terms across Get on Board, Himalayas and Jobicy; inspect independent
+  coverage and continue only the returned validated `next_search`. No automatic import.
+- Private batteries: `GET/POST /api/job-search/batteries`, `DELETE /api/job-search/batteries/{id}`.
+- Private strategy: `GET/PUT /api/job-search/strategy`; save with the current profile revision.
+- Pure salary scenario: `POST /api/job-search/strategy/compare`; never a hiring or move approval.
 - Source taxonomy: `GET /api/job-search/catalog`.
 - Selected preview: `POST /api/job-search/import` with a workspace-bound `ticket`.
 - Private queries: `GET/POST /api/job-search/presets`, `DELETE /api/job-search/presets/{id}`.
