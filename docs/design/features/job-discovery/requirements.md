@@ -35,8 +35,12 @@ Gate: frontend/src/components/JobDiscovery.test.tsx
 
 R-008 THE repository SHALL expose equivalent search/import commands through the native harness,
 document source limits and operational failure handling, and describe the flow in-app.
-Gate: tests/test_native_harness.py
+Gate: tests/test_harness.py
 
 R-009 THE release SHALL pass native verification, final-image security scanning, live provider
 search/import and viewport checks before it is reported deployed.
 Gate: docs/design/features/job-discovery/tasks.md
+
+R-010 WHEN a seeker explicitly saves a named query, THE API SHALL persist at most 12 validated
+first-page presets privately, preserve other preferences, and never execute them automatically.
+Gate: tests/test_job_discovery.py::test_presets_are_private_and_do_not_search

@@ -53,6 +53,8 @@ DECLARATIONS = {
 def test_declaration_matches_version_file(source: str) -> None:
     """Each declared version equals the contents of VERSION."""
     expected = _expected()
+    if source != "backend/careertwin/__init__.py":
+        expected = ".".join(str(int(part)) for part in expected.split("."))
     actual = DECLARATIONS[source]()
     assert actual == expected, (
         f"{source} declares {actual!r} but VERSION is {expected!r}. "
@@ -62,10 +64,10 @@ def test_declaration_matches_version_file(source: str) -> None:
 
 
 def test_version_file_is_semver() -> None:
-    """VERSION is a plain semantic version with no prefix or suffix."""
+    """The CAOS display release has padded minor/patch components, no suffix."""
     expected = _expected()
-    assert re.fullmatch(r"\d+\.\d+\.\d+", expected), (
-        f"VERSION must be bare semver, got {expected!r}"
+    assert re.fullmatch(r"\d+\.\d{2,}\.\d{3,}", expected), (
+        f"VERSION must use the CAOS display format, got {expected!r}"
     )
 
 
