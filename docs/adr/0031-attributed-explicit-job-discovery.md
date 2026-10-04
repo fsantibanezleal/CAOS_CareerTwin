@@ -28,5 +28,5 @@ previews are explicit actionable errors. Source ranking is not deterministic evi
 Remote-feed coverage is limited; local-market research still needs lawful employer/board capture.
 
 Acceptance includes tenant/CSRF/ticket/normalization/fetch/cache tests, UI actions, translations,
-native harness, real provider probes, final-image scan and live viewport checks. The design and
-actual release state are recorded in [job-discovery](../design/features/job-discovery/tasks.md).
+native harness, real provider probes, final-image scan and live viewport checks. Release
+verification follows [the operational procedure](../runbooks/release-verification.md).
