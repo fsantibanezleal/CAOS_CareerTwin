@@ -145,6 +145,8 @@ def execute(args: argparse.Namespace) -> Any:
             return client.request("GET", "/api/opportunities/visualization/graph")
         if args.command == "job-search":
             return client.request("POST", "/api/job-search", json=_payload(args.json_file))
+        if args.command == "job-battery":
+            return client.request("POST", "/api/job-search/battery", json=_payload(args.json_file))
         if args.command == "job-import":
             page = _payload(args.preview_file)
             jobs = page.get("jobs") if isinstance(page, dict) else None
@@ -217,8 +219,10 @@ def parser() -> argparse.ArgumentParser:
     commands.add_parser("opportunity-graph", help="Read the typed opportunity research graph")
     search = commands.add_parser("job-search", help="Explicit public-source search; no profile export or application")
     search.add_argument("--json-file", required=True, help="Private SearchRequest JSON file, or - for stdin")
+    battery = commands.add_parser("job-battery", help="Run explicit public terms across sources; inspect partial coverage")
+    battery.add_argument("--json-file", required=True, help="Private BatteryRequest JSON file, or - for stdin")
     job_import = commands.add_parser("job-import", help="Save exactly one selected, unexpired preview privately")
-    job_import.add_argument("--preview-file", required=True, help="Private JSON result from job-search")
+    job_import.add_argument("--preview-file", required=True, help="Private JSON result from job-search or job-battery")
     job_import.add_argument("--index", required=True, type=int, help="Explicit zero-based result index")
     profile_upload = commands.add_parser("profile-upload", help="Stage a CV or evidence document")
     profile_upload.add_argument("--file", required=True)

@@ -5,9 +5,10 @@ import { api, json } from '../api'
 import { useI18n } from '../i18n'
 import type { Opportunity } from '../types'
 import { EmptyState, ErrorState, ExternalLink, Loading } from './Primitives'
+import { FederatedSearch } from './FederatedSearch'
 
 export type JobQuery = {
-  provider: 'himalayas' | 'jobicy'; query: string; country?: string; worldwide?: boolean;
+  provider: 'himalayas' | 'jobicy' | 'getonbrd'; query: string; country?: string; worldwide?: boolean;
   seniority?: string; employment_type?: string; sort?: 'recent' | 'relevant'; page?: number;
   geo?: string; cursor?: string;
 }
@@ -18,6 +19,7 @@ export type DiscoveredJob = {
   salary_min: number | null; salary_max: number | null; currency: string; salary_period: string;
   published_at: string | null; expires_at: string | null; retrieved_at: string;
   import_ticket: string; saved_opportunity_id: string | null;
+  salary_basis?: string; remote_mode?: string;
 }
 export type JobSearchPage = {
   provider: JobQuery['provider']; jobs: DiscoveredJob[]; cached: boolean; retrieved_at: string;
@@ -28,6 +30,12 @@ type Catalog = { jobicy_locations: Array<{ value: string; label: string }>; jobi
 
 /** Explicit remote discovery: source ranking is not alignment, and a preview is not an application. */
 export function JobDiscovery({ onImported }: { onImported: (id: string) => void }) {
+  const { t } = useI18n()
+  const [mode, setMode] = useState<'combined' | 'single'>('combined')
+  return <div className="job-discovery discovery-workspace"><nav className="cw-tabs" aria-label={t('Search mode')}><button type="button" aria-pressed={mode === 'combined'} className={mode === 'combined' ? 'active' : ''} onClick={() => setMode('combined')}>{t('Combined search')}</button><button type="button" aria-pressed={mode === 'single'} className={mode === 'single' ? 'active' : ''} onClick={() => setMode('single')}>{t('Single source')}</button></nav>{mode === 'combined' ? <FederatedSearch onImported={onImported} /> : <SingleSourceSearch onImported={onImported} />}</div>
+}
+
+export function SingleSourceSearch({ onImported }: { onImported: (id: string) => void }) {
   const { t, formatDate, locale } = useI18n()
   const client = useQueryClient()
   const [filters, setFilters] = useState<JobQuery>({ provider: 'himalayas', query: '', sort: 'recent' })
@@ -69,7 +77,7 @@ export function JobDiscovery({ onImported }: { onImported: (id: string) => void 
   }
   const previous = () => { const query = history[position - 1]; if (query) { setPosition(position - 1); search.mutate(query) } }
   const selected = search.data?.jobs.find((job) => job.key === selectedKey) ?? search.data?.jobs[0]
-  const providerName = (value: JobQuery['provider']) => value === 'himalayas' ? 'Himalayas' : 'Jobicy'
+  const providerName = (value: JobQuery['provider']) => value === 'himalayas' ? 'Himalayas' : value === 'jobicy' ? 'Jobicy' : 'Get on Board'
   const salary = (job: DiscoveredJob) => {
     if (job.salary_min === null && job.salary_max === null) return t('Salary not disclosed')
     const amount = [job.salary_min, job.salary_max].filter((value): value is number => value !== null).map((value) => new Intl.NumberFormat(locale === 'es' ? 'es-CL' : 'en-US').format(value)).join(' – ')
