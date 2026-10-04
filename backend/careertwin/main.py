@@ -182,7 +182,12 @@ def frontend(path: str) -> Response:
         return JSONResponse({"detail": "Not found"}, status_code=404)
     index = frontend_dist / "index.html"
     if index.exists():
-        return FileResponse(index)
+        # The entry names content-hashed chunks. Reusing old HTML after a deployment
+        # can point a fresh tab at assets no longer present in the running release.
+        return FileResponse(
+            index,
+            headers={"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache", "Expires": "0"},
+        )
     return JSONResponse(
         {"detail": "Frontend is not built. Run the local development script."}, status_code=503
     )
