@@ -6,6 +6,7 @@ from typing import Any
 
 from careertwin.models import (
     Accomplishment,
+    ClaimState,
     Education,
     EvidenceClaim,
     Experience,
@@ -25,7 +26,7 @@ def build_profile_graph(
     sources: list[Source] | None = None,
     accomplishments: list[Accomplishment] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
-    """Project canonical rows into stable visualization nodes and evidence-bearing edges."""
+    """Project canonical rows; only tenant-owned confirmed claims support capabilities."""
     nodes: list[dict[str, Any]] = [
         {
             "id": f"profile:{profile.id}",
@@ -39,6 +40,11 @@ def build_profile_graph(
     linked_claims: set[str] = set()
     skill_by_name = {normalize_label(item.name): item for item in skills}
     for skill in sorted(skills, key=lambda item: (-item.level, item.name.casefold())):
+        confirmed_evidence = [
+            claim
+            for claim in skill.evidence
+            if claim.state == ClaimState.CONFIRMED and claim.workspace_id == profile.workspace_id
+        ]
         node_id = f"skill:{skill.id}"
         nodes.append(
             {
@@ -48,7 +54,7 @@ def build_profile_graph(
                 "strength": skill.level,
                 "confidence": skill.confidence,
                 "taxonomy_uri": skill.taxonomy_uri,
-                "evidence_count": len(skill.evidence),
+                "evidence_count": len(confirmed_evidence),
             }
         )
         edges.append(
@@ -60,7 +66,7 @@ def build_profile_graph(
                 "weight": max(0.1, skill.confidence),
             }
         )
-        for claim in skill.evidence:
+        for claim in confirmed_evidence:
             linked_claims.add(claim.id)
             claim_id = f"claim:{claim.id}"
             if not any(node["id"] == claim_id for node in nodes):
@@ -83,6 +89,8 @@ def build_profile_graph(
                 }
             )
     for claim in claims:
+        if claim.state != ClaimState.CONFIRMED or claim.workspace_id != profile.workspace_id:
+            continue
         claim_id = f"claim:{claim.id}"
         if not any(node["id"] == claim_id for node in nodes):
             nodes.append(
