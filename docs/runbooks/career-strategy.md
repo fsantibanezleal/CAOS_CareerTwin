@@ -5,6 +5,25 @@ location, work modalities, positioning and evidence priorities. Target titles ar
 not additions to your employment history. Saving preserves unrelated profile preferences and uses
 revision control; after a conflict reload and reconcile rather than overwriting another edit.
 
+## Research candidates and validated moves
+
+Save a relevant role for research even when employer compensation is unknown. Use `watching`,
+retain the source and check date, and explain the fit, progression potential and unresolved inputs.
+Missing pay means financial validation is pending; it does not mean the role is irrelevant or the
+seeker is unqualified. A saved role is not an application or a recommendation to resign.
+
+Use **Opportunities > Target portfolios** to separate priority/conditional screening, roles on
+hold and lower-priority alternatives. When the seeker requests a complete comparison, preserve
+the weaker roles with their reasons rather than silently discarding them. Keep analyst assessments
+clearly labelled in the research notes, separate from employer requirements. Review atomic
+requirements before calculating a match, then use the full confirmed profile and disclose evidence
+coverage and hard eligibility. A high alignment score does not establish advancement or salary.
+
+Create private validation tasks for actual pay units and total package, reporting line, direct
+reports, hiring/budget authority, active requisition, contract and location eligibility. Leave
+deadlines blank unless sourced or supplied by the seeker. No employer contact or application is
+sent by saving a role, a target portfolio, a match run or a task.
+
 ## Compensation
 
 Choose an explicit currency, gross/net basis and monthly/annual period. Keep current fixed pay and

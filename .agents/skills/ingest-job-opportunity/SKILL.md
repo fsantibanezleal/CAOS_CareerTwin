@@ -5,7 +5,7 @@ description: Search documented public job sources, then capture and normalize on
 
 # Ingest Job Opportunity
 
-Skill contract version: 2.2.0.
+Skill contract version: 2.2.1.
 
 ## Outcome
 
@@ -29,6 +29,12 @@ Create a reviewable, versioned opportunity snapshot with atomic requirements, pr
 6. Review title, employer, description, source, dates, location, remote mode, industry, area, seniority, compensation, and status.
 7. Split the posting into atomic requirements. Mark each as eligibility, required, or preferred; choose category and bounded weight; preserve its locator. Save a reviewed version rather than silently accepting extraction.
 8. Inspect immutable history when a source changes. Add the role to a named target set only when the seeker wants it in that scenario.
+   Saving relevant research and approving a career move are different decisions. Unknown employer
+   pay must not exclude an otherwise relevant lead from user-authorized research capture. Save it
+   as `watching`, label independent assessment separately from employer facts, retain unresolved
+   salary/authority/eligibility/availability checks and create review actions when requested.
+   If the seeker wants all shared roles retained for comparison, use explicit priority, hold and
+   alternative/lower-priority target portfolios instead of silently discarding weaker candidates.
    For a worthwhile career move, read `docs/runbooks/career-strategy.md` and the seeker's full
    evidence. Verify actual authority, active requisition and compatible employer compensation.
    Unknown pay remains unknown; market benchmarks never become actual offers or approved moves.
