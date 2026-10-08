@@ -2,10 +2,10 @@ import { SigmaContainer, useLoadGraph, useRegisterEvents, useSetSettings, useSig
 import Graph from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { Focus, RotateCcw, Search, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { NodeHoverDrawingFunction, NodeLabelDrawingFunction } from 'sigma/rendering'
 import { useI18n } from '../i18n'
-import type { Landscape, MatchRun, OpportunityGraphData, ProfileGraphData } from '../types'
+import type { Landscape, MatchRun, Opportunity, OpportunityGraphData, ProfileGraphData } from '../types'
 import { EChart, type ChartTokens } from './EChart'
 import { EmptyState } from './Primitives'
 
@@ -223,6 +223,9 @@ function GraphMatrix({ nodes, edges, onSelect }: { nodes: GraphNode[]; edges: Gr
 
 function GraphInspector({ data, selectedId, variant, onSelect, onClose }: { data: ProfileGraphData['graph']; selectedId?: string; variant: 'profile' | 'opportunity'; onSelect: (id: string) => void; onClose: () => void }) {
   const { t } = useI18n()
+  useEffect(() => {
+    if (selectedId && window.matchMedia('(max-width: 1100px)').matches) document.querySelector('.graph-inspector.open')?.scrollIntoView({ block: 'nearest' })
+  }, [selectedId])
   const selected = data.nodes.find((node) => node.id === selectedId)
   const selectedEdges = selected ? data.edges.filter((edge) => edge.source === selected.id || edge.target === selected.id) : []
   const other = (edge: GraphEdge) => data.nodes.find((node) => node.id === (edge.source === selectedId ? edge.target : edge.source))
@@ -267,28 +270,52 @@ export function OpportunityNetwork({ data }: { data: OpportunityGraphData['graph
   return <RelationshipAtlas data={data} variant="opportunity" />
 }
 
-export function OpportunityLandscape({ data }: { data: Landscape }) {
+/** Explore saved-role signals, then inspect the exact roles behind a selected facet. */
+export function OpportunityLandscape({ data, opportunities = [], onOpenRole }: { data: Landscape; opportunities?: Opportunity[]; onOpenRole?: (id: string) => void }) {
   const { plural, t } = useI18n()
   const [lens, setLens] = useState<'skills' | 'seniority' | 'industries'>('skills')
+  const [query, setQuery] = useState('')
+  const [minimum, setMinimum] = useState(1)
+  const [tableOnly, setTableOnly] = useState(false)
+  const [selected, setSelected] = useState<string>()
+  const selectionRef = useRef<HTMLElement>(null)
+  useEffect(() => { if (selected) selectionRef.current?.scrollIntoView({ block: 'nearest' }) }, [selected])
   const ranked = (values: Record<string, number>) => Object.entries(values).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-  const skillEntries = ranked(data.skills).slice(0, 18)
+  const skillEntries = ranked(data.skills)
   const seniorityEntries = ranked(data.seniority)
   const industryEntries = ranked(data.industries)
   if (!data.denominator) return <EmptyState title={t('Your opportunity landscape is empty')} description={t('Capture jobs from a URL, file, or manual entry to see patterns across your own search.')} />
-  const activeEntries = lens === 'skills' ? skillEntries : lens === 'seniority' ? seniorityEntries : industryEntries
+  const entries = lens === 'skills' ? skillEntries : lens === 'seniority' ? seniorityEntries : industryEntries
+  const activeEntries = entries.filter(([name, count]) => count >= minimum && name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+  // A chart is ranked and bounded; the table retains the complete filtered set.
+  const chartEntries = activeEntries.slice(0, 18)
+  const selectedFacet = activeEntries.some(([name]) => name === selected) ? selected : undefined
+  const relatedRoles = selectedFacet ? opportunities.filter((role) => lens === 'skills'
+    ? role.requirements.some((requirement) => (requirement.normalized_name || requirement.label).toLocaleLowerCase() === selectedFacet.toLocaleLowerCase())
+    : (lens === 'seniority' ? role.seniority : role.industry) === selectedFacet) : []
+  const chooseLens = (value: typeof lens) => { setLens(value); setSelected(undefined); setQuery('') }
+  const chooseFacet = (name: string) => setSelected((current) => current === name ? undefined : name)
   const option = (tokens: ChartTokens) => ({
     tooltip: { trigger: 'axis', backgroundColor: tokens.surface, borderColor: tokens.line, textStyle: { color: tokens.text }, valueFormatter: (value: number) => `${value} · ${Math.round(value / data.denominator * 100)}%` },
-    grid: { left: 150, right: 30, top: 20, bottom: 42, containLabel: true },
+    grid: { left: 8, right: 38, top: 20, bottom: 32, containLabel: true },
     xAxis: { type: 'value', minInterval: 1, axisLabel: { color: tokens.muted }, axisLine: { lineStyle: { color: tokens.line } }, splitLine: { lineStyle: { color: tokens.line } } },
-    yAxis: { type: 'category', data: activeEntries.map(([name]) => name).reverse(), axisLabel: { color: tokens.text, width: 135, overflow: 'truncate' } },
-    series: [{ name: t(lens === 'skills' ? 'Recurring requirements' : lens === 'seniority' ? 'Seniority signals' : 'Industry signals'), type: 'bar', data: activeEntries.map(([, count]) => count).reverse(), itemStyle: { color: lens === 'skills' ? tokens.cyan : lens === 'seniority' ? tokens.violet : tokens.amber, borderRadius: [0, 7, 7, 0] }, label: { show: true, position: 'right', color: tokens.text } }],
+    yAxis: { type: 'category', data: chartEntries.map(([name]) => name).reverse(), axisLabel: { color: tokens.text, width: 115, overflow: 'truncate' } },
+    series: [{ name: t(lens === 'skills' ? 'Recurring requirements' : lens === 'seniority' ? 'Seniority signals' : 'Industry signals'), type: 'bar', data: chartEntries.map(([name, count]) => ({ value: count, name, itemStyle: { opacity: !selectedFacet || selectedFacet === name ? 1 : 0.4 } })).reverse(), itemStyle: { color: lens === 'skills' ? tokens.cyan : lens === 'seniority' ? tokens.violet : tokens.amber, borderRadius: [0, 7, 7, 0] }, label: { show: true, position: 'right', color: tokens.text } }],
   })
   return (
     <div className="visual-stack">
-      <div className="visual-toolbar"><div className="segmented chart-lens-switcher" aria-label={t('Opportunity landscape lens')}>{(['skills', 'seniority', 'industries'] as const).map((value) => <button key={value} className={lens === value ? 'active' : ''} aria-pressed={lens === value} onClick={() => setLens(value)}>{t(value === 'skills' ? 'Skills' : value === 'seniority' ? 'Seniority' : 'Industries')}</button>)}</div><span>{t('Counts and share of {count} saved roles', { count: data.denominator })}</span></div>
-      <EChart className="echart landscape-chart" ariaLabel={t('{lens} across saved opportunity research', { lens: t(lens) })} option={option} />
+      <div className="visual-toolbar"><div className="segmented chart-lens-switcher" aria-label={t('Opportunity landscape lens')}>{(['skills', 'seniority', 'industries'] as const).map((value) => <button key={value} className={lens === value ? 'active' : ''} aria-pressed={lens === value} onClick={() => chooseLens(value)}>{t(value === 'skills' ? 'Skills' : value === 'seniority' ? 'Seniority' : 'Industries')}</button>)}</div><span>{t('Counts and share of {count} saved roles', { count: data.denominator })}</span></div>
+      <div className="landscape-controls">
+        <label className="search-field"><Search aria-hidden /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Find a landscape signal')} aria-label={t('Find a landscape signal')} /></label>
+        <label>{t('Minimum saved roles')}<select value={minimum} onChange={(event) => setMinimum(Number(event.target.value))}>{[...new Set([1, 2, 3, 5, 10, data.denominator])].filter((count) => count <= data.denominator).sort((a, b) => a - b).map((count) => <option key={count} value={count}>{count}</option>)}</select></label>
+        <div className="segmented" aria-label={t('Landscape display')}><button aria-pressed={!tableOnly} className={!tableOnly ? 'active' : ''} onClick={() => setTableOnly(false)}>{t('Chart')}</button><button aria-pressed={tableOnly} className={tableOnly ? 'active' : ''} onClick={() => setTableOnly(true)}>{t('Table')}</button></div>
+      </div>
+      {!tableOnly && !!chartEntries.length && <EChart className="echart landscape-chart" ariaLabel={t('{lens} across saved opportunity research', { lens: t(lens) })} option={option} onSelect={(selection) => { const item = [...chartEntries].reverse()[selection.dataIndex]; if (item) chooseFacet(item[0]) }} description={t('Select a bar or table signal to inspect the saved roles behind it.')} />}
+      {!activeEntries.length && <EmptyState title={t('No signals match these filters')} description={t('Lower the minimum or clear the search to restore the saved-role signals.')} />}
       <div className="insight-strip"><b>{plural(data.denominator, '{count} saved opportunity', '{count} saved opportunities')}</b><span>{plural(industryEntries.length, '{count} industry', '{count} industries')}</span><span>{plural(skillEntries.length, '{count} recurring skill signal shown', '{count} recurring skill signals shown')}</span></div>
-      <details className="chart-data"><summary>{t('Read this landscape as a table')}</summary><div className="table-scroll"><table><thead><tr><th>{t(lens === 'skills' ? 'Skill' : lens === 'seniority' ? 'Seniority' : 'Industry')}</th><th>{t('Saved roles')}</th><th>{t('Share of saved set')}</th></tr></thead><tbody>{activeEntries.map(([name, count]) => <tr key={name}><td>{name}</td><td>{count}</td><td>{Math.round(count / data.denominator * 100)}%</td></tr>)}</tbody></table></div></details>
+      <details className="chart-data" open={tableOnly || undefined}><summary>{t('Read this landscape as a table')}</summary><div className="table-scroll"><table><thead><tr><th>{t(lens === 'skills' ? 'Skill' : lens === 'seniority' ? 'Seniority' : 'Industry')}</th><th>{t('Saved roles')}</th><th>{t('Share of saved set')}</th></tr></thead><tbody>{activeEntries.map(([name, count]) => <tr key={name}><td>{onOpenRole ? <button className="landscape-facet" aria-pressed={selectedFacet === name} onClick={() => chooseFacet(name)}>{name}</button> : name}</td><td>{count}</td><td>{Math.round(count / data.denominator * 100)}%</td></tr>)}</tbody></table></div></details>
+      {selectedFacet && onOpenRole && <section ref={selectionRef} className="landscape-selection" aria-label={t('Roles behind this signal')}><header><h3>{selectedFacet}</h3><button className="icon-button" aria-label={t('Clear signal selection')} onClick={() => setSelected(undefined)}><X /></button></header><p role="status">{t('{count} saved roles with this signal. Select a role to review its requirements.', { count: relatedRoles.length })}</p><div className="landscape-role-list">{relatedRoles.map((role) => <button key={role.id} onClick={() => onOpenRole(role.id)}><b>{role.title}</b><small>{role.employer || t('Employer unknown')}</small></button>)}</div></section>}
+      <p className="chart-warning">{t('Chart shows the top {count} filtered signals; the table contains all {total}.', { count: chartEntries.length, total: activeEntries.length })}</p>
       <p className="chart-warning">{t(data.warning)}</p>
     </div>
   )

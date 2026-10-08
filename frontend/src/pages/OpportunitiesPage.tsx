@@ -7,6 +7,7 @@ import { OpportunityLandscape, OpportunityNetwork } from '../components/Visualiz
 import { EmptyState, ErrorState, ExternalLink, Loading, Panel } from '../components/Primitives'
 import { OpportunityBrief } from '../components/OpportunityBrief'
 import { JobDiscovery } from '../components/JobDiscovery'
+import { ModalSurface } from '../components/ModalSurface'
 import type { Compensation } from '../components/SalaryBand'
 import { compact } from '../money'
 import { useI18n } from '../i18n'
@@ -38,16 +39,16 @@ function CaptureDialog({ open, onClose }: { open: boolean; onClose: () => void }
   if (!open) return null
   return (
     <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="capture-modal" role="dialog" aria-modal="true" aria-labelledby="capture-title"><header><div><span className="eyebrow"><Sparkles /> {t('Bounded capture')}</span><h2 id="capture-title">{t('Add an opportunity')}</h2><p>{t('Bring one posting into your private research workspace, then review every extracted requirement.')}</p></div><button className="icon-button" onClick={onClose} aria-label={t('Close capture dialog')}><X /></button></header>
+      <ModalSurface className="capture-modal" labelledBy="capture-title" onClose={onClose}><button className="icon-button capture-close" onClick={onClose} aria-label={t('Close capture dialog')}><X /></button><header><div><span className="eyebrow"><Sparkles /> {t('Bounded capture')}</span><h2 id="capture-title">{t('Add an opportunity')}</h2><p>{t('Bring one posting into your private research workspace, then review every extracted requirement.')}</p></div></header>
         <nav className="capture-tabs">{([['url', <Link2 />, 'From URL'], ['file', <FileUp />, 'From document'], ['paste', <List />, 'Paste text'], ['manual', <Plus />, 'Manual']] as Array<[CaptureMode, React.ReactNode, string]>).map(([key, icon, label]) => <button key={key} className={mode === key ? 'active' : ''} onClick={() => setMode(key)}>{icon}{t(label)}</button>)}</nav>
         <form onSubmit={(event) => { event.preventDefault(); capture.mutate() }}>
           {mode === 'url' && <label>{t('Public job posting URL')}<input type="url" value={url} onChange={(event) => setUrl(event.target.value)} required placeholder="https://company.example/careers/role" /><small>{t('Redirects and every resolved IP are checked against SSRF protections. No authenticated or local pages.')}</small></label>}
-          {mode === 'file' && <><div className="drop-zone" onClick={() => fileRef.current?.click()}><FileUp /><b>{file?.name || t('Choose a job description document')}</b><span>{t('PDF, DOCX, text, Markdown, or HTML · malware-scanned in production')}</span></div><input ref={fileRef} hidden type="file" accept=".pdf,.docx,.txt,.md,.html" onChange={(event) => setFile(event.target.files?.[0])} required /><div className="form-grid two"><label>{t('Title override')}<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label><label>{t('Employer override')}<input value={draft.employer} onChange={(event) => setDraft({ ...draft, employer: event.target.value })} /></label></div></>}
+          {mode === 'file' && <><button type="button" className="drop-zone" onClick={() => fileRef.current?.click()}><FileUp /><b>{file?.name || t('Choose a job description document')}</b><span>{t('PDF, DOCX, text, Markdown, or HTML · malware-scanned in production')}</span></button><input ref={fileRef} hidden type="file" accept=".pdf,.docx,.txt,.md,.html" onChange={(event) => setFile(event.target.files?.[0])} required /><div className="form-grid two"><label>{t('Title override')}<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label><label>{t('Employer override')}<input value={draft.employer} onChange={(event) => setDraft({ ...draft, employer: event.target.value })} /></label></div></>}
           {(mode === 'paste' || mode === 'manual') && <><div className="form-grid two"><label>{t('Role title')}<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} required /></label><label>{t('Employer')}<input value={draft.employer} onChange={(event) => setDraft({ ...draft, employer: event.target.value })} /></label></div><label>{t(mode === 'paste' ? 'Paste the complete posting' : 'Description')}<textarea rows={10} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label><div className="form-grid three"><label>{t('Industry')}<input value={draft.industry} onChange={(event) => setDraft({ ...draft, industry: event.target.value })} /></label><label>{t('Seniority')}<input value={draft.seniority} onChange={(event) => setDraft({ ...draft, seniority: event.target.value })} /></label><label>{t('Location')}<input value={draft.location} onChange={(event) => setDraft({ ...draft, location: event.target.value })} /></label></div></>}
           {capture.error && <ErrorState error={capture.error} />}
           <footer><span>{t('Captured data remains a private snapshot in your workspace.')}</span><button className="button primary" disabled={capture.isPending || (mode === 'file' && !file)}>{t(capture.isPending ? 'Capturing…' : 'Capture for review')}</button></footer>
         </form>
-      </section>
+      </ModalSurface>
     </div>
   )
 }
@@ -163,11 +164,11 @@ export function OpportunitiesPage() {
           <button role="tab" tabIndex={view === 'network' ? 0 : -1} aria-selected={view === 'network'} className={view === 'network' ? 'active' : ''} onClick={() => setView('network')}><Network /> {t('Graph')}</button>
           <button role="tab" tabIndex={view === 'landscape' ? 0 : -1} aria-selected={view === 'landscape'} className={view === 'landscape' ? 'active' : ''} onClick={() => setView('landscape')}><Radar /> {t('Landscape')}</button>
         </div>
-        <button type="button" className="button ghost" onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Portfolios')}</button>
-        <button type="button" className="button primary" onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>
+        <button type="button" className="button ghost" title={t('Portfolios')} onClick={() => setPortfoliosOpen(true)}><FolderKanban /> {t('Portfolios')}</button>
+        <button type="button" className="button primary" title={t('Add opportunity')} onClick={() => setCaptureOpen(true)}><Plus /> {t('Add opportunity')}</button>
       </header>
       {view === 'discover' ? <JobDiscovery onImported={(id) => { setSelectedId(id); setView('cards') }} /> : view === 'landscape' ? (
-        <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles, not the global labor market')}><OpportunityLandscape data={landscape.data} /></Panel>
+        <Panel className="workbench-panel" title={t('Your search landscape')} subtitle={t('A descriptive view of saved roles, not the global labor market')}><OpportunityLandscape data={landscape.data} opportunities={opportunities.data} onOpenRole={(id) => { setQueryText(''); setSelectedId(id); setView('cards') }} /></Panel>
       ) : view === 'network' ? (
         <Panel className="workbench-panel" title={t('Opportunity knowledge graph')} subtitle={t('Explore how your saved roles, requirements, employers, and target scenarios connect')}><OpportunityNetwork data={graph.data.graph} /><p className="chart-warning">{t(graph.data.warning)}</p></Panel>
       ) : (
@@ -198,10 +199,10 @@ export function OpportunitiesPage() {
       <CaptureDialog open={captureOpen} onClose={() => setCaptureOpen(false)} />
       {portfoliosOpen ? (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPortfoliosOpen(false)}>
-          <section className="portfolio-modal" role="dialog" aria-modal="true" aria-label={t('Target portfolios')}>
+          <ModalSurface className="portfolio-modal" label={t('Target portfolios')} onClose={() => setPortfoliosOpen(false)}>
             <button type="button" className="icon-button portfolio-modal-close" onClick={() => setPortfoliosOpen(false)} aria-label={t('Close')}><X /></button>
             <TargetSetManager opportunities={opportunities.data} />
-          </section>
+          </ModalSurface>
         </div>
       ) : null}
     </div>

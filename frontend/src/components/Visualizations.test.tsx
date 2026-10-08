@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nProvider } from '../i18n'
-import type { Landscape, MatchRun } from '../types'
+import type { Landscape, MatchRun, Opportunity } from '../types'
 import { MatchWaterfall, OpportunityLandscape, OpportunityNetwork } from './Visualizations'
 
 const captureSigmaSettings = vi.hoisted(() => vi.fn())
+afterEach(cleanup)
 
 vi.mock('./EChart', () => ({
   EChart: ({ ariaLabel }: { ariaLabel: string }) => <div role="img" aria-label={ariaLabel} />,
@@ -115,5 +116,25 @@ describe('decision-grade visual fallbacks', () => {
     expect(within(priority!).getByText('Priority gap')).toBeInTheDocument()
     expect(within(priority!).getByText('Leadership')).toBeInTheDocument()
     expect(within(priority!).getByText('40% coverage · 2 requirements')).toBeInTheDocument()
+  })
+
+  it('keeps every table signal, filters live and links a facet to exact saved roles', () => {
+    const open = vi.fn()
+    const skills = Object.fromEntries(Array.from({ length: 22 }, (_, index) => [`Signal ${index}`, index < 4 ? 3 : 1]))
+    const role = { id: 'role-1', title: 'Data lead', employer: 'Synthetic', requirements: [{ normalized_name: 'signal 0', label: 'Signal 0' }] } as Opportunity
+    renderEnglish(<OpportunityLandscape data={{ denominator: 3, skills, seniority: {}, industries: {}, opportunities: [], warning: 'Counts describe only saved opportunities.' }} opportunities={[role]} onOpenRole={open} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Table' }))
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(23)
+    fireEvent.change(screen.getByRole('combobox', { name: 'Minimum saved roles' }), { target: { value: '3' } })
+    expect(screen.getAllByRole('row')).toHaveLength(5)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Find a landscape signal' }), { target: { value: 'Signal 0' } })
+    expect(screen.getAllByRole('row')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: 'Signal 0' }))
+    fireEvent.click(screen.getByRole('button', { name: /Data lead.*Synthetic/ }))
+    expect(open).toHaveBeenCalledWith('role-1')
+    fireEvent.change(screen.getByRole('textbox', { name: 'Find a landscape signal' }), { target: { value: 'nonexistent' } })
+    expect(screen.getByText('No signals match these filters')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Roles behind this signal')).not.toBeInTheDocument()
   })
 })

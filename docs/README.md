@@ -12,6 +12,7 @@
 - [Software design description](design/SDD.md): domain, execution, experience and delivery contracts.
 - [Agent harness](agents/README.md): router, providers, state, approval, and evaluation contract.
 - [Visualization system](visualization.md): Atalaya lessons, selected engines, accessibility, and honest graphics.
+- [Interaction guides](guides/guides.md): reachable tables, linked analysis and responsive keyboard tools.
 - [Security threat model](security/threat-model.md) and [privacy model](security/privacy.md).
 - [Research synthesis](research/README.md): comparable products, standards, primary sources, and resulting design choices.
 - [Taxonomy provenance](research/taxonomy-provenance.md): official sources, checksums, licensing, and release gate.

@@ -1,6 +1,6 @@
 # CareerTwin
 
-Release `0.16.000`. See [`CHANGELOG.md`](CHANGELOG.md).
+Release `0.17.000`. See [`CHANGELOG.md`](CHANGELOG.md).
 
 CareerTwin is an evidence-first career-research system for one professional per account and many
 job opportunities. The product is this public repository: domain modules, graph projections,

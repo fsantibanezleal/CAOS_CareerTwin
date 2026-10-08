@@ -8,6 +8,7 @@ import { SalaryBand } from '../components/SalaryBand'
 import { MatchWaterfall } from '../components/Visualizations'
 import { EmptyState, ErrorState, Loading, Panel, Score } from '../components/Primitives'
 import { useI18n } from '../i18n'
+import { ModalSurface } from '../components/ModalSurface'
 import type { MatchRun, Opportunity, Recommendation, TargetSet } from '../types'
 
 const statusIcon = {
@@ -134,18 +135,18 @@ export function MatchesPage() {
       <CoverageWorkbench runs={matches.data ?? []} opportunities={opportunities.data ?? []} onOpenRole={setRoleId} />
       {role && roleRun ? (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setRoleId(undefined)}>
-          <section className="role-drawer" role="dialog" aria-modal="true" aria-label={role.title}>
+          <ModalSurface className="role-drawer" label={role.title} onClose={() => setRoleId(undefined)}>
             <button type="button" className="icon-button role-drawer-close" onClick={() => setRoleId(undefined)} aria-label={t('Close')}><X /></button>
             <MatchDetail run={roleRun} opportunity={role} />
-          </section>
+          </ModalSurface>
         </div>
       ) : null}
       {portfoliosOpen ? (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPortfoliosOpen(false)}>
-          <section className="portfolio-modal" role="dialog" aria-modal="true" aria-label={t('Target portfolio alignment')}>
+          <ModalSurface className="portfolio-modal" label={t('Target portfolio alignment')} onClose={() => setPortfoliosOpen(false)}>
             <button type="button" className="icon-button portfolio-modal-close" onClick={() => setPortfoliosOpen(false)} aria-label={t('Close')}><X /></button>
             <TargetPortfolioPanel />
-          </section>
+          </ModalSurface>
         </div>
       ) : null}
     </div>

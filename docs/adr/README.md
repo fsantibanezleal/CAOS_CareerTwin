@@ -37,3 +37,4 @@ Records are active from the release in which they were accepted unless supersede
 | [0031](0031-attributed-explicit-job-discovery.md) | Explicit attributed public discovery with private reviewed imports |
 | [0032](0032-display-and-package-release-versions.md) | Exact padded display releases with standards-compatible package versions |
 | [0033](0033-federated-search-private-career-strategy.md) | Bounded multi-source batteries and private compatible-pay career strategy |
+| [0034](0034-reachable-linked-analytical-workbenches.md) | Reachable analytical depth, linked signals and consistent modal navigation |

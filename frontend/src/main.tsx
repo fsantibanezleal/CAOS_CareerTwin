@@ -14,6 +14,7 @@ import './opportunity-brief.css'
 import './profile-workbench.css'
 import './pipeline-workbench.css'
 import './today-workbench.css'
+import './analytical-workbench.css'
 import '@react-sigma/core/lib/style.css'
 import '@xyflow/react/dist/style.css'
 

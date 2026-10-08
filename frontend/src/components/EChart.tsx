@@ -83,7 +83,8 @@ function chartTokens(): ChartTokens {
  * left switched off.
  *
  * This version emits clicks, preserves state across updates, enables zoom on request,
- * and exposes the canvas as a figure or application rather than an image.
+ * and exposes the canvas as a figure. Keyboard equivalents belong in the
+ * surrounding table and controls; a pointer callback is not a keyboard interface.
  */
 export function EChart({
   option,
@@ -96,7 +97,7 @@ export function EChart({
   option: ChartOption
   ariaLabel: string
   className?: string
-  /** Fired when a data item is clicked; its presence makes the chart focusable. */
+  /** Fired when a data item is clicked. Provide keyboard equivalents alongside it. */
   onSelect?: (selection: ChartSelection) => void
   /** Enables wheel/drag zoom plus a slider on the primary axis. */
   zoomable?: boolean
@@ -195,17 +196,14 @@ export function EChart({
     build()
   }, [build])
 
-  const interactive = Boolean(onSelect)
-
   return (
     <div
       ref={container}
       className={className}
-      // A chart that answers input is a figure, not a picture. role="img" tells
-      // assistive technology the content is static and unreachable.
-      role={interactive ? 'application' : 'figure'}
+      // Do not switch screen readers into application mode without a complete
+      // keyboard interaction model. The adjacent semantic table supplies it.
+      role="figure"
       aria-label={ariaLabel}
-      tabIndex={interactive ? 0 : undefined}
     />
   )
 }

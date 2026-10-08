@@ -28,6 +28,12 @@ PACKAGE = REPO_ROOT / "frontend" / "package.json"
 GENUINE_VERSION_COINCIDENCES: frozenset[tuple[str, str, str]] = frozenset(
     {
         (
+            # npm view @eslint/core@0.17.0 dist.integrity, 2026-10-04.
+            "node_modules/@eslint/core",
+            "0.17.0",
+            "sha512-yL/sLrpmtDaFEiUj1osRP4TI2MDz1AddJL+jZ7KSqvBuliN4xqYY54IfdN8qD8Toa6g1iloph1fxQNkjOxrrpQ==",
+        ),
+        (
             # npm view @humanfs/types@0.15.0 dist.integrity, 2026-10-03.
             "node_modules/@humanfs/types",
             "0.15.0",

@@ -9,6 +9,17 @@ type TranslationValues = Record<string, string | number>
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export const spanishMessages: Record<string, string> = {
+  'Find a landscape signal': 'Buscar una señal del panorama',
+  'Minimum saved roles': 'Mínimo de cargos guardados',
+  'Landscape display': 'Vista del panorama',
+  'Chart': 'Gráfico',
+  'Select a bar or table signal to inspect the saved roles behind it.': 'Selecciona una barra o señal de la tabla para inspeccionar los cargos guardados asociados.',
+  'No signals match these filters': 'No hay señales que coincidan con estos filtros',
+  'Lower the minimum or clear the search to restore the saved-role signals.': 'Reduce el mínimo o borra la búsqueda para recuperar las señales de los cargos guardados.',
+  'Roles behind this signal': 'Cargos asociados a esta señal',
+  'Clear signal selection': 'Borrar selección de señal',
+  '{count} saved roles with this signal. Select a role to review its requirements.': '{count} cargos guardados con esta señal. Selecciona un cargo para revisar sus requisitos.',
+  'Chart shows the top {count} filtered signals; the table contains all {total}.': 'El gráfico muestra las primeras {count} señales filtradas; la tabla contiene las {total}.',
   'Search mode': 'Modo de búsqueda',
   'Combined search': 'Búsqueda combinada',
   'Single source': 'Una fuente',

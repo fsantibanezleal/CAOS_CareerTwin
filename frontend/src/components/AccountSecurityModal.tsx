@@ -4,6 +4,7 @@ import { type FormEvent, useState } from 'react'
 import { api, json } from '../api'
 import { useI18n } from '../i18n'
 import { ErrorState } from './Primitives'
+import { ModalSurface } from './ModalSurface'
 
 export function AccountSecurityModal({ open, onClose, onPasswordChanged }: { open: boolean; onClose: () => void; onPasswordChanged: () => void }) {
   const { t } = useI18n()
@@ -22,7 +23,7 @@ export function AccountSecurityModal({ open, onClose, onPasswordChanged }: { ope
   }
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="capture-modal account-security-modal" role="dialog" aria-modal="true" aria-labelledby="account-security-title">
+      <ModalSurface className="capture-modal account-security-modal" labelledBy="account-security-title" onClose={onClose}>
         <header><div><h2 id="account-security-title">{t('Account security')}</h2><p>{t('Changing your password revokes every active session, including this one.')}</p></div><button className="icon-button" onClick={onClose} aria-label={t('Close account security')}><X /></button></header>
         <form onSubmit={submit}>
           <label>{t('Current password')}<input type="password" autoComplete="current-password" required minLength={8} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /></label>
@@ -31,7 +32,7 @@ export function AccountSecurityModal({ open, onClose, onPasswordChanged }: { ope
           {change.error && <ErrorState error={change.error} />}
           <footer><span>{t('Your password is stored only as an Argon2id hash.')}</span><button type="button" className="button ghost" onClick={onClose}>{t('Cancel')}</button><button className="button primary" disabled={change.isPending || newPassword !== confirmation}><KeyRound /> {t(change.isPending ? 'Changing…' : 'Change password')}</button></footer>
         </form>
-      </section>
+      </ModalSurface>
     </div>
   )
 }

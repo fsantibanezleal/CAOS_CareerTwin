@@ -89,8 +89,8 @@ function diagramSvg(graph: typeof diagrams[keyof typeof diagrams]): string {
 const architectureConfig: ArchitectureConfig = {
   title_en: 'CareerTwin architecture', title_es: 'Arquitectura de CareerTwin',
   tabs: Object.entries(diagrams).map(([id, graph]) => ({ id, en: graph.label, es: translate('es', graph.label),
-    body_en: `${explanations[id as keyof typeof explanations][0]}\n\nPublic decision register: github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr. Local wiki: docs/README.md. Discovery and career-strategy contracts: ADR 0031 and ADR 0033.`,
-    body_es: `${explanations[id as keyof typeof explanations][1]}\n\nRegistro público de decisiones: github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr. Wiki local: docs/README.md. Contratos de búsqueda y estrategia profesional: ADR 0031 y ADR 0033.`,
+    body_en: `${explanations[id as keyof typeof explanations][0]}\n\nPublic decision register: github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr. Local wiki: docs/README.md. Discovery and career-strategy contracts: ADR 0031 and ADR 0033. Reachable, linked workbenches: ADR 0034.`,
+    body_es: `${explanations[id as keyof typeof explanations][1]}\n\nRegistro público de decisiones: github.com/fsantibanezleal/CAOS_CareerTwin/tree/main/docs/adr. Wiki local: docs/README.md. Contratos de búsqueda y estrategia profesional: ADR 0031 y ADR 0033. Paneles accesibles e interconectados: ADR 0034.`,
     svg: diagramSvg(graph) })),
 }
 
