@@ -1,0 +1,85 @@
+/* Analytical content has intrinsic depth inside a bounded viewport, not clipped depth.
+   Never make a canvas's size depend on an expanding table or its own rendered children. */
+.workbench-panel .visual-stack { min-width: 0; grid-template-columns: minmax(0, 1fr); align-content: start; }
+.visual-stack > * { min-width: 0; }
+.visual-toolbar .segmented { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+.visual-toolbar .segmented button { flex: none; }
+.chart-warning { overflow-wrap: anywhere; }
+.shell-main { scroll-padding-top: 70px; }
+.workbench-panel .panel-header { margin-bottom: var(--space-4); }
+.landscape-chart { height: clamp(320px, 54dvh, 780px); min-height: 0; }
+.landscape-controls { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.landscape-controls .search-field { flex: 1 1 220px; min-width: 0; }
+.landscape-controls label { display: flex; align-items: center; gap: var(--space-2); color: var(--muted); font-size: var(--text-sm); }
+.landscape-controls select { width: auto; min-height: 40px; }
+.landscape-selection { border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-3); background: var(--surface-2); }
+.landscape-selection > header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.landscape-selection h3 { margin: 0; font-size: var(--text-base); overflow-wrap: anywhere; }
+.landscape-selection p { margin-block: var(--space-2); color: var(--muted); font-size: var(--text-sm); }
+.landscape-role-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--space-2); }
+.landscape-role-list button { min-height: 44px; display: grid; gap: var(--space-1); text-align: left; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3); color: var(--text); background: var(--surface); cursor: pointer; }
+.landscape-role-list small { color: var(--muted); }
+.landscape-facet { min-height: 36px; border: 0; padding: 4px 0; background: transparent; color: var(--text); text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.landscape-facet[aria-pressed="true"] { color: var(--accent); font-weight: var(--weight-bold); }
+.table-scroll { min-width: 0; overscroll-behavior-x: contain; }
+.graph-alt-layout > .table-scroll { max-height: clamp(320px, 58dvh, 1100px); overflow: auto; overscroll-behavior: contain; }
+.graph-alt-layout > .table-scroll thead { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.graph-inspector { scroll-margin-block: var(--space-4); }
+.capture-tabs { min-width: 0; overflow-x: auto; white-space: nowrap; }
+.capture-tabs button { flex: none; }
+.dialog-sheet, .capture-modal, .portfolio-modal, .role-drawer { overscroll-behavior: contain; scroll-padding-block: 64px 24px; }
+.dialog-sheet > .panel > .panel-header { padding-right: 48px; }
+.dialog-close, .portfolio-modal-close, .role-drawer-close { position: sticky; top: var(--space-3); float: right; margin: var(--space-3); z-index: 3; background: var(--surface); }
+.dialog-sheet > .panel, .portfolio-modal > .panel { clear: both; }
+.capture-modal > header { position: relative; padding-block: 12px; padding-right: 48px; background: var(--surface); }
+.capture-close { position: sticky; top: 0; float: right; z-index: 3; background: var(--surface); }
+.drop-zone { width: 100%; color: var(--text); font: inherit; }
+@media (max-width: 900px) {
+  .topbar { min-height: 58px; height: 58px; padding-inline: 16px; gap: var(--space-2); }
+  .command-search { width: auto; flex: 1; min-width: 0; }
+  .command-search span, .command-search kbd, .topbar-actions .chat-button span,
+  .account-menu > button > span:nth-child(2), .account-menu > button > svg { display: none; }
+  .sidebar nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .sidebar nav a { min-width: 0; padding: 4px 2px; font-size: 12px; line-height: 14px; text-align: center; }
+  .sidebar nav a > span { min-width: 0; overflow-wrap: anywhere; }
+  .shell-main { scroll-padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .shell-main > .content:has(.page-contained) { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .page-contained > .workbench-panel { padding: var(--space-3); }
+  .landscape-chart { height: clamp(300px, 50dvh, 520px); }
+  .graph-tools .graph-search { min-width: 0; width: 100%; }
+  .graph-inspector:not(.open) { height: auto; min-height: 140px; }
+  .modal-backdrop { padding: 10px; }
+  .sm-controls { flex-wrap: wrap; }
+  .sm-search { flex-basis: 100%; min-width: 0; }
+  .sm-category { flex: 1 1 120px; max-width: 100%; }
+  .sm-legend { flex-basis: 100%; }
+  .identity { gap: var(--space-2); }
+  .identity-facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
+  .bar-tabs { scrollbar-width: thin; }
+  .capture-modal, .dialog-sheet, .portfolio-modal, .role-drawer { width: 100%; max-width: 100%; max-height: calc(100dvh - 20px); height: auto; border-radius: var(--radius-lg); }
+}
+@media (max-width: 620px) {
+  .workbench-bar:has(.opportunity-views) { display: grid; grid-template-columns: minmax(0, 1fr) 42px 42px; gap: var(--space-2); }
+  .workbench-bar:has(.opportunity-views) h1 { grid-row: 1; grid-column: 1; font-size: var(--text-lg); }
+  .workbench-bar:has(.opportunity-views) > .button { grid-row: 1; grid-column: 2; width: 42px; min-height: 42px; padding: 8px; font-size: 0; }
+  .workbench-bar:has(.opportunity-views) > .button.primary { grid-column: 3; }
+  .workbench-bar:has(.opportunity-views) > .search-field { grid-row: 2; grid-column: 1 / -1; width: 100%; min-width: 0; }
+  .workbench-bar .opportunity-views { grid-row: 3; grid-column: 1 / -1; display: flex; width: 100%; flex-wrap: nowrap; overflow-x: auto; }
+  .opportunity-views button { flex: 1 0 auto; justify-content: center; padding: 6px; font-size: var(--text-xs); }
+  .opportunity-views button svg { display: none; }
+  .landscape-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
+  .landscape-controls .search-field { grid-column: 1 / -1; width: 100%; }
+  .landscape-controls > label { font-size: var(--text-xs); }
+  .landscape-controls select { padding-inline: 8px; }
+  .landscape-controls .segmented button { font-size: var(--text-xs); padding-inline: 8px; }
+  .workbench-panel .insight-strip { flex-wrap: nowrap; overflow-x: auto; }
+  .workbench-panel .insight-strip > * { white-space: nowrap; font-size: var(--text-xs); }
+  .landscape-controls + .landscape-chart { height: 320px; }
+}
+/* Zoom and landscape phones still need a usable instrument: let the existing main
+   scroller own the short-height fallback, never collapse a panel to a few pixels. */
+@media (max-height: 650px) {
+  .shell-main > .content:has(.page-contained) { flex: 1 0 auto; }
+  .page-contained { height: auto; min-height: 100%; grid-template-rows: auto minmax(360px, 1fr); }
+  .page-contained > .workbench-panel { max-height: 580px; }
+}

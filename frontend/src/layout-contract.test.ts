@@ -3,8 +3,15 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const stylesheet = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8')
+const analyticalStyles = readFileSync(resolve(process.cwd(), 'src/analytical-workbench.css'), 'utf8')
+const workbenchStyles = readFileSync(resolve(process.cwd(), 'src/opportunity-brief.css'), 'utf8')
 
 describe('viewport ownership contract', () => {
+  it('lets analytical panels own expanded content and bounds the canvas independently', () => {
+    expect(workbenchStyles).toMatch(/\.page-contained > \.workbench-panel \{[^}]*min-height: 0[^}]*overflow: auto/s)
+    expect(analyticalStyles).toMatch(/\.landscape-chart \{[^}]*height: clamp\([^}]*min-height: 0/s)
+    expect(analyticalStyles).toMatch(/@media \(max-height: 650px\)/)
+  })
   it('keeps the browser document fixed and gives long content one internal scroll owner', () => {
     expect(stylesheet).toMatch(/html, body, #root \{[^}]*height: 100%[^}]*overflow: hidden/s)
     expect(stylesheet).toMatch(/\.app-shell \{[^}]*height: 100dvh[^}]*grid-template-rows: minmax\(0, 1fr\)[^}]*overflow: hidden/s)

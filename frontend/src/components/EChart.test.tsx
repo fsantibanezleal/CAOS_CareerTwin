@@ -76,18 +76,16 @@ describe('EChart presentation contract', () => {
   })
 
   it('presents a chart without handlers as a figure, not an image', () => {
-    // role="img" tells assistive technology the content is a static picture. A chart is
-    // a figure; one that answers input is an application.
     render(<EChart ariaLabel="Static distribution" option={{}} />)
     expect(screen.getByRole('figure', { name: 'Static distribution' })).toBeInTheDocument()
   })
 
-  it('exposes a selectable chart as a focusable application and emits its selection', () => {
+  it('keeps a pointer-selectable chart a figure and emits its selection', () => {
     const onSelect = vi.fn()
     render(<EChart ariaLabel="Coverage by requirement" option={{}} onSelect={onSelect} />)
 
-    const surface = screen.getByRole('application', { name: 'Coverage by requirement' })
-    expect(surface).toHaveAttribute('tabindex', '0')
+    const surface = screen.getByRole('figure', { name: 'Coverage by requirement' })
+    expect(surface).not.toHaveAttribute('tabindex')
 
     expect(handlers.click).toHaveLength(1)
     act(() => {

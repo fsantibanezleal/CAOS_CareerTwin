@@ -64,6 +64,13 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const handledRun = useRef<string | undefined>(undefined)
   const fileRef = useRef<HTMLInputElement>(null)
+  const drawerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const frame = requestAnimationFrame(() => drawerRef.current?.querySelector<HTMLTextAreaElement>('textarea')?.focus())
+    return () => { cancelAnimationFrame(frame); if (opener?.isConnected) opener.focus() }
+  }, [open])
   const voiceSocket = useRef<WebSocket | null>(null)
   const voiceStream = useRef<MediaStream | null>(null)
   const voiceContext = useRef<AudioContext | null>(null)
@@ -271,7 +278,7 @@ export function ChatDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     }
   }
   return (
-    <aside className={`chat-drawer ${open ? 'open' : ''}`} aria-hidden={!open} aria-label={t('Career copilot')}>
+    <aside ref={drawerRef} className={`chat-drawer ${open ? 'open' : ''}`} inert={!open} aria-hidden={!open} aria-label={t('Career copilot')} onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); stopVoice(); onClose() } }}>
       <header><div className="bot-mark"><Bot /></div><div><span>{t('Career copilot')}</span><small><i /> {t('Evidence-bounded')}</small></div><button className="icon-button" onClick={() => { stopVoice(); onClose() }} aria-label={t('Close chat')}><X /></button></header>
       <div className="chat-context"><ShieldCheck size={15} /> {t('Durable runs can be cancelled or retried. Only your approval can change canonical data.')}</div>
       <div className="chat-history">

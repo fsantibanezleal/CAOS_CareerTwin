@@ -4,6 +4,26 @@ All notable changes follow Keep a Changelog. CareerTwin uses semantic versioning
 
 ## [Unreleased]
 
+## [0.17.000] - 2026-10-04
+
+### Added
+
+- Searchable landscape signals, occurrence filters, explicit chart/table lenses and linked inspection
+  of the actual saved roles behind a bar or table selection. Complete tables retain signals beyond
+  the chart's ranked top 18; all percentages keep the saved-set denominator.
+- Real-API responsive interaction gate across routes, graph lenses, expanded tables, editors,
+  chat keyboard access and short-height viewports, with private synthetic screenshots only.
+
+### Fixed
+
+- Analytical panels now own overflow, making expanded landscape tables and graph alternatives
+  reachable inside the fixed app viewport. Chart height stays independent from expanding content.
+- Mobile opportunity navigation and skill-map filters no longer clip controls; career identity
+  is more compact and short-height/zoomed screens retain a usable working surface.
+- Secondary dialogs contain focus, dismiss with Escape and restore the opener. Closed chat is
+  inert; opening the copilot focuses its message field and Escape closes it.
+- Test DOM cleanup is explicit so stale views cannot make interaction regressions pass accidentally.
+
 ## [0.16.000] - 2026-10-04
 
 ### Added

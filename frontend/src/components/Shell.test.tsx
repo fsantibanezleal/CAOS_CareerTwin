@@ -60,6 +60,7 @@ describe('shared authenticated workbench shell', () => {
     expect(account).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(account)
     expect(account).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('menuitem', { name: 'System architecture' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('menuitem', { name: 'Use light theme' }))
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
     fireEvent.click(account)

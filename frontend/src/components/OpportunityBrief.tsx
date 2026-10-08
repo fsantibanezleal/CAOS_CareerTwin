@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, CircleHelp, CircleOff, FileText, Pencil, ShieldQuestion, X } from 'lucide-react'
 import { useMemo, useState, type ReactElement } from 'react'
 import { useI18n } from '../i18n'
+import { ModalSurface } from './ModalSurface'
 import type { MatchRun, Opportunity } from '../types'
 import { EvidenceList } from './EvidenceList'
 import { SalaryBand, type Compensation } from './SalaryBand'
@@ -289,7 +290,7 @@ export function OpportunityBrief({
 
       {posting ? (
         <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPosting(false)}>
-          <section className="ob-posting" role="dialog" aria-modal="true" aria-label={t('Posting')}>
+          <ModalSurface className="ob-posting" label={t('Posting')} onClose={() => setPosting(false)}>
             <header>
               <h3>{opportunity.title}</h3>
               <button type="button" className="icon-button" onClick={() => setPosting(false)} aria-label={t('Close')}>
@@ -297,7 +298,7 @@ export function OpportunityBrief({
               </button>
             </header>
             <div className="ob-posting-body">{readable(opportunity.description ?? '')}</div>
-          </section>
+          </ModalSurface>
         </div>
       ) : null}
     </section>
