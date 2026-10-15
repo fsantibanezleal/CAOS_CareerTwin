@@ -13,7 +13,7 @@ pgvector==0.5.0
 prometheus-client==0.26.0
 psycopg[binary,pool]==3.3.6
 pydantic==2.13.5
-pydantic-ai-slim[anthropic,google,openai,xai]==1.107.6
+pydantic-ai-slim[anthropic,google,openai,xai]==1.107.7
 pydantic-settings==2.15.0
 pypdf==6.19.0
 python-docx==1.2.0
