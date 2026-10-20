@@ -1,0 +1,963 @@
+{
+  "title": {
+    "en": "Hiring has become cheap to apply to and expensive to read, and a professional's evidence is lost at the first screen.",
+    "es": "Postular se volvió barato y leer cada postulación se volvió caro, y la evidencia de un profesional se pierde en el primer cribado."
+  },
+  "key_statement": {
+    "en": "Searches are lengthening while screens filter on a degree, a work gap or an exact keyword, so qualified people are set aside before anyone reads them. The direction: make evidence tied to its sources the unit that reaches the screen and the audit, each screen reporting what it used and missed, ahead of new rules.",
+    "es": "Las búsquedas se alargan y los cribados filtran por un título, un período sin empleo o una palabra clave, así que se descarta a personas calificadas sin leerlas. El rumbo: que la evidencia ligada a sus fuentes llegue al cribado y a la auditoría, con cada cribado informando lo que usó y faltó, antes de las nuevas normas."
+  },
+  "headline_figures": [
+    {
+      "heading": {
+        "en": "Months of searching",
+        "es": "Meses de búsqueda"
+      },
+      "value": {
+        "en": "18.8",
+        "es": "18,8"
+      },
+      "unit": {
+        "en": "percent of unemployed people in Chile have searched for work 12 months or more, 184,033 people, in May to July 2026",
+        "es": "por ciento de las personas desempleadas en Chile lleva 12 meses o más buscando empleo, 184.033 personas, en mayo a julio de 2026"
+      },
+      "source": "ine-chile-ene-mjj-2026"
+    },
+    {
+      "heading": {
+        "en": "Qualified people set aside by the screen",
+        "es": "Personas calificadas que el cribado descarta"
+      },
+      "value": {
+        "en": "88",
+        "es": "88"
+      },
+      "unit": {
+        "en": "percent of surveyed employers agree that qualified high-skills candidates are vetted out for missing exact criteria, a 2020 survey of 2,275 executives in three countries",
+        "es": "por ciento de los empleadores encuestados coincide en que se descarta a candidatos calificados por no calzar con criterios exactos, encuesta de 2020 a 2.275 ejecutivos en tres países"
+      },
+      "source": "hbs-hidden-workers-2021"
+    },
+    {
+      "heading": {
+        "en": "Why now: rules for automated hiring",
+        "es": "Por qué ahora: normas para la contratación automatizada"
+      },
+      "value": {
+        "en": "2027-12-02",
+        "es": "2027-12-02"
+      },
+      "unit": {
+        "en": "the date from which the European Union's high-risk obligations apply to artificial intelligence that filters job applications",
+        "es": "la fecha desde la cual rigen las obligaciones de alto riesgo de la Unión Europea para la inteligencia artificial que filtra postulaciones de empleo"
+      },
+      "source": "ep-digital-omnibus-ai"
+    }
+  ],
+  "pain": {
+    "key_message": {
+      "en": "Searches are lengthening, and the evidence of a qualified professional is lost at the screen before anyone reads it.",
+      "es": "Las búsquedas se alargan y la evidencia de un profesional calificado se pierde en el cribado antes de que alguien la lea."
+    },
+    "paragraphs": [
+      {
+        "en": "The failure of matching shows first as time. In the United States in September 2026, 1.9 million people, 27.1 percent of all unemployed people, had been out of work 27 weeks or more. In Chile, the statistics office added a measure of search duration in August 2026. In May to July 2026, 184,033 people had searched for 12 months or more, 18.8 percent of the unemployed. The average search lasted 8.1 months, the highest for that season outside the pandemic. The share of long-term searchers moved from about 10 percent in 2014 to almost 20 percent in 2026. The cost is not spread evenly. In 2025, above 30 percent of unemployed people aged 55 or over had searched 12 months or more, against under 10 percent at ages 15 to 24. The average search lasted 12.8 months for the first group and 4.0 months for the second. Above 23 percent of university-educated unemployed people had searched that long, 9.1 months on average, against 16.9 percent for secondary education, 6.7 months. Time out of work also lowers the chance of being read. In a United States field experiment of 12,054 fictitious resumes, the callback rate was about 45 percent lower at eight months of unemployment than at one month. It fell from roughly 7 percent to 4 percent, in the labour market of about 2011. The authors state that the result speaks most directly to young job seekers.",
+        "es": "La falla del emparejamiento se ve primero como tiempo. En Estados Unidos, en septiembre de 2026, 1,9 millones de personas, 27,1 por ciento de todas las personas desempleadas, llevaban 27 semanas o más sin trabajo. En Chile, la oficina de estadísticas incorporó en agosto de 2026 una medida de la duración de la búsqueda. En mayo a julio de 2026, 184.033 personas llevaban 12 meses o más buscando empleo, 18,8 por ciento de las personas desempleadas. La búsqueda promedio duró 8,1 meses, la más alta para esa temporada fuera de la pandemia. La proporción de quienes buscan hace mucho pasó de cerca de 10 por ciento en 2014 a casi 20 por ciento en 2026. El costo no se reparte por igual. En 2025, más de 30 por ciento de las personas desempleadas de 55 años o más llevaba 12 meses o más buscando. Entre los 15 y los 24 años, era menos de 10 por ciento. La búsqueda promedio duró 12,8 meses en el primer grupo y 4,0 meses en el segundo. Entre las personas con educación universitaria, más de 23 por ciento llevaba tanto tiempo buscando, y la búsqueda promedio fue de 9,1 meses. Con educación secundaria fueron 16,9 por ciento y 6,7 meses. El tiempo sin trabajo también reduce la probabilidad de ser leído. Un experimento de campo en Estados Unidos con 12.054 currículos ficticios halló cerca de 45 por ciento menos respuestas a los ocho meses de desempleo que al mes. La tasa cayó de unos 7 por ciento a 4 por ciento, en el mercado laboral de cerca de 2011. Los autores señalan que el resultado habla con más fuerza de los jóvenes que buscan empleo."
+      },
+      {
+        "en": "The place where evidence is lost is the screen. A 2020 survey of 2,275 executives in the United States, the United Kingdom and Germany, reported in 2021, found 63 percent of employers using a recruiting management system. Among employers using one, 94 percent use it to filter or rank middle-skills candidates and 92 percent high-skills candidates. In the same survey, 88 percent agreed that qualified high-skills candidates are vetted out because they miss the exact criteria of the job description. Almost half screen out a resume with a work gap above six months. On the employer side, the median cost of recruiting a senior manager in the United Kingdom in 2026 was 3,500 pounds, among respondents able to give costs within 20 percent. Just 19 percent of organisations measure the return on recruitment. The stream of applications is also changing its nature. Of the organisations that tried to recruit, 27 percent report excessive candidate use of generative artificial intelligence and 35 percent attempt to monitor it. Of those that monitor it, 75 percent reject candidates for it at least some of the time.",
+        "es": "El lugar donde se pierde la evidencia es el cribado. Una encuesta de 2020 a 2.275 ejecutivos de Estados Unidos, el Reino Unido y Alemania se publicó en 2021. Halló que 63 por ciento de los empleadores usa un sistema de gestión de reclutamiento. Entre quienes lo usan, 94 por ciento lo emplea para filtrar o clasificar candidatos de habilidades medias y 92 por ciento a los de habilidades altas. En la misma encuesta, 88 por ciento coincidió en que se descarta a candidatos calificados de habilidades altas porque no calzan con los criterios exactos del cargo. Casi la mitad descarta un currículum con un período sin empleo superior a seis meses. Del lado del empleador, la mediana del costo de reclutar a un gerente senior en el Reino Unido en 2026 fue de 3.500 libras. La submuestra informó costos con un error de hasta 20 por ciento. Solo 19 por ciento de las organizaciones mide el retorno del reclutamiento. El flujo de postulaciones también cambia de naturaleza. Entre las organizaciones que intentaron reclutar, 27 por ciento informa un uso excesivo de inteligencia artificial generativa por parte de los candidatos y 35 por ciento intenta vigilarlo. De las que lo vigilan, 75 por ciento rechaza candidatos por eso al menos algunas veces."
+      }
+    ],
+    "bearers": [
+      {
+        "who": {
+          "en": "Professional looking for a role or a change",
+          "es": "Profesional que busca empleo o cambio de rol"
+        },
+        "cost": {
+          "en": "Months without income and fewer callbacks as time out of work grows, longest for people aged 55 or over in Chile.",
+          "es": "Meses sin ingresos y menos respuestas a medida que crece el tiempo sin trabajo, más largos entre quienes tienen 55 años o más en Chile."
+        },
+        "measure": {
+          "en": "Search duration, the share searching 12 months or more, and callback rates in field experiments.",
+          "es": "Duración de la búsqueda, proporción que busca 12 meses o más y tasas de respuesta en experimentos de campo."
+        }
+      },
+      {
+        "who": {
+          "en": "Employer and hiring manager",
+          "es": "Empleador y jefe contratante"
+        },
+        "cost": {
+          "en": "A vacancy filled late or with a worse match, and qualified people set aside by rigid criteria.",
+          "es": "Una vacante cubierta tarde o con peor ajuste, y personas calificadas descartadas por criterios rígidos."
+        },
+        "measure": {
+          "en": "Cost per hire, time to hire, and the share of qualified candidates screened out in surveys.",
+          "es": "Costo por contratación, tiempo para contratar y proporción de candidatos calificados descartados en encuestas."
+        }
+      },
+      {
+        "who": {
+          "en": "Head of people and talent-acquisition lead",
+          "es": "Director de personas y responsable de adquisición de talento"
+        },
+        "cost": {
+          "en": "Rising recruitment cost, policing applications written with artificial intelligence, and tools adopted without outcome data.",
+          "es": "Costo de reclutamiento al alza, vigilar postulaciones escritas con inteligencia artificial y herramientas adoptadas sin datos de resultados."
+        },
+        "measure": {
+          "en": "Survey shares of organisations, cost per hire, and the share that measure the return on recruitment.",
+          "es": "Proporciones de organizaciones en encuestas, costo por contratación y proporción que mide el retorno del reclutamiento."
+        }
+      },
+      {
+        "who": {
+          "en": "Public employment services and the public purse",
+          "es": "Servicios públicos de empleo y las arcas públicas"
+        },
+        "cost": {
+          "en": "A growing caseload of long-term unemployed people, 184,033 in Chile in 2026, and the cost of counselling programmes.",
+          "es": "Una carga creciente de personas desempleadas de larga duración, 184.033 en Chile en 2026, y el costo de los programas de orientación."
+        },
+        "measure": {
+          "en": "Exit to employment per beneficiary, the share long-term unemployed, and programme cost per jobseeker.",
+          "es": "Salida al empleo por beneficiario, proporción de desempleo de larga duración y costo del programa por persona."
+        }
+      },
+      {
+        "who": {
+          "en": "Regulators, auditors and the public",
+          "es": "Reguladores, auditores y la ciudadanía"
+        },
+        "cost": {
+          "en": "Unrecorded screen rules, so tools cannot be checked for accuracy or bias, and the burden of auditing them.",
+          "es": "Cribados cuyas reglas no quedan registradas, de modo que no se puede verificar su exactitud ni su sesgo, y la carga de auditarlos."
+        },
+        "measure": {
+          "en": "Documentation of what each tool used and left out, and findings of audits of automated hiring tools.",
+          "es": "Documentación de lo que cada herramienta usó y dejó fuera, y hallazgos de auditorías de herramientas automatizadas de contratación."
+        }
+      }
+    ],
+    "figures": [
+      {
+        "heading": {
+          "en": "Long-term unemployed in the United States",
+          "es": "Desempleo de larga duración en Estados Unidos"
+        },
+        "value": {
+          "en": "27.1",
+          "es": "27,1"
+        },
+        "unit": {
+          "en": "percent of unemployed people jobless 27 weeks or more, 1.9 million people, United States, September 2026",
+          "es": "por ciento de las personas desempleadas lleva 27 semanas o más sin trabajo, 1,9 millones de personas, Estados Unidos, septiembre de 2026"
+        },
+        "source": "bls-empsit-2026-09"
+      },
+      {
+        "heading": {
+          "en": "Callbacks after eight months out of work",
+          "es": "Respuestas tras ocho meses sin trabajo"
+        },
+        "value": {
+          "en": "about 45",
+          "es": "cerca de 45"
+        },
+        "unit": {
+          "en": "percent fewer callbacks at eight months of unemployment than at one month, in a United States field experiment in the labour market of about 2011",
+          "es": "por ciento menos respuestas a los ocho meses de desempleo que al mes, en un experimento de campo en Estados Unidos en el mercado laboral de cerca de 2011"
+        },
+        "source": "jpal-kroft-2013"
+      },
+      {
+        "heading": {
+          "en": "Cost of recruiting a senior manager",
+          "es": "Costo de reclutar a un gerente senior"
+        },
+        "value": {
+          "en": "3,500",
+          "es": "3.500"
+        },
+        "unit": {
+          "en": "pounds, the median cost of recruiting a senior manager in the United Kingdom, survey of April to May 2026",
+          "es": "libras, la mediana del costo de reclutar a un gerente senior en el Reino Unido, encuesta de abril a mayo de 2026"
+        },
+        "source": "cipd-resourcing-2026"
+      }
+    ],
+    "causes": [
+      {
+        "cause": {
+          "en": "Screens read proxies, not evidence: a degree, a work gap and exact keywords decide who is seen.",
+          "es": "Los cribados leen indicadores indirectos y no evidencia: un título, un período sin empleo y palabras clave exactas deciden a quién se ve."
+        },
+        "weight": 30
+      },
+      {
+        "cause": {
+          "en": "Skills and results are hard to evidence and to compare: claims are self-reported, in free text, with no shared verified record.",
+          "es": "Las habilidades y los resultados son difíciles de evidenciar y de comparar: lo declara cada persona, en texto libre, sin un registro verificado compartido."
+        },
+        "weight": 25
+      },
+      {
+        "cause": {
+          "en": "Application volume and applications written with artificial intelligence weaken the signal that an application carries.",
+          "es": "El volumen de postulaciones y las postulaciones escritas con inteligencia artificial debilitan la señal que lleva una postulación."
+        },
+        "weight": 15
+      },
+      {
+        "cause": {
+          "en": "Recruitment rarely measures its own outcomes, so the process does not learn and tools are not checked.",
+          "es": "El reclutamiento rara vez mide sus propios resultados, de modo que el proceso no aprende y las herramientas no se verifican."
+        },
+        "weight": 15
+      },
+      {
+        "cause": {
+          "en": "Uneven labour demand and fit across the cycle, regions, occupations and education levels.",
+          "es": "Una demanda laboral y un ajuste desiguales según el ciclo, las regiones, las ocupaciones y los niveles de educación."
+        },
+        "weight": 15
+      }
+    ]
+  },
+  "context": {
+    "key_message": {
+      "en": "Hiring has become cheap to apply to and expensive to read, and few organisations measure what the screen discards.",
+      "es": "Postular se volvió barato y leer se volvió caro, y pocas organizaciones miden lo que el cribado descarta."
+    },
+    "paragraphs": [
+      {
+        "en": "The pain persists because hiring has become cheap to apply to and expensive to read. Screens save effort by using proxies, applications are easier to produce than to verify, and few organisations measure what the screen discards. Rules on automated hiring are arriving with dates, but practice, not law, sets what a screen reads today.",
+        "es": "El problema persiste porque postular se volvió barato y leer se volvió caro. Los cribados ahorran esfuerzo con indicadores indirectos, las postulaciones son más fáciles de producir que de verificar y pocas organizaciones miden lo que el cribado descarta. Las normas sobre contratación automatizada llegan con fechas, pero hoy la práctica, y no la ley, fija lo que lee un cribado."
+      },
+      {
+        "en": "Technology sits on both sides of the hand-off. Employers use recruiting systems that filter and rank, while professionals use writing aids that make an application cheap to produce. Resumes and postings are free text, and each side sees only what the other chose to write.",
+        "es": "La tecnología está a ambos lados del traspaso. Los empleadores usan sistemas de reclutamiento que filtran y clasifican, mientras los profesionales usan asistentes de redacción que abaratan producir una postulación. Los currículos y los avisos son texto libre, y cada parte ve solo lo que la otra eligió escribir."
+      }
+    ],
+    "setting": {
+      "en": "Professionals looking for roles, recruiters, hiring managers and heads of people work through job boards, public employment services and the recruiting systems of each employer. Rules on automated hiring differ by jurisdiction.",
+      "es": "Profesionales que buscan empleo, reclutadores, jefes contratantes y directores de personas trabajan a través de portales de empleo, servicios públicos de empleo y los sistemas de reclutamiento de cada empleador. Las normas sobre contratación automatizada difieren según la jurisdicción."
+    },
+    "forces": [
+      {
+        "force": {
+          "en": "Application volume and applications written with artificial intelligence",
+          "es": "Volumen de postulaciones y postulaciones escritas con inteligencia artificial"
+        },
+        "direction": "rising"
+      },
+      {
+        "force": {
+          "en": "Automated screening and artificial intelligence in recruitment",
+          "es": "Cribado automatizado e inteligencia artificial en el reclutamiento"
+        },
+        "direction": "rising"
+      },
+      {
+        "force": {
+          "en": "Skills-based hiring: roles without degree requirements rose almost fourfold while hires barely moved",
+          "es": "Contratación basada en habilidades: los cargos sin exigencia de título casi se cuadruplicaron mientras las contrataciones apenas se movieron"
+        },
+        "direction": "steady"
+      },
+      {
+        "force": {
+          "en": "Regulation of automated hiring",
+          "es": "Regulación de la contratación automatizada"
+        },
+        "direction": "rising"
+      }
+    ],
+    "evidence": [
+      {
+        "statement": {
+          "en": "In the United Kingdom in 2026, 27 percent of organisations that recruited reported excessive candidate use of generative artificial intelligence, and 35 percent attempt to monitor it.",
+          "es": "En el Reino Unido en 2026, 27 por ciento de las organizaciones que reclutaron informó uso excesivo de inteligencia artificial generativa y 35 por ciento lo vigila."
+        },
+        "source": "cipd-resourcing-2026"
+      },
+      {
+        "statement": {
+          "en": "In a 2020 three-country survey, 88 percent of employers agreed that qualified high-skills candidates are vetted out for missing exact criteria; 94 percent said so for middle-skills.",
+          "es": "Encuesta de 2020: 88 por ciento de los empleadores dice que se descarta a candidatos calificados de habilidades altas por criterios exactos, y 94 por ciento a los de medias."
+        },
+        "source": "hbs-hidden-workers-2021"
+      },
+      {
+        "statement": {
+          "en": "In the United States in 2023, skills-based hiring opened up about 97,000 of 77 million hires, fewer than 1 in 700.",
+          "es": "Estados Unidos, 2023: la contratación basada en habilidades abrió cerca de 97.000 de 77 millones de contrataciones, menos de 1 de cada 700."
+        },
+        "source": "burning-glass-skills-hiring-2024"
+      },
+      {
+        "statement": {
+          "en": "The European Union's artificial intelligence regulation lists, among high-risk uses, systems for recruiting or selecting people, in particular to analyse and filter job applications and to evaluate candidates.",
+          "es": "El reglamento de inteligencia artificial de la Unión Europea clasifica de alto riesgo los sistemas para reclutar o seleccionar personas, en particular para filtrar postulaciones y evaluar candidatos."
+        },
+        "source": "eu-ai-act-annex-iii"
+      }
+    ]
+  },
+  "situation": {
+    "key_message": {
+      "en": "Each role holds one part of the picture, the tools read proxies or serve narrow cases, and skills-based hiring has barely reached hires.",
+      "es": "Cada rol tiene una parte del cuadro, las herramientas leen indicadores indirectos o sirven casos acotados, y la contratación basada en habilidades apenas llegó a las contrataciones."
+    },
+    "roles": [
+      {
+        "role": {
+          "en": "Professional looking for a role or a change",
+          "es": "Profesional que busca empleo o cambio de rol"
+        },
+        "decides": {
+          "en": "Where to apply, how to present results, and whether to change field.",
+          "es": "Dónde postular, cómo presentar los resultados y si cambiar de campo."
+        },
+        "needs": {
+          "en": "To know what a role asks, how a screen reads the document, and evidence a screen can accept.",
+          "es": "Saber qué pide un cargo, cómo lee el documento un cribado y contar con evidencia que un cribado pueda aceptar."
+        }
+      },
+      {
+        "role": {
+          "en": "Recruiter or talent-acquisition lead",
+          "es": "Reclutador o responsable de adquisición de talento"
+        },
+        "decides": {
+          "en": "Who passes the screen and who is interviewed.",
+          "es": "Quién pasa el cribado y a quién se entrevista."
+        },
+        "needs": {
+          "en": "A fast shortlist, filters, defensible criteria and a way to handle volume.",
+          "es": "Una lista corta rápida, filtros, criterios defendibles y una forma de manejar el volumen."
+        }
+      },
+      {
+        "role": {
+          "en": "Hiring manager",
+          "es": "Jefe contratante"
+        },
+        "decides": {
+          "en": "The requirements of the role and the final choice.",
+          "es": "Los requisitos del cargo y la elección final."
+        },
+        "needs": {
+          "en": "Candidates evidenced against the real work, not a long list of accumulated requirements.",
+          "es": "Candidatos con evidencia frente al trabajo real, y no una larga lista de requisitos acumulados."
+        }
+      },
+      {
+        "role": {
+          "en": "Head of people",
+          "es": "Director de personas"
+        },
+        "decides": {
+          "en": "Tools, policy on the use of artificial intelligence, budget and what is measured.",
+          "es": "Las herramientas, la política de uso de inteligencia artificial, el presupuesto y lo que se mide."
+        },
+        "needs": {
+          "en": "Outcome measures, a policy on acceptable use, and compliance with rules on automated decisions.",
+          "es": "Medidas de resultados, una política de uso aceptable y cumplimiento de las normas sobre decisiones automatizadas."
+        }
+      },
+      {
+        "role": {
+          "en": "Regulator and auditor of automated hiring tools",
+          "es": "Regulador y auditor de herramientas automatizadas de contratación"
+        },
+        "decides": {
+          "en": "Whether a tool complies: accuracy, bias monitoring, data minimisation, notice and human review.",
+          "es": "Si una herramienta cumple: exactitud, monitoreo de sesgo, minimización de datos, aviso e intervención humana."
+        },
+        "needs": {
+          "en": "Documentation of what the tool used, its tests, and the means to audit it.",
+          "es": "Documentación de lo que usó la herramienta, sus pruebas y los medios para auditarla."
+        }
+      }
+    ],
+    "interaction": {
+      "en": "Evidence in the professional's own words meets a screen that reads proxies, and nobody on either side measures what was discarded.",
+      "es": "La evidencia, en palabras del propio profesional, llega a un cribado que lee indicadores indirectos, y nadie en ninguno de los dos lados mide lo que se descartó."
+    },
+    "state_of_the_art": [
+      {
+        "approach": {
+          "en": "Applicant tracking and recruiting management systems",
+          "es": "Sistemas de seguimiento de candidatos y de gestión de reclutamiento"
+        },
+        "achieves": {
+          "en": "They handle volume and workflow; 63 percent of surveyed employers used one in 2020.",
+          "es": "Manejan volumen y flujo de trabajo; 63 por ciento de los empleadores encuestados usaba uno en 2020."
+        },
+        "falls_short": {
+          "en": "88 percent of employers agree qualified candidates are vetted out; almost half screen out gaps above six months.",
+          "es": "88 por ciento de los empleadores coincide en que se descarta a candidatos calificados; casi la mitad descarta períodos sin empleo superiores a seis meses."
+        },
+        "source": "hbs-hidden-workers-2021"
+      },
+      {
+        "approach": {
+          "en": "Skills classifications and skills-based hiring",
+          "es": "Clasificaciones de habilidades y contratación basada en habilidades"
+        },
+        "achieves": {
+          "en": "At leading firms, hires without a degree stay 10 percentage points longer than degree holders.",
+          "es": "En las empresas líderes, quienes se contratan sin título permanecen 10 puntos porcentuales más que quienes lo tienen."
+        },
+        "falls_short": {
+          "en": "Fewer than 1 in 700 United States hires changed in 2023; 45 percent of firms changed in name only.",
+          "es": "Menos de 1 de cada 700 contrataciones en Estados Unidos cambió en 2023; 45 por ciento de las empresas cambió solo de nombre."
+        },
+        "source": "burning-glass-skills-hiring-2024"
+      },
+      {
+        "approach": {
+          "en": "Career coaching, outplacement and intensive public counselling",
+          "es": "Asesoría de carrera, reubicación laboral y orientación pública intensiva"
+        },
+        "achieves": {
+          "en": "In a French trial of 2007, six-month exit to employment rose 10.2 points with public counselling and 4.5 with private.",
+          "es": "En un ensayo francés de 2007, la salida al empleo a seis meses subió 10,2 puntos con orientación pública y 4,5 con la privada."
+        },
+        "falls_short": {
+          "en": "The private version cost up to 4,000 euros per jobseeker against 600 for the public one.",
+          "es": "La versión privada costó hasta 4.000 euros por persona, frente a 600 de la pública."
+        },
+        "source": "aej-behaghel-2014"
+      },
+      {
+        "approach": {
+          "en": "Public employment services and statistical profiling",
+          "es": "Servicios públicos de empleo y elaboración estadística de perfiles"
+        },
+        "achieves": {
+          "en": "Profiling targets costly intensive services at jobseekers most at risk of long-term unemployment.",
+          "es": "La elaboración de perfiles dirige los servicios intensivos y costosos a quienes tienen más riesgo de desempleo de larga duración."
+        },
+        "falls_short": {
+          "en": "Models can misclassify jobseekers, the algorithm is not always open to scrutiny, and one German model reaches about 65 percent accuracy.",
+          "es": "Los modelos pueden clasificar mal, el algoritmo no siempre es examinable y un modelo alemán llega a cerca de 65 por ciento de exactitud."
+        },
+        "source": "oecd-profiling-2019"
+      },
+      {
+        "approach": {
+          "en": "Writing aids on the seeker's side",
+          "es": "Asistentes de redacción del lado de quien busca"
+        },
+        "achieves": {
+          "en": "In a field experiment with nearly half a million jobseekers, writing help on resumes raised hires by 8 percent.",
+          "es": "En un experimento de campo con casi medio millón de personas, la ayuda de redacción en los currículos subió las contrataciones 8 por ciento."
+        },
+        "falls_short": {
+          "en": "It rests on one working paper from one online labour market.",
+          "es": "Se apoya en un solo documento de trabajo de un mercado laboral en línea."
+        },
+        "source": "nber-wiles-2023"
+      }
+    ],
+    "status": {
+      "heading": {
+        "en": "Hires opened up by skills-based hiring",
+        "es": "Contrataciones abiertas por la contratación basada en habilidades"
+      },
+      "value": {
+        "en": "fewer than 1 in 700",
+        "es": "menos de 1 de cada 700"
+      },
+      "unit": {
+        "en": "United States hires, about 97,000 of 77 million, extrapolated from 11,300 roles at large firms",
+        "es": "contrataciones en Estados Unidos, cerca de 97.000 de 77 millones, extrapoladas de 11.300 cargos en grandes empresas"
+      },
+      "date": {
+        "en": "2023",
+        "es": "2023"
+      },
+      "source": "burning-glass-skills-hiring-2024"
+    }
+  },
+  "trends": {
+    "key_message": {
+      "en": "Rules arrive with dates, applications get cheaper to produce, and searches lengthen, while skills-based hiring is slow to reach hires.",
+      "es": "Las normas llegan con fechas, las postulaciones se abaratan y las búsquedas se alargan, mientras la contratación basada en habilidades tarda en llegar a las contrataciones."
+    },
+    "items": [
+      {
+        "trend": {
+          "en": "Rules on automated hiring tools take effect",
+          "es": "Entran en vigor normas sobre herramientas de contratación automatizada"
+        },
+        "kind": "regulatory",
+        "direction": "rising",
+        "horizon": "two_years",
+        "signal": {
+          "statement": {
+            "en": "The European Union's high-risk obligations for stand-alone systems, including those that filter job applications, apply from 2 December 2027 under Regulation 2026/1744, published on 24 July 2026.",
+            "es": "Las obligaciones de alto riesgo de la Unión Europea para sistemas independientes, como los que filtran postulaciones, rigen desde el 2 de diciembre de 2027 según el Reglamento 2026/1744."
+          },
+          "source": "ep-digital-omnibus-ai"
+        },
+        "effect": {
+          "en": "The head of people and the recruiter must document what a tool uses and keep records, and the regulator and auditor gain a basis for review.",
+          "es": "El director de personas y el reclutador deben documentar lo que usa una herramienta y conservar registros, y el regulador y auditor ganan una base para revisar."
+        },
+        "confidence": "high"
+      },
+      {
+        "trend": {
+          "en": "Generative artificial intelligence floods and cheapens applications",
+          "es": "La inteligencia artificial generativa inunda y abarata las postulaciones"
+        },
+        "kind": "technological",
+        "direction": "rising",
+        "horizon": "now",
+        "signal": {
+          "statement": {
+            "en": "27 percent of United Kingdom organisations that recruited report excessive use of generative artificial intelligence in applications, 35 percent attempt to monitor it, and 21 percent changed their assessments.",
+            "es": "27 por ciento de las organizaciones británicas que reclutaron informa uso excesivo de inteligencia artificial generativa; 35 por ciento lo vigila y 21 por ciento cambió sus evaluaciones."
+          },
+          "source": "cipd-resourcing-2026"
+        },
+        "effect": {
+          "en": "Recruiters spend effort on authenticity, and professionals need evidence that a writing tool cannot generate.",
+          "es": "Los reclutadores dedican esfuerzo a comprobar la autenticidad, y los profesionales necesitan evidencia que una herramienta de redacción no pueda generar."
+        },
+        "confidence": "medium"
+      },
+      {
+        "trend": {
+          "en": "Skills-based hiring moves from announcement to practice",
+          "es": "La contratación basada en habilidades pasa del anuncio a la práctica"
+        },
+        "kind": "practice",
+        "direction": "rising",
+        "horizon": "two_years",
+        "signal": {
+          "statement": {
+            "en": "Roles with degree requirements removed grew almost fourfold from 2014 to 2023, yet only 37 percent of firms made real, sustained change.",
+            "es": "Los cargos sin exigencia de título casi se cuadruplicaron de 2014 a 2023, pero solo 37 por ciento de las empresas hizo un cambio real y sostenido."
+          },
+          "source": "burning-glass-skills-hiring-2024"
+        },
+        "effect": {
+          "en": "Hiring managers must state skills and results, professionals must evidence skills rather than degrees, and recruiters' filters change.",
+          "es": "Los jefes contratantes deben declarar habilidades y resultados, los profesionales deben evidenciar habilidades y no títulos, y los filtros de los reclutadores cambian."
+        },
+        "confidence": "medium"
+      },
+      {
+        "trend": {
+          "en": "Longer careers, more moves and faster change of skills",
+          "es": "Carreras más largas, más cambios y habilidades que se renuevan más rápido"
+        },
+        "kind": "market",
+        "direction": "rising",
+        "horizon": "ten_years",
+        "signal": {
+          "statement": {
+            "en": "Employers expect 22 percent of today's jobs to be created or displaced by 2030, and 39 percent of workers' skill sets to be transformed or outdated in 2025 to 2030.",
+            "es": "Los empleadores esperan que 22 por ciento de los empleos de hoy se cree o desplace hacia 2030 y que 39 por ciento de las habilidades cambie o quede obsoleto."
+          },
+          "source": "wef-future-jobs-2025"
+        },
+        "effect": {
+          "en": "Professionals who change field must show transferable evidence, and heads of people plan reskilling.",
+          "es": "Los profesionales que cambian de campo deben mostrar evidencia transferible, y los directores de personas planifican la recapacitación."
+        },
+        "confidence": "medium"
+      },
+      {
+        "trend": {
+          "en": "Searches are lengthening",
+          "es": "Las búsquedas se alargan"
+        },
+        "kind": "market",
+        "direction": "rising",
+        "horizon": "now",
+        "signal": {
+          "statement": {
+            "en": "In Chile the long-term share rose from about 10 percent in 2014 to almost 20 percent in 2026, and the average search from about 4 to above 7 months.",
+            "es": "En Chile, la larga duración pasó de cerca de 10 por ciento en 2014 a casi 20 en 2026, y la búsqueda de unos 4 a más de 7 meses."
+          },
+          "source": "ine-chile-separata-8"
+        },
+        "effect": {
+          "en": "Professionals feel it first, then recruiters, who see more long gaps in the pool.",
+          "es": "Los profesionales lo sienten primero, luego los reclutadores, que ven más períodos largos sin empleo entre los postulantes."
+        },
+        "confidence": "high"
+      }
+    ]
+  },
+  "proposal": {
+    "key_message": {
+      "en": "Make evidence, not the document, the unit that moves to the screen and the audit, starting with the head of people recording what each stage discards.",
+      "es": "Que la evidencia, y no el documento, llegue al cribado y a la auditoría, empezando por el director de personas que registra lo que descarta cada etapa."
+    },
+    "paragraphs": [
+      {
+        "en": "The approach is to make the evidence, not the document, the unit that moves from the professional to the screen and out to the audit. Each claim a professional makes, such as a role held, a result or a skill, is tied to a source that can be checked. A screen can then read results and responsibilities instead of proxies, and claims become comparable and verifiable. Because verified evidence is costly to fake with a writing tool, the signal survives application volume.",
+        "es": "El enfoque es que la evidencia, y no el documento, sea la unidad que pasa del profesional al cribado y de ahí a la auditoría. Cada afirmación que hace un profesional, como un cargo ocupado, un resultado o una habilidad, se liga a una fuente que se puede revisar. Así un cribado puede leer resultados y responsabilidades en lugar de indicadores indirectos, y las afirmaciones se vuelven comparables y verificables. Como la evidencia verificada es costosa de falsificar con una herramienta de redacción, la señal sobrevive al volumen de postulaciones."
+      },
+      {
+        "en": "Screens report which evidence they used and what was missing, in coverage and uncertainty and not as a verdict. Organisations measure what each stage discards and check tools for accuracy and bias without inferred traits. Professionals, counsellors and employers use one record to see whether a gap is of capability, evidence or presentation, and to plan moves into adjacent roles.",
+        "es": "Los cribados informan qué evidencia usaron y cuál faltó, en cobertura e incertidumbre y no como veredicto. Las organizaciones miden lo que descarta cada etapa y verifican la exactitud y el sesgo de las herramientas sin rasgos inferidos. Profesionales, orientadores y empleadores usan el mismo registro para ver si una brecha es de capacidad, de evidencia o de presentación, y para planificar pasos hacia cargos cercanos."
+      }
+    ],
+    "four_cs": [
+      {
+        "c": {
+          "en": "Choice",
+          "es": "Elección"
+        },
+        "applies": {
+          "en": "Proprietary or open models can extract and match evidence and be swapped without rebuilding the record, because no single tool serves every language, sector or jurisdiction.",
+          "es": "Modelos propietarios o abiertos pueden extraer y emparejar evidencia y cambiarse sin reconstruir el registro, porque ninguna herramienta sirve a todos los idiomas, sectores o jurisdicciones."
+        }
+      },
+      {
+        "c": {
+          "en": "Context",
+          "es": "Contexto"
+        },
+        "applies": {
+          "en": "Matching rests on the meaning of the work, roles held, results and a shared skills vocabulary, so a screen reads what a person did, not their keywords.",
+          "es": "Se empareja según el significado del trabajo, con cargos, resultados y un vocabulario común de habilidades: el cribado lee lo que alguien hizo, no sus palabras clave."
+        }
+      },
+      {
+        "c": {
+          "en": "Cost",
+          "es": "Costo"
+        },
+        "applies": {
+          "en": "Each screening or drafting step shows what it spends in money, time and qualified people set aside, to be weighed against the recruiting cost already known.",
+          "es": "Cada paso de cribado o de redacción muestra lo que gasta en dinero, tiempo y personas calificadas descartadas, para contrastarlo con el costo de reclutamiento que ya se conoce."
+        }
+      },
+      {
+        "c": {
+          "en": "Control",
+          "es": "Control"
+        },
+        "applies": {
+          "en": "One governance over candidate data, models and agents, with purpose limits, retention, human review of any decision that affects a person, and records an auditor can inspect.",
+          "es": "Una sola gobernanza sobre datos de candidatos, modelos y agentes, con límites de propósito, retención, revisión humana de toda decisión que afecte a una persona y registros auditables."
+        }
+      }
+    ],
+    "actions": [
+      {
+        "action": {
+          "en": "Record, for each hiring stage, who is screened out, by which rule, and how the hires perform later, and review it each quarter.",
+          "es": "Registrar, en cada etapa de contratación, a quién se descarta, con qué regla y cómo rinden después las personas contratadas, y revisarlo cada trimestre."
+        },
+        "owner": {
+          "en": "Head of people",
+          "es": "Director de personas"
+        },
+        "horizon": {
+          "en": "Within a year",
+          "es": "En un año"
+        },
+        "check": {
+          "en": "The share of vacancies with stage-by-stage records, against a United Kingdom baseline where 19 percent of organisations measure the return on recruitment.",
+          "es": "La proporción de vacantes con registros etapa por etapa, frente a una base del Reino Unido donde 19 por ciento de las organizaciones mide el retorno del reclutamiento."
+        }
+      },
+      {
+        "action": {
+          "en": "Write each requirement as a skill or a result with a stated reason, and remove degree and gap filters that have none.",
+          "es": "Escribir cada requisito como una habilidad o un resultado con su razón, y quitar los filtros de título y de períodos sin empleo que no la tengan."
+        },
+        "owner": {
+          "en": "Hiring manager",
+          "es": "Jefe contratante"
+        },
+        "horizon": {
+          "en": "Now",
+          "es": "Ahora"
+        },
+        "check": {
+          "en": "The share of postings in which every filter has a written reason, against 72 percent of employers who reuse or lightly edit a middle-skills posting.",
+          "es": "La proporción de avisos en que cada filtro tiene una razón escrita, frente a 72 por ciento de los empleadores que reutiliza o edita poco un aviso de habilidades medias."
+        }
+      },
+      {
+        "action": {
+          "en": "Each month, read a sample of automatically rejected applications against the posting and report how many met the written requirements.",
+          "es": "Cada mes, leer una muestra de postulaciones rechazadas automáticamente frente al aviso e informar cuántas cumplían los requisitos escritos."
+        },
+        "owner": {
+          "en": "Recruiter or talent-acquisition lead",
+          "es": "Reclutador o responsable de adquisición de talento"
+        },
+        "horizon": {
+          "en": "Within a year",
+          "es": "En un año"
+        },
+        "check": {
+          "en": "The share of the sample that met the requirements, trending down, against 88 percent of employers who agree qualified people are vetted out.",
+          "es": "La proporción de la muestra que cumplía los requisitos, a la baja, frente a 88 por ciento de los empleadores que coincide en que se descarta a personas calificadas."
+        }
+      },
+      {
+        "action": {
+          "en": "Set out what an audit of a hiring tool must cover: accuracy testing, bias monitoring without inferred traits, data minimisation, explanation and review.",
+          "es": "Definir qué debe cubrir la auditoría de una herramienta de contratación: pruebas de exactitud, monitoreo de sesgo sin rasgos inferidos, minimización de datos, explicación y revisión."
+        },
+        "owner": {
+          "en": "Regulator and auditor of automated hiring tools",
+          "es": "Regulador y auditor de herramientas automatizadas de contratación"
+        },
+        "horizon": {
+          "en": "Two years",
+          "es": "En dos años"
+        },
+        "check": {
+          "en": "The share of audited tools with evidence of accuracy testing and without inferred protected traits.",
+          "es": "La proporción de herramientas auditadas con evidencia de pruebas de exactitud y sin rasgos protegidos inferidos."
+        }
+      },
+      {
+        "action": {
+          "en": "Keep a dated evidence file that links each claim to a source, tailor it to each posting, and sort each gap as capability, evidence or presentation.",
+          "es": "Llevar un archivo de evidencia con fechas que ligue cada afirmación a una fuente, adaptarlo a cada aviso y clasificar cada brecha como de capacidad, de evidencia o de presentación."
+        },
+        "owner": {
+          "en": "Professional looking for a role or a change",
+          "es": "Profesional que busca empleo o cambio de rol"
+        },
+        "horizon": {
+          "en": "Now",
+          "es": "Ahora"
+        },
+        "check": {
+          "en": "The share of applications that carry at least one verifiable link, and callbacks per application, tracked by the professional.",
+          "es": "La proporción de postulaciones que llevan al menos un enlace verificable, y las respuestas por postulación, que registra el propio profesional."
+        }
+      }
+    ],
+    "risks": [
+      {
+        "en": "A record of verified evidence could become a new proxy that excludes people without documents or digital access.",
+        "es": "Un registro de evidencia verificada podría volverse un nuevo indicador indirecto que excluya a personas sin documentos o sin acceso digital."
+      },
+      {
+        "en": "Rule dates move: the European Union has already moved its high-risk date once, so any date in this view may change.",
+        "es": "Las fechas de las normas se mueven: la Unión Europea ya corrió una vez su fecha de alto riesgo, de modo que cualquier fecha de esta vista puede cambiar."
+      },
+      {
+        "en": "Evidence may not transfer between countries: the callback experiment speaks to young job seekers, the skills study covers the United States, and the cost survey the United Kingdom.",
+        "es": "La evidencia puede no trasladarse entre países: el experimento de respuestas habla de jóvenes, el estudio de habilidades cubre Estados Unidos y la encuesta de costos el Reino Unido."
+      },
+      {
+        "en": "A screen that reports coverage could be read as a score and used as a hidden ranking.",
+        "es": "Un cribado que informa cobertura podría leerse como un puntaje y usarse como un ranking oculto."
+      }
+    ],
+    "unknowns": [
+      {
+        "en": "The relative size of the five causes: the weights are an estimate by the authors, not a measurement.",
+        "es": "El tamaño relativo de las cinco causas: los pesos son una estimación de los autores y no una medición."
+      },
+      {
+        "en": "Whether evidence-linked applications raise callbacks, since the experiments read here measure writing assistance and resume gaps, not evidence links.",
+        "es": "Si las postulaciones ligadas a evidencia aumentan las respuestas, pues los experimentos leídos miden la ayuda de redacción y los períodos sin empleo, no los enlaces de evidencia."
+      },
+      {
+        "en": "How common automated screening is in Chile, where no primary figure was found.",
+        "es": "Qué tan común es el cribado automatizado en Chile, donde no se encontró una cifra primaria."
+      },
+      {
+        "en": "How generative artificial intelligence has changed the number of applications per vacancy, which no primary count answers.",
+        "es": "Cómo ha cambiado la inteligencia artificial generativa el número de postulaciones por vacante, que ningún conteo primario responde."
+      }
+    ],
+    "handoff": {
+      "en": "The technical view explores one part: how a professional keeps an evidence-linked profile and measures alignment with a role by coverage and uncertainty, never as a hiring probability.",
+      "es": "La vista técnica explora una parte: cómo un profesional mantiene un perfil con evidencia ligada y mide su alineación con un cargo por cobertura e incertidumbre, sin probabilidad de contratación."
+    }
+  },
+  "illustrations": {
+    "pain": {
+      "file": "executive/pain.svg",
+      "caption": {
+        "en": "A professional's evidence passes three gates toward a stack of openings, and its pages thin out at the automated screen where nobody sees what was lost.",
+        "es": "La evidencia de un profesional pasa por tres puertas hacia una pila de vacantes, y sus páginas se adelgazan en el cribado automatizado, donde nadie ve lo que se perdió."
+      }
+    },
+    "situation": {
+      "file": "executive/situation.svg",
+      "caption": {
+        "en": "Five roles each hold a part of the picture, and only a thin sheet passes through the narrow slot between the folder and the screen.",
+        "es": "Cinco roles tienen cada uno una parte del cuadro, y solo una hoja delgada pasa por la ranura estrecha entre la carpeta y el cribado."
+      }
+    },
+    "proposal": {
+      "file": "executive/proposal.svg",
+      "caption": {
+        "en": "A professional's evidence passes the same three gates toward a stack of openings, tied to its sources, with the screen reporting what it used and what was missing.",
+        "es": "Con evidencia ligada a sus fuentes, un profesional pasa las mismas tres puertas hacia una pila de vacantes, y el cribado informa lo que usó y lo que faltó."
+      }
+    }
+  },
+  "sources": [
+    {
+      "id": "ine-chile-ene-mjj-2026",
+      "title": {
+        "en": "Chile's National Statistics Institute, National Employment Survey, main results May to July 2026",
+        "es": "Instituto Nacional de Estadísticas de Chile, Encuesta Nacional de Empleo, resultados principales mayo a julio de 2026"
+      },
+      "url": "https://www.ine.gob.cl/docs/default-source/prensa-y-comunicacion/presentacion-empleo-mjj-26_comunicaciones.pdf?sfvrsn=993b24c1_2",
+      "note": {
+        "en": "Slides on search duration, pages 26 to 28.",
+        "es": "Diapositivas sobre duración de la búsqueda, páginas 26 a 28."
+      }
+    },
+    {
+      "id": "ine-chile-separata-8",
+      "title": {
+        "en": "Chile's National Statistics Institute, technical supplement 8, new dimensions of the National Employment Survey",
+        "es": "Instituto Nacional de Estadísticas de Chile, separata técnica 8, nuevas dimensiones de la Encuesta Nacional de Empleo"
+      },
+      "url": "https://www.ine.gob.cl/docs/default-source/ocupacion-y-desocupacion/publicaciones-y-anuarios/separatas/nuevas-dimensiones/nuevas-dimensiones-8.pdf",
+      "note": {
+        "en": "Trend since 2014 and the age and education gradients of 2025, printed pages 6 to 9.",
+        "es": "Tendencia desde 2014 y gradientes por edad y educación de 2025, páginas impresas 6 a 9."
+      }
+    },
+    {
+      "id": "bls-empsit-2026-09",
+      "title": {
+        "en": "United States Bureau of Labor Statistics, The Employment Situation, September 2026",
+        "es": "Oficina de Estadísticas Laborales de Estados Unidos, La situación del empleo, septiembre de 2026"
+      },
+      "url": "https://www.bls.gov/news.release/archives/empsit_10022026.htm"
+    },
+    {
+      "id": "cipd-resourcing-2026",
+      "title": {
+        "en": "Chartered Institute of Personnel and Development, Resourcing and talent planning report 2026",
+        "es": "Chartered Institute of Personnel and Development, informe de reclutamiento y planificación de talento 2026"
+      },
+      "url": "https://www.cipd.org/globalassets/media/knowledge/knowledge-hub/reports/2026-pdfs/9218-resource-and-talent-planning-2026-report-web.pdf",
+      "note": {
+        "en": "A United Kingdom survey of 1,014 respondents, April to May 2026.",
+        "es": "Encuesta del Reino Unido a 1.014 personas, abril a mayo de 2026."
+      }
+    },
+    {
+      "id": "hbs-hidden-workers-2021",
+      "title": {
+        "en": "Harvard Business School Project on Managing the Future of Work, Hidden Workers: Untapped Talent",
+        "es": "Proyecto sobre la gestión del futuro del trabajo de Harvard Business School, Hidden Workers: Untapped Talent"
+      },
+      "url": "https://www.hbs.edu/managing-the-future-of-work/research/Pages/hidden-workers-untapped-talent.aspx",
+      "note": {
+        "en": "A survey of 2,275 executives in the United States, the United Kingdom and Germany, May to June 2020.",
+        "es": "Encuesta a 2.275 ejecutivos de Estados Unidos, el Reino Unido y Alemania, de mayo a junio de 2020."
+      }
+    },
+    {
+      "id": "jpal-kroft-2013",
+      "title": {
+        "en": "Abdul Latif Jameel Poverty Action Lab, summary of a field experiment on duration dependence and labour market conditions",
+        "es": "Laboratorio de Acción contra la Pobreza Abdul Latif Jameel, resumen de un experimento de campo sobre dependencia de la duración y condiciones del mercado laboral"
+      },
+      "url": "https://www.povertyactionlab.org/print/pdf/node/2091",
+      "note": {
+        "en": "The paper is in the Quarterly Journal of Economics, 2013.",
+        "es": "El artículo está en el Quarterly Journal of Economics, 2013."
+      }
+    },
+    {
+      "id": "burning-glass-skills-hiring-2024",
+      "title": {
+        "en": "Burning Glass Institute with the Harvard Business School Project on Managing the Future of Work, Skills-Based Hiring: The Long Road from Pronouncements to Practice",
+        "es": "Burning Glass Institute con el proyecto sobre la gestión del futuro del trabajo de Harvard Business School, Skills-Based Hiring: The Long Road from Pronouncements to Practice"
+      },
+      "url": "https://burningglassinstitute.org/research/skills-based-hiring-2024",
+      "note": {
+        "en": "February 2024; an extrapolation from 11,300 roles at large United States firms.",
+        "es": "Febrero de 2024; una extrapolación desde 11.300 cargos de grandes empresas de Estados Unidos."
+      }
+    },
+    {
+      "id": "eu-ai-act-annex-iii",
+      "title": {
+        "en": "European Commission, artificial intelligence regulation service desk, Annex III, point 4 on employment",
+        "es": "Comisión Europea, servicio de ayuda del reglamento de inteligencia artificial, Anexo III, punto 4 sobre empleo"
+      },
+      "url": "https://ai-act-service-desk.ec.europa.eu/en/ai-act/annex-3"
+    },
+    {
+      "id": "ep-digital-omnibus-ai",
+      "title": {
+        "en": "European Parliament Legislative Train, Digital Omnibus on artificial intelligence",
+        "es": "Tren Legislativo del Parlamento Europeo, ómnibus digital sobre inteligencia artificial"
+      },
+      "url": "https://www.europarl.europa.eu/legislative-train/package-digital-package/file-digital-omnibus-on-ai",
+      "note": {
+        "en": "Regulation 2026/1744, July 2026.",
+        "es": "Reglamento 2026/1744, julio de 2026."
+      }
+    },
+    {
+      "id": "aej-behaghel-2014",
+      "title": {
+        "en": "Behaghel, Crépon and Gurgand, private and public provision of counselling to jobseekers, a large controlled experiment",
+        "es": "Behaghel, Crépon y Gurgand, provisión privada y pública de orientación a personas que buscan empleo, un gran experimento controlado"
+      },
+      "url": "https://extranet.parisschoolofeconomics.eu/docs/gurgand-marc/revisionaej_oct9.pdf",
+      "note": {
+        "en": "Assignment in 2007; a French trial.",
+        "es": "Asignación en 2007; un ensayo francés."
+      }
+    },
+    {
+      "id": "oecd-profiling-2019",
+      "title": {
+        "en": "Organisation for Economic Co-operation and Development, statistical profiling in public employment services, an international comparison",
+        "es": "Organización para la Cooperación y el Desarrollo Económicos, elaboración estadística de perfiles en los servicios públicos de empleo, una comparación internacional"
+      },
+      "url": "https://doi.org/10.1787/b5e5f16e-en",
+      "note": {
+        "en": "Working paper 224, February 2019.",
+        "es": "Documento de trabajo 224, febrero de 2019."
+      }
+    },
+    {
+      "id": "nber-wiles-2023",
+      "title": {
+        "en": "National Bureau of Economic Research, algorithmic writing assistance on jobseekers' resumes increases hires",
+        "es": "Oficina Nacional de Investigación Económica de Estados Unidos, la ayuda algorítmica de redacción en los currículos aumenta las contrataciones"
+      },
+      "url": "https://www.nber.org/papers/w30886",
+      "note": {
+        "en": "A working paper of 2023.",
+        "es": "Documento de trabajo de 2023."
+      }
+    },
+    {
+      "id": "wef-future-jobs-2025",
+      "title": {
+        "en": "World Economic Forum, Future of Jobs Report 2025",
+        "es": "Foro Económico Mundial, Informe sobre el futuro del empleo 2025"
+      },
+      "url": "https://reports.weforum.org/docs/WEF_Future_of_Jobs_Report_2025.pdf",
+      "note": {
+        "en": "A survey of 1,000 employers in 55 economies.",
+        "es": "Encuesta a 1.000 empleadores en 55 economías."
+      }
+    }
+  ]
+}
