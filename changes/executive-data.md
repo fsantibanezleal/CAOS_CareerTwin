@@ -1,0 +1,3 @@
+- content/executive.json: the executive view of the Introduction (the labour market matching of professionals to roles), English and neutral Spanish, valid against the shell schema 2.0.0, with 13 cited sources.
+- frontend/src/content/executive.test.ts: the contract test of the executive data (schema, floors, flip-card limits, owners, sources, no named company).
+- frontend/package.json: the shell pin @fasl-work/caos-app-shell 0.16.0 exact.
